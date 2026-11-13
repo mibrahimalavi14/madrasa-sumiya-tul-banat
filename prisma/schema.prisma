@@ -105,6 +105,7 @@ model StudentEnrollment {
   rollLocked  Boolean  @default(false)
   carriedFromId String?
   monthlyFee  Float?
+  feeExempt   Boolean  @default(false)
   createdAt   DateTime @default(now())
 
   @@unique([studentId, sessionId])

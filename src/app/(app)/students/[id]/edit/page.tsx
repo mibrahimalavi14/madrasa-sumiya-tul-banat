@@ -13,6 +13,7 @@ async function updateStudent(formData: FormData) {
   const id = String(formData.get("id"));
   const sessionId = String(formData.get("sessionId") || "");
   const rollNo = String(formData.get("rollNo") || "").trim() || null;
+  const feeExempt = formData.get("feeExempt") === "on";
   await prisma.student.update({ where: { id }, data: {
     applicationNo: String(formData.get("applicationNo")||"") || null,
     nameEn: String(formData.get("nameEn")||""), nameUr: String(formData.get("nameUr")||"") || null,
@@ -35,8 +36,8 @@ async function updateStudent(formData: FormData) {
     try {
       await prisma.studentEnrollment.upsert({
         where: { studentId_sessionId: { studentId: id, sessionId } },
-        update: { rollNo },
-        create: { studentId: id, sessionId, rollNo },
+        update: { rollNo, feeExempt, ...(feeExempt ? { monthlyFee: 0 } : {}) } as any,
+        create: { studentId: id, sessionId, rollNo, feeExempt, monthlyFee: feeExempt ? 0 : null } as any,
       });
     } catch {
       redirect(`/students/${id}/edit?error=roll`);
@@ -83,6 +84,13 @@ export default async function EditStudent({ params, searchParams }: { params: Pr
             <div><label className="text-sm text-gray-700">Roll No (Session)</label><input name="rollNo" defaultValue={enrollment?.rollNo||""} placeholder={session ? `Session ${session.name}` : "No active session"} disabled={!session} className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2.5 disabled:bg-gray-50"/></div>
             <div><label className="text-sm text-gray-700">Application No</label><input name="applicationNo" defaultValue={student.applicationNo||""} className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2.5"/></div>
             <div><label className="text-sm text-gray-700">Status</label><select name="status" defaultValue={student.status} className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2.5 bg-white"><option value="REGISTERED">REGISTERED</option><option value="ACTIVE">ACTIVE</option><option value="LEFT">LEFT</option></select></div>
+          </div>
+          <div className="mt-4 flex items-start gap-3 p-3 rounded-xl border border-amber-200 bg-amber-50/60">
+            <input id="feeExempt" name="feeExempt" type="checkbox" defaultChecked={!!(enrollment as any)?.feeExempt} className="mt-1 h-4 w-4" />
+            <label htmlFor="feeExempt" className="text-sm text-gray-800">
+              <span className="font-medium">Fee Exempt / فیس معاف</span>
+              <span className="block text-xs text-gray-600 mt-0.5">اس طالب علم سے فیس وصول نہیں کی جاتی (داخلہ/ریکارڈ برقرار رہے گا)۔</span>
+            </label>
           </div>
         </div>
 

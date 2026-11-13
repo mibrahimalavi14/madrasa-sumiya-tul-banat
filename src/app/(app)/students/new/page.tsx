@@ -15,6 +15,7 @@ async function createStudent(formData: FormData) {
   const admissionNo = String(formData.get("admissionNo")||"").trim() || formatAdmissionNo(count + 1);
   const registrationNo = formatRegNo(count + 1); // internal, not shown on admission form
   const rollNo = String(formData.get("rollNo") || "").trim() || null;
+  const feeExempt = formData.get("feeExempt") === "on";
   if (rollNo) {
     const conflict = await prisma.studentEnrollment.findFirst({ where: { sessionId: session.id, rollNo } });
     if (conflict) redirect("/students/new?error=roll");
@@ -39,7 +40,7 @@ async function createStudent(formData: FormData) {
     }
   });
   try {
-    await prisma.studentEnrollment.create({ data: { studentId: student.id, sessionId: session.id, rollNo } });
+    await prisma.studentEnrollment.create({ data: { studentId: student.id, sessionId: session.id, rollNo, feeExempt, monthlyFee: feeExempt ? 0 : undefined } as any });
   } catch {
     await prisma.student.delete({ where: { id: student.id } }).catch(() => {});
     redirect("/students/new?error=roll");
@@ -82,6 +83,13 @@ export default async function NewStudent({ searchParams }: { searchParams?: Prom
             <div><label className="text-sm text-gray-700">Roll No / رول نمبر</label><input name="rollNo" className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-emerald-200" placeholder="e.g. 1"/></div>
             <div><label className="text-sm text-gray-700">Application No / درخواست نمبر</label><input name="applicationNo" className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-emerald-200"/></div>
             <div><label className="text-sm text-gray-700">Admission No / داخلہ نمبر</label><input name="admissionNo" defaultValue={formatAdmissionNo(count+1)} className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-emerald-200"/></div>
+          </div>
+          <div className="mt-4 flex items-start gap-3 p-3 rounded-xl border border-amber-200 bg-amber-50/60">
+            <input id="feeExempt" name="feeExempt" type="checkbox" className="mt-1 h-4 w-4" />
+            <label htmlFor="feeExempt" className="text-sm text-gray-800">
+              <span className="font-medium">Fee Exempt / فیس معاف</span>
+              <span className="block text-xs text-gray-600 mt-0.5">اس طالب علم سے فیس وصول نہیں کی جاتی (داخلہ/ریکارڈ برقرار رہے گا)۔</span>
+            </label>
           </div>
         </div>
 

@@ -49,8 +49,12 @@ export default async function FeesPage({ searchParams }: { searchParams: Promise
   const tr = t[lang];
   if (user?.role === "PARENT") {
     if (!user.parentStudentId) return <p>{tr.noLinkedStudent}</p>;
-    const fees = await prisma.feePayment.findMany({ where: { studentId: user.parentStudentId }, orderBy: [{ year: "desc" }, { month: "desc" }] });
-    return <div><h1 className="text-2xl font-bold text-emerald-900 mb-4">{tr.fees}</h1><FeeTableRead fees={fees} tr={tr} /></div>;
+    const sessionNow = await getCurrentSession();
+    const [fees, enrollment] = await Promise.all([
+      prisma.feePayment.findMany({ where: { studentId: user.parentStudentId }, orderBy: [{ year: "desc" }, { month: "desc" }] }),
+      sessionNow ? prisma.studentEnrollment.findUnique({ where: { studentId_sessionId: { studentId: user.parentStudentId, sessionId: sessionNow.id } }, select: { feeExempt: true } }) : Promise.resolve(null),
+    ]);
+    return <div><h1 className="text-2xl font-bold text-emerald-900 mb-4">{tr.fees}</h1><FeeTableRead fees={fees} tr={tr} exempt={!!(enrollment as any)?.feeExempt} lang={lang as any} /></div>;
   }
   if (!session) return <p>{lang==="ur" ? "براہ کرم پہلے فعال سیشن بنائیں/منتخب کریں۔" : "Create/select active session first."}</p>;
   const sp = await searchParams;
@@ -61,7 +65,7 @@ export default async function FeesPage({ searchParams }: { searchParams: Promise
     prisma.setting.findFirst({ where: { key: "monthlyFee", sessionId: null }, select: { value: true } }),
     prisma.studentEnrollment.findMany({
       where: { sessionId: session.id },
-      select: { id: true, studentId: true, monthlyFee: true, student: { select: { id: true, admissionNo: true, nameEn: true } } },
+      select: { id: true, studentId: true, monthlyFee: true, feeExempt: true, student: { select: { id: true, admissionNo: true, nameEn: true } } },
       orderBy: { student: { nameEn: "asc" } },
     }),
     prisma.feePayment.findMany({
@@ -91,13 +95,14 @@ export default async function FeesPage({ searchParams }: { searchParams: Promise
         <tbody>
           {enrolls.map(en => { 
             const f = map.get(en.studentId); 
+            const exempt = !!(en as any).feeExempt;
             const studentFee = (en as any).monthlyFee;
-            const effectiveDefault = (studentFee != null ? Number(studentFee) : defaultAmount);
-            const status = f?.isPaid ? (f.isLate?tr.late:tr.paid) : tr.unpaid; 
+            const effectiveDefault = exempt ? 0 : (studentFee != null ? Number(studentFee) : defaultAmount);
+            const status = exempt ? (lang === "ur" ? "فیس معاف" : "Exempt") : (f?.isPaid ? (f.isLate?tr.late:tr.paid) : tr.unpaid); 
             const formId = `fee-${en.studentId}`;
             const sFormId = `sfee-${en.studentId}`;
             return (
-              <tr key={en.id} className="align-middle">
+              <tr key={en.id} className={`align-middle ${exempt ? "bg-amber-50/30" : ""}`}>
                 <td className="p-3">
                   {en.student.admissionNo}
                   <form id={formId} action={upsertFee}>
@@ -109,27 +114,32 @@ export default async function FeesPage({ searchParams }: { searchParams: Promise
                     <input type="hidden" name="studentId" value={en.studentId}/>
                   </form>
                 </td>
-                <td className="p-3 font-medium">{en.student.nameEn}</td>
+                <td className="p-3 font-medium">
+                  <div>{en.student.nameEn}</div>
+                  {exempt && <div className="text-[11px] text-amber-700 mt-0.5">{lang === "ur" ? "اس طالب علم سے فیس نہیں لی جاتی" : "No fee collected from this student"}</div>}
+                </td>
                 <td className="p-3">
                   <div className="flex items-center gap-2">
-                    <input form={sFormId} name="studentMonthlyFee" type="number" step="1" defaultValue={studentFee ?? ""} placeholder={String(defaultAmount)} className="border border-emerald-200/80 rounded-lg px-3 py-2 w-28" />
-                    <button form={sFormId} className="bg-gray-700 hover:bg-gray-800 text-white px-3 py-2 rounded-lg text-xs">{lang === "ur" ? "سیٹ" : "Set"}</button>
+                    <input form={sFormId} name="studentMonthlyFee" type="number" step="1" defaultValue={exempt ? 0 : (studentFee ?? "")} placeholder={String(defaultAmount)} disabled={exempt} className="border border-emerald-200/80 rounded-lg px-3 py-2 w-28 disabled:bg-gray-100 disabled:text-gray-500" />
+                    <button form={sFormId} disabled={exempt} className="bg-gray-700 hover:bg-gray-800 disabled:bg-gray-300 disabled:text-gray-600 text-white px-3 py-2 rounded-lg text-xs">{lang === "ur" ? "سیٹ" : "Set"}</button>
                   </div>
-                  <div className="text-[11px] text-gray-500 mt-1">{lang === "ur" ? "خالی = ڈیفالٹ فیس" : "Empty = default fee"}</div>
+                  <div className="text-[11px] text-gray-500 mt-1">{exempt ? (lang === "ur" ? "فیس معاف" : "Fee exempt") : (lang === "ur" ? "خالی = ڈیفالٹ فیس" : "Empty = default fee")}</div>
                 </td>
                 <td className="p-3">
-                  <input form={formId} name="amount" type="number" step="1" defaultValue={f?.amount ?? effectiveDefault} className="border border-emerald-200/80 rounded-lg px-3 py-2 w-28" />
+                  <input form={formId} name="amount" type="number" step="1" defaultValue={f?.amount ?? effectiveDefault} disabled={exempt} className="border border-emerald-200/80 rounded-lg px-3 py-2 w-28 disabled:bg-gray-100 disabled:text-gray-500" />
                 </td>
                 <td className="p-3 text-center">
-                  <label className="inline-flex items-center gap-2 text-sm justify-center">
-                    <input form={formId} type="checkbox" name="markPaid" defaultChecked={f?.isPaid||false}/> {tr.paid}
+                  <label className={`inline-flex items-center gap-2 text-sm justify-center ${exempt ? "text-gray-400" : ""}`}>
+                    <input form={formId} type="checkbox" name="markPaid" defaultChecked={exempt ? false : (f?.isPaid||false)} disabled={exempt}/> {tr.paid}
                   </label>
                 </td>
                 <td className="p-3">
-                  <DateInputDMY form={formId} name="paidAt" defaultValue={toDateInputDMY(f?.paidAt)} inputClassName="border border-emerald-200/80 rounded-lg px-3 py-2" />
+                  <div className={exempt ? "opacity-50 pointer-events-none" : ""}>
+                    <DateInputDMY form={formId} name="paidAt" defaultValue={toDateInputDMY(f?.paidAt)} inputClassName="border border-emerald-200/80 rounded-lg px-3 py-2" />
+                  </div>
                 </td>
                 <td className="p-3 text-center">
-                  <span className={`inline-flex px-2.5 py-1 rounded-full text-xs font-semibold ${status===tr.paid?"bg-emerald-100 text-emerald-800":status===tr.late?"bg-amber-100 text-amber-800":"bg-red-100 text-red-800"}`}>{status}{f?.isPaid?" ✓":""}</span>
+                  <span className={`inline-flex px-2.5 py-1 rounded-full text-xs font-semibold ${exempt ? "bg-amber-100 text-amber-800" : status===tr.paid?"bg-emerald-100 text-emerald-800":status===tr.late?"bg-amber-100 text-amber-800":"bg-red-100 text-red-800"}`}>{status}{!exempt && f?.isPaid?" ✓":""}</span>
                 </td>
                 <td className="p-3 text-center">
                   <button form={formId} className="bg-emerald-800 hover:bg-emerald-900 text-white px-4 py-2 rounded-lg">{tr.save}</button>
@@ -144,6 +154,9 @@ export default async function FeesPage({ searchParams }: { searchParams: Promise
   );
 }
 
-function FeeTableRead({ fees, tr }: { fees: any[]; tr: any }) {
-  return <div className="bg-white rounded-2xl shadow-sm border border-emerald-100/80 overflow-auto"><table className="w-full text-sm"><thead><tr><th className="p-3">{tr.month}/{tr.year}</th><th className="p-3">{tr.amount}</th><th className="p-3">{tr.status}</th><th className="p-3">{tr.paidDate}</th></tr></thead><tbody>{fees.map(f=>(<tr key={f.id}><td className="p-3 text-center">{f.month}/{f.year}</td><td className="p-3 text-center">Rs {f.amount}</td><td className="p-3 text-center">{f.isPaid?(f.isLate?tr.late:`${tr.paid} ✓`):tr.unpaid}</td><td className="p-3 text-center">{formatDateDMY(f.paidAt)}</td></tr>))}{fees.length===0 && <tr><td colSpan={4} className="p-4 text-center text-gray-500">{tr.noFeeRecords}</td></tr>}</tbody></table></div>;
+function FeeTableRead({ fees, tr, exempt = false, lang = "en" }: { fees: any[]; tr: any; exempt?: boolean; lang?: "en" | "ur" }) {
+  return <div className="bg-white rounded-2xl shadow-sm border border-emerald-100/80 overflow-auto">
+    {exempt && <div className="px-4 pt-4"><span className="inline-flex px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-100 text-amber-800">{lang === "ur" ? "فیس معاف" : "Fee Exempt"}</span></div>}
+    <table className="w-full text-sm"><thead><tr><th className="p-3">{tr.month}/{tr.year}</th><th className="p-3">{tr.amount}</th><th className="p-3">{tr.status}</th><th className="p-3">{tr.paidDate}</th></tr></thead><tbody>{fees.map(f=>(<tr key={f.id}><td className="p-3 text-center">{f.month}/{f.year}</td><td className="p-3 text-center">Rs {f.amount}</td><td className="p-3 text-center">{exempt ? (lang === "ur" ? "فیس معاف" : "Exempt") : (f.isPaid?(f.isLate?tr.late:`${tr.paid} ✓`):tr.unpaid)}</td><td className="p-3 text-center">{formatDateDMY(f.paidAt)}</td></tr>))}{fees.length===0 && <tr><td colSpan={4} className="p-4 text-center text-gray-500">{tr.noFeeRecords}</td></tr>}</tbody></table>
+  </div>;
 }
