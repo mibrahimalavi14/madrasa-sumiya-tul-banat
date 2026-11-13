@@ -15,10 +15,8 @@ async function logout() {
 }
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
-  const user = await getAuthUser();
+  const [user, current, lang] = await Promise.all([getAuthUser(), getCurrentSession(), getLang()]);
   if (!user) redirect("/login");
-  const current = await getCurrentSession();
-  const lang = await getLang();
   const tr = t[lang];
   const isAdmin = user.role === "ADMIN";
   const sections = isAdmin

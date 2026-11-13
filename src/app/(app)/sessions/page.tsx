@@ -3,7 +3,7 @@ import { getAuthUser } from "@/lib/auth";
 import { getLang } from "@/lib/lang";
 import { t } from "@/lib/i18n";
 import { redirect } from "next/navigation";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 
 async function createSessionAction(formData: FormData) {
   "use server";
@@ -17,6 +17,7 @@ async function createSessionAction(formData: FormData) {
     if (makeCurrent) await tx.session.updateMany({ data: { isCurrent: false } });
     await tx.session.create({ data: { name, startDate, endDate, status: "ACTIVE", isCurrent: makeCurrent } });
   });
+  revalidateTag("current-session", { expire: 0 });
   revalidatePath("/sessions"); revalidatePath("/dashboard");
 }
 async function setCurrentAction(formData: FormData) {
@@ -27,6 +28,7 @@ async function setCurrentAction(formData: FormData) {
     await tx.session.updateMany({ data: { isCurrent: false } });
     await tx.session.update({ where: { id }, data: { isCurrent: true } });
   });
+  revalidateTag("current-session", { expire: 0 });
   revalidatePath("/sessions"); revalidatePath("/dashboard");
 }
 async function expireAction(formData: FormData) {
@@ -34,6 +36,7 @@ async function expireAction(formData: FormData) {
   const user = await getAuthUser(); if (user?.role !== "ADMIN") throw new Error("UNAUTHORIZED");
   const id = String(formData.get("id"));
   await prisma.session.update({ where: { id }, data: { status: "EXPIRED", isCurrent: false } });
+  revalidateTag("current-session", { expire: 0 });
   revalidatePath("/sessions"); revalidatePath("/dashboard");
 }
 async function carryStudentsAction(formData: FormData) {

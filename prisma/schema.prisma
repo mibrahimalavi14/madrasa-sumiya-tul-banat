@@ -42,6 +42,9 @@ model Session {
   feePayments   FeePayment[]
   certificates  Certificate[]
   settings      Setting[]
+
+  @@index([isCurrent])
+  @@index([status])
 }
 
 model Setting {
@@ -106,6 +109,7 @@ model StudentEnrollment {
 
   @@unique([studentId, sessionId])
   @@unique([sessionId, rollNo])
+  @@index([sessionId, createdAt])
 }
 
 model Sibling {
@@ -138,6 +142,9 @@ model Exam {
   papers          QuestionPaper[]
   results         Result[]
   oralMarks       OralMark[]
+
+  @@index([sessionId, stage])
+  @@index([sessionId, createdAt])
 }
 
 model ExamStudent {
@@ -148,6 +155,8 @@ model ExamStudent {
   student   Student @relation(fields: [studentId], references: [id])
 
   @@unique([examId, studentId])
+  @@index([examId])
+  @@index([studentId])
 }
 
 model QuestionPaper {
@@ -165,6 +174,7 @@ model QuestionPaper {
   createdAt   DateTime  @default(now())
 
   @@unique([examId, type, paperCode])
+  @@index([examId])
 }
 
 model Question {
@@ -218,6 +228,9 @@ model Result {
   updatedAt       DateTime @updatedAt
 
   @@unique([examId, studentId])
+  @@index([examId])
+  @@index([studentId])
+  @@index([examId, position])
 }
 
 model FeePayment {
@@ -237,6 +250,9 @@ model FeePayment {
   updatedAt   DateTime @updatedAt
 
   @@unique([sessionId, studentId, month, year])
+  @@index([sessionId])
+  @@index([studentId])
+  @@index([sessionId, isPaid, isLate])
 }
 
 model Certificate {
@@ -250,4 +266,7 @@ model Certificate {
   issueDate   DateTime        @default(now())
   details     String?
   createdAt   DateTime        @default(now())
+
+  @@index([sessionId])
+  @@index([studentId])
 }

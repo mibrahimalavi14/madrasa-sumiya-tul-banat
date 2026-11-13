@@ -1,8 +1,15 @@
 import { cache } from "react";
+import { unstable_cache } from "next/cache";
 import prisma from "./prisma";
 
+const getCurrentSessionCached = unstable_cache(
+  async () => prisma.session.findFirst({ where: { isCurrent: true } }),
+  ["current-session"],
+  { tags: ["current-session"], revalidate: 60 }
+);
+
 export const getCurrentSession = cache(async () => {
-  return prisma.session.findFirst({ where: { isCurrent: true } });
+  return getCurrentSessionCached();
 });
 
 export async function requireCurrentSession() {
