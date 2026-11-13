@@ -54,13 +54,16 @@ export default async function FeesPage({ searchParams }: { searchParams: Promise
       prisma.feePayment.findMany({ where: { studentId: user.parentStudentId }, orderBy: [{ year: "desc" }, { month: "desc" }] }),
       sessionNow ? prisma.studentEnrollment.findUnique({ where: { studentId_sessionId: { studentId: user.parentStudentId, sessionId: sessionNow.id } }, select: { feeExempt: true } }) : Promise.resolve(null),
     ]);
-    return <div><h1 className="text-2xl font-bold text-emerald-900 mb-4">{tr.fees}</h1><FeeTableRead fees={fees} tr={tr} exempt={!!(enrollment as any)?.feeExempt} lang={lang as any} /></div>;
+    if ((enrollment as any)?.feeExempt) {
+      return <div><h1 className="text-2xl font-bold text-emerald-900 mb-4">{tr.fees}</h1><div className="bg-amber-50 border border-amber-200 text-amber-800 rounded-xl p-4">{lang === "ur" ? "اس طالب علم کی فیس معاف ہے۔" : "This student is fee exempt."}</div></div>;
+    }
+    return <div><h1 className="text-2xl font-bold text-emerald-900 mb-4">{tr.fees}</h1><FeeTableRead fees={fees} tr={tr} lang={lang as any} /></div>;
   }
   if (!session) return <p>{lang==="ur" ? "براہ کرم پہلے فعال سیشن بنائیں/منتخب کریں۔" : "Create/select active session first."}</p>;
   const sp = await searchParams;
   const now = new Date();
   const month = Number(sp.month || (now.getMonth()+1)); const year = Number(sp.year || now.getFullYear());
-  const [defaultAmountSettingSession, defaultAmountSettingGlobal, enrolls, fees] = await Promise.all([
+  const [defaultAmountSettingSession, defaultAmountSettingGlobal, enrollsAll, fees] = await Promise.all([
     prisma.setting.findFirst({ where: { key: "monthlyFee", sessionId: session.id }, select: { value: true } }),
     prisma.setting.findFirst({ where: { key: "monthlyFee", sessionId: null }, select: { value: true } }),
     prisma.studentEnrollment.findMany({
@@ -74,6 +77,7 @@ export default async function FeesPage({ searchParams }: { searchParams: Promise
     }),
   ]);
   const defaultAmount = Number((defaultAmountSettingSession || defaultAmountSettingGlobal)?.value || 0);
+  const enrolls = enrollsAll.filter((en: any) => !(en as any).feeExempt);
   const map = new Map(fees.map(f=>[f.studentId,f]));
   return (
     <div className="space-y-4">
@@ -147,7 +151,7 @@ export default async function FeesPage({ searchParams }: { searchParams: Promise
               </tr>
             );
           })}
-          {enrolls.length===0 && <tr><td colSpan={8} className="p-4 text-center text-gray-500">{tr.noEnrolledStudents}</td></tr>}
+          {enrolls.length===0 && <tr><td colSpan={8} className="p-4 text-center text-gray-500">{lang==="ur" ? "فیس کے لیے کوئی طالب علم دستیاب نہیں (یا سب فیس معاف ہیں)" : "No students available for fees (or all are fee exempt)"}</td></tr>}
         </tbody></table>
       </div>
     </div>
