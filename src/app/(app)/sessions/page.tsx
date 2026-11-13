@@ -69,7 +69,10 @@ export default async function SessionsPage({ searchParams }: { searchParams: Pro
   const tr = t[lang];
   const sp = await searchParams;
   await autoExpireSessionsIfNeeded();
-  const sessions = await prisma.session.findMany({ orderBy: { createdAt: "desc" } });
+  const sessions = await prisma.session.findMany({
+    select: { id: true, name: true, status: true, isCurrent: true, startDate: true, endDate: true },
+    orderBy: { createdAt: "desc" },
+  });
   const errorMsg = sp.error === "duration"
     ? (lang === "ur" ? "سیشن کی مدت ایک سال سے زیادہ نہیں ہو سکتی۔ تاریخیں درست کریں۔" : "Session duration cannot be more than 1 year. Please correct the dates.")
     : sp.error === "required"
@@ -131,14 +134,18 @@ export default async function SessionsPage({ searchParams }: { searchParams: Pro
                 <td className="p-3">
                   <div className="flex items-center justify-center gap-2 flex-wrap">
                     {s.status === "ACTIVE" ? (
-                      <form action={setCurrentAction}>
-                        <input type="hidden" name="id" value={s.id}/>
-                        <button
-                          className={`inline-flex items-center justify-center min-w-[120px] px-3 py-2 rounded-lg text-sm font-medium border transition ${s.isCurrent ? "bg-blue-700 text-white border-blue-700 shadow-sm" : "bg-blue-50 text-blue-800 border-blue-200 hover:bg-blue-100"}`}
-                        >
-                          {s.isCurrent ? `✓ ${tr.setCurrent}` : tr.setCurrent}
-                        </button>
-                      </form>
+                      s.isCurrent ? (
+                        <span className="inline-flex items-center justify-center min-w-[120px] px-3 py-2 rounded-lg text-sm font-medium border border-blue-300 bg-blue-100 text-blue-800 shadow-sm">
+                          ✓ {lang === "ur" ? "موجودہ سیشن" : "Current"}
+                        </span>
+                      ) : (
+                        <form action={setCurrentAction}>
+                          <input type="hidden" name="id" value={s.id}/>
+                          <button className="inline-flex items-center justify-center min-w-[120px] px-3 py-2 rounded-lg text-sm font-medium border border-blue-200 bg-blue-50 text-blue-800 hover:bg-blue-100 transition">
+                            {tr.setCurrent}
+                          </button>
+                        </form>
+                      )
                     ) : (
                       <span className="inline-flex items-center justify-center min-w-[120px] px-3 py-2 rounded-lg text-sm font-medium border border-amber-200 bg-amber-50 text-amber-800">
                         {lang === "ur" ? "خودکار طور پر ختم" : "Auto Expired"}
