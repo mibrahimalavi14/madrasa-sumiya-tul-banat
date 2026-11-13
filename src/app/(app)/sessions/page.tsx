@@ -86,23 +86,55 @@ export default async function SessionsPage() {
         </form>
         <p className="text-xs text-gray-500 mt-2">{tr.carryNote}</p>
       </div>
-      <div className="bg-white rounded-xl shadow overflow-auto">
+      <div className="bg-white rounded-2xl shadow-sm border border-emerald-100 overflow-auto">
         <table className="w-full text-sm">
-          <thead className="bg-emerald-50"><tr><th className="p-2 text-left">{tr.name}</th><th className="p-2">{tr.status}</th><th className="p-2">{tr.current}</th><th className="p-2">{tr.dates}</th><th className="p-2">{tr.actions}</th></tr></thead>
+          <thead className="bg-emerald-50 text-emerald-900">
+            <tr>
+              <th className="p-3 text-left">{tr.name}</th>
+              <th className="p-3 text-center">{tr.status}</th>
+              <th className="p-3 text-center">{tr.current}</th>
+              <th className="p-3 text-center">{tr.dates}</th>
+              <th className="p-3 text-center">{tr.actions}</th>
+            </tr>
+          </thead>
           <tbody>
             {sessions.map(s => (
-              <tr key={s.id} className="border-t">
-                <td className="p-2 font-medium">{s.name}</td>
-                <td className="p-2 text-center">{s.status}</td>
-                <td className="p-2 text-center">{s.isCurrent ? tr.yes : tr.no}</td>
-                <td className="p-2 text-center">{formatDateDMY(s.startDate)} to {formatDateDMY(s.endDate)}</td>
-                <td className="p-2 text-center space-x-2">
-                  <form action={setCurrentAction} className="inline"><input type="hidden" name="id" value={s.id}/><button className="text-emerald-700 underline">{tr.setCurrent}</button></form>
-                  {s.status === "ACTIVE" && <form action={expireAction} className="inline"><input type="hidden" name="id" value={s.id}/><button className="text-red-700 underline">{tr.expire}</button></form>}
+              <tr key={s.id} className="border-t hover:bg-gray-50/60 align-middle">
+                <td className="p-3 font-semibold text-gray-900">{s.name}</td>
+                <td className="p-3 text-center">
+                  <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold border ${s.status === "ACTIVE" ? "bg-emerald-50 text-emerald-800 border-emerald-200" : s.status === "EXPIRED" ? "bg-amber-50 text-amber-800 border-amber-200" : "bg-gray-100 text-gray-700 border-gray-200"}`}>
+                    {s.status}
+                  </span>
+                </td>
+                <td className="p-3 text-center">
+                  <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold border ${s.isCurrent ? "bg-blue-50 text-blue-800 border-blue-200" : "bg-gray-50 text-gray-600 border-gray-200"}`}>
+                    {s.isCurrent ? tr.yes : tr.no}
+                  </span>
+                </td>
+                <td className="p-3 text-center text-gray-700">{formatDateDMY(s.startDate)} <span className="text-gray-400">to</span> {formatDateDMY(s.endDate)}</td>
+                <td className="p-3">
+                  <div className="flex items-center justify-center gap-2 flex-wrap">
+                    <form action={setCurrentAction}>
+                      <input type="hidden" name="id" value={s.id}/>
+                      <button
+                        className={`inline-flex items-center justify-center min-w-[110px] px-3 py-2 rounded-lg text-sm font-medium border transition ${s.isCurrent ? "bg-blue-700 text-white border-blue-700 shadow-sm" : "bg-blue-50 text-blue-800 border-blue-200 hover:bg-blue-100"}`}
+                      >
+                        {s.isCurrent ? `✓ ${tr.setCurrent}` : tr.setCurrent}
+                      </button>
+                    </form>
+                    {s.status === "ACTIVE" && (
+                      <form action={expireAction}>
+                        <input type="hidden" name="id" value={s.id}/>
+                        <button className="inline-flex items-center justify-center min-w-[110px] px-3 py-2 rounded-lg text-sm font-medium border border-red-200 bg-red-50 text-red-700 hover:bg-red-100 transition">
+                          {tr.expire}
+                        </button>
+                      </form>
+                    )}
+                  </div>
                 </td>
               </tr>
             ))}
-            {sessions.length===0 && <tr><td className="p-4 text-center text-gray-500" colSpan={5}>{tr.noSessions}</td></tr>}
+            {sessions.length===0 && <tr><td className="p-6 text-center text-gray-500" colSpan={5}>{tr.noSessions}</td></tr>}
           </tbody>
         </table>
       </div>
