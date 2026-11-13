@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { getAuthUser } from "@/lib/auth";
+import { formatDateDMY } from "@/lib/utils";
 import { notFound, redirect } from "next/navigation";
 
 
@@ -31,7 +32,7 @@ export default async function ExamDetail({ params }: { params: Promise<{ id: str
       <div className="bg-white rounded-xl shadow p-4 text-sm grid md:grid-cols-4 gap-2">
         <div><b>Session:</b> {exam.session.name}</div>
         <div><b>Subject:</b> {exam.subject}</div>
-        <div><b>Date:</b> {exam.examDate?.toISOString().slice(0,10)||"-"}</div>
+        <div><b>Date:</b> {formatDateDMY(exam.examDate)}</div>
         <div><b>Type:</b> {(exam as any).hasWritten !== false ? "Written" : ""}{(exam as any).hasWritten !== false && (exam as any).hasOral !== false ? " + " : ""}{(exam as any).hasOral !== false ? "Oral" : ""} {(exam as any).stage ? `| Annual Weight: ${(exam as any).stage===4?40:20}%` : ""}</div>
       </div>
 

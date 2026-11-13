@@ -3,6 +3,7 @@ import { getCurrentSession } from "@/lib/session";
 import { getAuthUser } from "@/lib/auth";
 import { getLang } from "@/lib/lang";
 import { t } from "@/lib/i18n";
+import { formatDateDMY } from "@/lib/utils";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import Link from "next/link";
@@ -51,5 +52,5 @@ export default async function CertificatesPage() {
 }
 
 function CertList({ certs, lang, tr }: { certs: any[]; lang: "en"|"ur"; tr: any }) {
-  return <div className="bg-white rounded-xl shadow overflow-auto"><table className="w-full text-sm"><thead className="bg-emerald-50"><tr><th className="p-2">{tr.serial}</th><th className="p-2">{tr.student}</th><th className="p-2">{tr.type}</th><th className="p-2">{tr.session}</th><th className="p-2">{tr.date}</th><th className="p-2">{tr.action}</th></tr></thead><tbody>{certs.map(c=>(<tr key={c.id} className="border-t"><td className="p-2">{c.serialNo||"-"}</td><td className="p-2">{c.student.admissionNo} - {c.student.nameEn}</td><td className="p-2">{c.type==="ANNUAL"?tr.annual:tr.nazraCompletion}</td><td className="p-2">{c.session.name}</td><td className="p-2">{c.issueDate.toISOString().slice(0,10)}</td><td className="p-2"><Link className="text-emerald-700 underline" href={`/certificates/${c.id}/print`}>{tr.print}</Link></td></tr>))}{certs.length===0 && <tr><td colSpan={6} className="p-4 text-center text-gray-500">{tr.noCertificates}</td></tr>}</tbody></table></div>;
+  return <div className="bg-white rounded-xl shadow overflow-auto"><table className="w-full text-sm"><thead className="bg-emerald-50"><tr><th className="p-2">{tr.serial}</th><th className="p-2">{tr.student}</th><th className="p-2">{tr.type}</th><th className="p-2">{tr.session}</th><th className="p-2">{tr.date}</th><th className="p-2">{tr.action}</th></tr></thead><tbody>{certs.map(c=>(<tr key={c.id} className="border-t"><td className="p-2">{c.serialNo||"-"}</td><td className="p-2">{c.student.admissionNo} - {c.student.nameEn}</td><td className="p-2">{c.type==="ANNUAL"?tr.annual:tr.nazraCompletion}</td><td className="p-2">{c.session.name}</td><td className="p-2">{formatDateDMY(c.issueDate)}</td><td className="p-2"><Link className="text-emerald-700 underline" href={`/certificates/${c.id}/print`}>{tr.print}</Link></td></tr>))}{certs.length===0 && <tr><td colSpan={6} className="p-4 text-center text-gray-500">{tr.noCertificates}</td></tr>}</tbody></table></div>;
 }

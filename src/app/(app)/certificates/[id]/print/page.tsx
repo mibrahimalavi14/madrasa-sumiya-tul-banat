@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { notFound } from "next/navigation";
 import Logo from "@/components/Logo";
+import { formatDateDMY } from "@/lib/utils";
 
 export default async function CertPrint({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -24,7 +25,7 @@ export default async function CertPrint({ params }: { params: Promise<{ id: stri
         <p className="mt-4 text-base">This is to certify that <b>{cert.student.nameEn}</b> {cert.student.nameUr ? <span className="font-urdu">({cert.student.nameUr})</span>:null}, Admission No <b>{cert.student.admissionNo}</b>, has {cert.type==="ANNUAL"?"successfully completed the Annual Examination":"successfully completed Nazra Quran"} for session <b>{cert.session.name}</b>.</p>
         {cert.details && <p className="mt-2 text-sm">Details: {cert.details}</p>}
         <div className="mt-10 grid grid-cols-3 gap-6 text-sm">
-          <div><div className="border-t border-black pt-1 mt-8">Date / تاریخ<br/>{cert.issueDate.toISOString().slice(0,10)}</div></div>
+          <div><div className="border-t border-black pt-1 mt-8">Date / تاریخ<br/>{formatDateDMY(cert.issueDate)}</div></div>
           <div><div className="border-t border-black pt-1 mt-8">Serial: {cert.serialNo||"-"}</div></div>
           <div><div className="border-t border-black pt-1 mt-8">Principal / سربراہ</div></div>
         </div>

@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { getCurrentSession } from "@/lib/session";
 import { getAuthUser } from "@/lib/auth";
 import { getLang } from "@/lib/lang";
+import { formatDateDMY } from "@/lib/utils";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 
@@ -234,7 +235,7 @@ export default async function ExaminationPage() {
                 <td className="p-3 text-center font-medium text-gray-800">{(e as any).stage ?? "-"}</td>
                 <td className="p-3 text-center text-gray-700">{(e as any).stage===1?"First":(e as any).stage===2?"Fourth":(e as any).stage===3?"Eighth":(e as any).stage===4?"Twelfth":"-"}</td>
                 <td className="p-3 text-center text-xs">{(e as any).hasWritten !== false ? (ur ? "تحریری" : "Written") : ""}{(e as any).hasWritten !== false && (e as any).hasOral !== false ? " + " : ""}{(e as any).hasOral !== false ? (ur ? "زبانی" : "Oral") : ""}</td>
-                <td className="p-3 text-center">{e.examDate?.toISOString().slice(0,10)||"-"}</td>
+                <td className="p-3 text-center">{formatDateDMY(e.examDate)}</td>
                 <td className="p-3 text-center">{e._count.students}</td>
                 <td className="p-3 text-center">{e._count.papers}</td>
                 <td className="p-3 text-center">{e._count.results}</td>

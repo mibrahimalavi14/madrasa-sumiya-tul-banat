@@ -3,6 +3,7 @@ import { getCurrentSession } from "@/lib/session";
 import { getAuthUser, hashPassword } from "@/lib/auth";
 import { getLang } from "@/lib/lang";
 import { t } from "@/lib/i18n";
+import { formatDateDMY } from "@/lib/utils";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import Link from "next/link";
@@ -83,7 +84,7 @@ export default async function SettingsPage() {
             <div className="rounded-xl border border-emerald-100 p-3">
               <div className="text-gray-500">{ur ? "فعال سیشن" : "Active Session"}</div>
               <div className="font-semibold text-emerald-900 mt-0.5">{session ? `${session.name} (${session.status})` : tr.noActiveSession}</div>
-              {session && <div className="text-xs text-gray-500 mt-1">{session.startDate ? session.startDate.toISOString().slice(0,10) : "-"} to {session.endDate ? session.endDate.toISOString().slice(0,10) : "-"}</div>}
+              {session && <div className="text-xs text-gray-500 mt-1">{formatDateDMY(session.startDate)} to {formatDateDMY(session.endDate)}</div>}
             </div>
             <div className="rounded-xl border border-emerald-100 p-3">
               <div className="text-gray-500">{ur ? "زبان" : "Language"}</div>

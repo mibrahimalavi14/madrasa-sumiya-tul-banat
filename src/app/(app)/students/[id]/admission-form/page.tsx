@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { getCurrentSession } from "@/lib/session";
 import { notFound } from "next/navigation";
 import PrintButton from "@/components/PrintButton";
+import { formatDateDMY } from "@/lib/utils";
 
 export default async function AdmissionFormPrint({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -46,7 +47,7 @@ export default async function AdmissionFormPrint({ params }: { params: Promise<{
             <R label="Student Name (English)" labelUr="طالب/طالبہ کا نام (انگریزی)" value={student.nameEn} />
             <R label="Student Name (Urdu)" labelUr="طالب/طالبہ کا نام (اردو)" value={student.nameUr ? <span className="font-urdu">{student.nameUr}</span> : ""} />
             <R label="Age" labelUr="عمر" value={student.age} />
-            <R label="Date of Birth" labelUr="تاریخ پیدائش" value={student.dob?.toISOString().slice(0,10)} />
+            <R label="Date of Birth" labelUr="تاریخ پیدائش" value={formatDateDMY(student.dob)} />
             <R label="Gender" labelUr="جنس" value={student.gender} />
             <R label="Class for Admission" labelUr="کس جماعت میں داخلہ چاہیے" value={student.admissionClass} />
           </div>
@@ -73,7 +74,7 @@ export default async function AdmissionFormPrint({ params }: { params: Promise<{
             <div className="grid grid-cols-3 gap-6 mt-1">
               <div><div className="text-[8.5px] text-gray-600">Student Signature / <span className="font-urdu">طالب/طالبہ کے دستخط</span></div><div className="border-b border-gray-600 h-4 mt-2"></div></div>
               <div><div className="text-[8.5px] text-gray-600">Parent Signature / <span className="font-urdu">سرپرست کے دستخط</span></div><div className="border-b border-gray-600 h-4 mt-2"></div></div>
-              <div><div className="text-[8.5px] text-gray-600">Date / <span className="font-urdu">تاریخ</span></div><div className="border-b border-gray-600 h-4 mt-2">{student.admissionDate.toISOString().slice(0,10)}</div></div>
+              <div><div className="text-[8.5px] text-gray-600">Date / <span className="font-urdu">تاریخ</span></div><div className="border-b border-gray-600 h-4 mt-2">{formatDateDMY(student.admissionDate)}</div></div>
             </div>
           </div>
         </Sec>

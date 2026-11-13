@@ -3,6 +3,7 @@ import { getCurrentSession } from "@/lib/session";
 import { getAuthUser } from "@/lib/auth";
 import { getLang } from "@/lib/lang";
 import { t } from "@/lib/i18n";
+import { formatDateDMY } from "@/lib/utils";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 
@@ -143,5 +144,5 @@ export default async function FeesPage({ searchParams }: { searchParams: Promise
 }
 
 function FeeTableRead({ fees, tr }: { fees: any[]; tr: any }) {
-  return <div className="bg-white rounded-2xl shadow-sm border border-emerald-100/80 overflow-auto"><table className="w-full text-sm"><thead><tr><th className="p-3">{tr.month}/{tr.year}</th><th className="p-3">{tr.amount}</th><th className="p-3">{tr.status}</th><th className="p-3">{tr.paidDate}</th></tr></thead><tbody>{fees.map(f=>(<tr key={f.id}><td className="p-3 text-center">{f.month}/{f.year}</td><td className="p-3 text-center">Rs {f.amount}</td><td className="p-3 text-center">{f.isPaid?(f.isLate?tr.late:`${tr.paid} ✓`):tr.unpaid}</td><td className="p-3 text-center">{f.paidAt?.toISOString().slice(0,10)||"-"}</td></tr>))}{fees.length===0 && <tr><td colSpan={4} className="p-4 text-center text-gray-500">{tr.noFeeRecords}</td></tr>}</tbody></table></div>;
+  return <div className="bg-white rounded-2xl shadow-sm border border-emerald-100/80 overflow-auto"><table className="w-full text-sm"><thead><tr><th className="p-3">{tr.month}/{tr.year}</th><th className="p-3">{tr.amount}</th><th className="p-3">{tr.status}</th><th className="p-3">{tr.paidDate}</th></tr></thead><tbody>{fees.map(f=>(<tr key={f.id}><td className="p-3 text-center">{f.month}/{f.year}</td><td className="p-3 text-center">Rs {f.amount}</td><td className="p-3 text-center">{f.isPaid?(f.isLate?tr.late:`${tr.paid} ✓`):tr.unpaid}</td><td className="p-3 text-center">{formatDateDMY(f.paidAt)}</td></tr>))}{fees.length===0 && <tr><td colSpan={4} className="p-4 text-center text-gray-500">{tr.noFeeRecords}</td></tr>}</tbody></table></div>;
 }

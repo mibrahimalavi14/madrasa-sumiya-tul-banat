@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { getAuthUser } from "@/lib/auth";
+import { formatDateDMY } from "@/lib/utils";
 import { notFound, redirect } from "next/navigation";
 
 export default async function StudentProfile({ params }: { params: Promise<{ id: string }> }) {
@@ -61,7 +62,7 @@ export default async function StudentProfile({ params }: { params: Promise<{ id:
             <Info label="Name (English)" value={student.nameEn} />
             <Info label="Name (Urdu)" value={student.nameUr ? <span className="font-urdu">{student.nameUr}</span> : "-"} />
             <Info label="Age" value={student.age} />
-            <Info label="Date of Birth" value={student.dob?.toISOString().slice(0,10)} />
+            <Info label="Date of Birth" value={formatDateDMY(student.dob)} />
             <Info label="Gender" value={student.gender} />
             <Info label="Status" value={student.status} />
             <Info label="Father / Mother Name" value={[student.fatherName, student.motherName].filter(Boolean).join(" / ")} />
@@ -105,7 +106,7 @@ export default async function StudentProfile({ params }: { params: Promise<{ id:
       </div>
       <div className="bg-white rounded-2xl shadow-sm border border-emerald-100 p-5">
         <h2 className="font-semibold mb-2">Fees</h2>
-        {student.feePayments.length===0?<p className="text-sm text-gray-500">No fee records.</p>:<table className="w-full text-sm"><thead className="bg-gray-50"><tr><th className="p-2">Month/Year</th><th className="p-2">Amount</th><th className="p-2">Status</th><th className="p-2">Paid At</th></tr></thead><tbody>{student.feePayments.map(f=>(<tr key={f.id} className="border-t"><td className="p-2 text-center">{f.month}/{f.year}</td><td className="p-2 text-center">Rs {f.amount}</td><td className="p-2 text-center">{f.isPaid ? (f.isLate? <span className="text-amber-700 font-semibold">Late</span>:<span className="text-emerald-700 font-semibold">Paid ✓</span>) : <span className="text-red-700">Unpaid</span>}</td><td className="p-2 text-center">{f.paidAt?.toISOString().slice(0,10)||"-"}</td></tr>))}</tbody></table>}
+        {student.feePayments.length===0?<p className="text-sm text-gray-500">No fee records.</p>:<table className="w-full text-sm"><thead className="bg-gray-50"><tr><th className="p-2">Month/Year</th><th className="p-2">Amount</th><th className="p-2">Status</th><th className="p-2">Paid At</th></tr></thead><tbody>{student.feePayments.map(f=>(<tr key={f.id} className="border-t"><td className="p-2 text-center">{f.month}/{f.year}</td><td className="p-2 text-center">Rs {f.amount}</td><td className="p-2 text-center">{f.isPaid ? (f.isLate? <span className="text-amber-700 font-semibold">Late</span>:<span className="text-emerald-700 font-semibold">Paid ✓</span>) : <span className="text-red-700">Unpaid</span>}</td><td className="p-2 text-center">{formatDateDMY(f.paidAt)}</td></tr>))}</tbody></table>}
       </div>
     </div>
   );

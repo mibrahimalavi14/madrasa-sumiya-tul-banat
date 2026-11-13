@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import Logo from "@/components/Logo";
 import PrintButton from "@/components/PrintButton";
+import { formatDateDMY } from "@/lib/utils";
 
 function parseOptions(q: any): string[] {
   try { const a = JSON.parse(q.optionsJson || "[]"); return Array.isArray(a) ? [0,1,2,3].map(i => String(a[i] || "")) : ["","","",""]; } catch { return ["","","",""]; }
@@ -57,7 +58,7 @@ export default async function PaperPrint({ params, searchParams }: { params: Pro
           <div><b>سیشن:</b> {paper.exam.session.name}</div>
           <div><b>جماعت:</b> {paper.className}</div>
           <div><b>مضمون:</b> {paper.mazhmoon}</div>
-          <div><b>تاریخ:</b> {paper.exam.examDate?.toISOString().slice(0,10) || "________"}</div>
+          <div><b>تاریخ:</b> {paper.exam.examDate ? formatDateDMY(paper.exam.examDate) : "________"}</div>
           <div><b>رول نمبر:</b> {stu?.rollNo || "________"}</div>
           <div className="col-span-2"><b>طالب علم کا نام:</b> {stu ? (stu.nameUr || stu.nameEn) : "________________________"}</div>
         </div>
@@ -129,7 +130,7 @@ export default async function PaperPrint({ params, searchParams }: { params: Pro
         <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-[15px] mb-3 font-urdu leading-7">
           <div><b>امتحان:</b> {examNameUr}</div><div><b>سیشن:</b> {paper.exam.session.name}</div>
           <div><b>جماعت:</b> {paper.className}</div><div><b>مضمون:</b> {paper.mazhmoon}</div>
-          <div><b>تاریخ:</b> {paper.exam.examDate?.toISOString().slice(0,10) || "________"}</div><div></div>
+          <div><b>تاریخ:</b> {paper.exam.examDate ? formatDateDMY(paper.exam.examDate) : "________"}</div><div></div>
           <div><b>طالب علم کا نام:</b> {stu ? (stu.nameUr || stu.nameEn) : "________________________"}</div>
           <div><b>رول نمبر:</b> {stu?.rollNo || "________"}</div>
         </div>

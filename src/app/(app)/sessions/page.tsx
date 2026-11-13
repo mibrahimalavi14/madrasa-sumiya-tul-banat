@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { getAuthUser } from "@/lib/auth";
 import { getLang } from "@/lib/lang";
 import { t } from "@/lib/i18n";
+import { formatDateDMY } from "@/lib/utils";
 import { redirect } from "next/navigation";
 import { revalidatePath, revalidateTag } from "next/cache";
 
@@ -93,7 +94,7 @@ export default async function SessionsPage() {
                 <td className="p-2 font-medium">{s.name}</td>
                 <td className="p-2 text-center">{s.status}</td>
                 <td className="p-2 text-center">{s.isCurrent ? tr.yes : tr.no}</td>
-                <td className="p-2 text-center">{s.startDate?.toISOString().slice(0,10) || "-"} to {s.endDate?.toISOString().slice(0,10) || "-"}</td>
+                <td className="p-2 text-center">{formatDateDMY(s.startDate)} to {formatDateDMY(s.endDate)}</td>
                 <td className="p-2 text-center space-x-2">
                   <form action={setCurrentAction} className="inline"><input type="hidden" name="id" value={s.id}/><button className="text-emerald-700 underline">{tr.setCurrent}</button></form>
                   {s.status === "ACTIVE" && <form action={expireAction} className="inline"><input type="hidden" name="id" value={s.id}/><button className="text-red-700 underline">{tr.expire}</button></form>}
