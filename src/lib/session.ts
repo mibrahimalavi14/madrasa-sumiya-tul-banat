@@ -12,28 +12,27 @@ export function isSessionExpiredByDate(session: { status: string; endDate?: Date
   return session.status === "ACTIVE" && !!session.endDate && Date.now() > endOfDay(new Date(session.endDate)).getTime();
 }
 
-export async function autoExpireSessionsIfNeeded() {
+export async function autoExpireSessionsIfNeeded(options?: { revalidate?: boolean }) {
   const now = new Date();
   // Expire ACTIVE sessions whose end date has passed
   const active = await prisma.session.findMany({ where: { status: "ACTIVE", endDate: { not: null } }, select: { id: true, endDate: true, isCurrent: true } });
   const toExpire = active.filter(s => s.endDate && now.getTime() > endOfDay(new Date(s.endDate)).getTime());
   if (!toExpire.length) return 0;
   await prisma.session.updateMany({ where: { id: { in: toExpire.map(s => s.id) } }, data: { status: "EXPIRED", isCurrent: false } });
-  revalidateTag("current-session", { expire: 0 });
+  if (options?.revalidate) revalidateTag("current-session", { expire: 0 });
   return toExpire.length;
 }
 
 const getCurrentSessionCached = unstable_cache(
   async () => prisma.session.findFirst({ where: { isCurrent: true } }),
   ["current-session"],
-  { tags: ["current-session"], revalidate: 60 }
+  { tags: ["current-session"], revalidate: 30 }
 );
 
 export const getCurrentSession = cache(async () => {
   const s = await getCurrentSessionCached();
   if (s && isSessionExpiredByDate(s)) {
     await prisma.session.update({ where: { id: s.id }, data: { status: "EXPIRED", isCurrent: false } }).catch(() => {});
-    revalidateTag("current-session", { expire: 0 });
     return { ...s, status: "EXPIRED", isCurrent: false } as any;
   }
   return s;

@@ -24,7 +24,7 @@ async function createSessionAction(formData: FormData) {
   const e = new Date(endDate); e.setHours(0,0,0,0);
   const m = new Date(maxEnd); m.setHours(0,0,0,0);
   if (e.getTime() !== m.getTime()) { redirect("/sessions?error=duration"); }
-  await autoExpireSessionsIfNeeded();
+  await autoExpireSessionsIfNeeded({ revalidate: true });
   const activeExists = await prisma.session.count({ where: { status: "ACTIVE" } });
   if (activeExists > 0) { redirect("/sessions?error=activeexists"); }
   const now = new Date();
@@ -44,7 +44,7 @@ async function setCurrentAction(formData: FormData) {
   "use server";
   const user = await getAuthUser(); if (user?.role !== "ADMIN") throw new Error("UNAUTHORIZED");
   const id = String(formData.get("id"));
-  await autoExpireSessionsIfNeeded();
+  await autoExpireSessionsIfNeeded({ revalidate: true });
   const target = await prisma.session.findUnique({ where: { id }, select: { id: true, status: true, endDate: true } });
   if (!target) redirect("/sessions");
   if (target.status !== "ACTIVE") redirect("/sessions?error=expiredset");
@@ -78,7 +78,7 @@ export default async function SessionsPage({ searchParams }: { searchParams: Pro
   const lang = await getLang();
   const tr = t[lang];
   const sp = await searchParams;
-  await autoExpireSessionsIfNeeded();
+  await autoExpireSessionsIfNeeded({ revalidate: true });
   const sessions = await prisma.session.findMany({
     select: { id: true, name: true, status: true, isCurrent: true, startDate: true, endDate: true },
     orderBy: { createdAt: "desc" },
