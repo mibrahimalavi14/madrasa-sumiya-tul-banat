@@ -6,6 +6,7 @@ import { getLang } from "@/lib/lang";
 import { formatDateDMY, parseDateInput } from "@/lib/utils";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
+import DateInputDMY from "@/components/DateInputDMY";
 
 const STAGES = [
   { stage: 1, name: "Initial Written Examination", month: "1st Month", desc: "Written exam only (MCQs, short questions, fill in the blanks, true/false, etc.). Nazra Quran not included. Separate result, 20% of annual.", written: true, oral: false, diagnostic: false, included: true, weight: 20 },
@@ -208,7 +209,7 @@ export default async function ExaminationPage() {
           </div>
           <div className="flex flex-col gap-2">
             <label className="text-sm font-medium text-gray-700">{ur ? "امتحان کی تاریخ" : "Exam Date"}</label>
-            <input name="examDate" type="text" placeholder="DD/MM/YYYY" inputMode="numeric" required className="w-full border rounded-lg px-3 py-2.5"/>
+            <DateInputDMY name="examDate" required inputClassName="border rounded-lg px-3 py-2.5" />
           </div>
           <div>
             <button className="bg-emerald-800 hover:bg-emerald-900 text-white px-4 py-2.5 rounded-lg font-medium w-full">{ur ? "امتحان بنائیں" : "Create Exam"}</button>

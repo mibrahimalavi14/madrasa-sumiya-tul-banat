@@ -5,6 +5,7 @@ import { getAuthUser } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { formatAdmissionNo, formatRegNo, parseDateInput } from "@/lib/utils";
+import DateInputDMY from "@/components/DateInputDMY";
 
 async function createStudent(formData: FormData) {
   "use server";
@@ -93,7 +94,7 @@ export default async function NewStudent({ searchParams }: { searchParams?: Prom
             <div><label className="text-sm text-gray-700">Student Name (English) / طالب/طالبہ کا نام (انگریزی)</label><input name="nameEn" required className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-emerald-200"/></div>
             <div><label className="text-sm text-gray-700">Student Name (Urdu) / طالب/طالبہ کا نام (اردو)</label><input name="nameUr" className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2.5 font-urdu focus:outline-none focus:ring-2 focus:ring-emerald-200"/></div>
             <div><label className="text-sm text-gray-700">Age / عمر</label><input name="age" className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2.5" placeholder="e.g. 8 years"/></div>
-            <div><label className="text-sm text-gray-700">Date of Birth / تاریخ پیدائش</label><input name="dob" type="text" placeholder="DD/MM/YYYY" inputMode="numeric" className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2.5"/></div>
+            <div><label className="text-sm text-gray-700">Date of Birth / تاریخ پیدائش</label><DateInputDMY name="dob" className="mt-1" inputClassName="border border-gray-200 rounded-lg px-3 py-2.5" /></div>
             <div><label className="text-sm text-gray-700">Gender / جنس</label><select name="gender" className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2.5 bg-white"><option value="">Select</option><option value="Male">Male / لڑکا</option><option value="Female">Female / لڑکی</option></select></div>
             <div><label className="text-sm text-gray-700">Class for Admission / کس جماعت میں داخلہ چاہیے</label><input name="admissionClass" className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2.5" placeholder="e.g. Nazra / Class 1"/></div>
           </div>

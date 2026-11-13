@@ -5,6 +5,7 @@ import { t } from "@/lib/i18n";
 import { formatDateDMY, parseDateInput } from "@/lib/utils";
 import { redirect } from "next/navigation";
 import { revalidatePath, revalidateTag } from "next/cache";
+import DateInputDMY from "@/components/DateInputDMY";
 
 async function createSessionAction(formData: FormData) {
   "use server";
@@ -70,8 +71,8 @@ export default async function SessionsPage() {
         <h2 className="font-semibold mb-3">{tr.createNewSession}</h2>
         <form action={createSessionAction} className="grid md:grid-cols-4 gap-3 items-end">
           <div><label className="text-sm">{tr.sessionName}</label><input name="name" required className="w-full border rounded px-2 py-2"/></div>
-          <div><label className="text-sm">{tr.startDate}</label><input name="startDate" type="text" placeholder="DD/MM/YYYY" inputMode="numeric" className="w-full border rounded px-2 py-2"/></div>
-          <div><label className="text-sm">{tr.endDate}</label><input name="endDate" type="text" placeholder="DD/MM/YYYY" inputMode="numeric" className="w-full border rounded px-2 py-2"/></div>
+          <div><label className="text-sm">{tr.startDate}</label><DateInputDMY name="startDate" inputClassName="border rounded px-2 py-2" /></div>
+          <div><label className="text-sm">{tr.endDate}</label><DateInputDMY name="endDate" inputClassName="border rounded px-2 py-2" /></div>
           <div className="flex items-center gap-2"><input id="mc" name="makeCurrent" type="checkbox" defaultChecked/><label htmlFor="mc" className="text-sm">{tr.setAsCurrentActive}</label></div>
           <div className="md:col-span-4"><button className="bg-emerald-800 text-white px-4 py-2 rounded">{tr.createSession}</button></div>
         </form>

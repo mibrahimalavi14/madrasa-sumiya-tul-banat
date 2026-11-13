@@ -5,6 +5,7 @@ import { getCurrentSession } from "@/lib/session";
 import { notFound, redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { parseDateInput, toDateInputDMY } from "@/lib/utils";
+import DateInputDMY from "@/components/DateInputDMY";
 
 async function updateStudent(formData: FormData) {
   "use server";
@@ -91,7 +92,7 @@ export default async function EditStudent({ params, searchParams }: { params: Pr
             <div><label className="text-sm text-gray-700">Student Name (English)</label><input name="nameEn" defaultValue={student.nameEn} required className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2.5"/></div>
             <div><label className="text-sm text-gray-700">Student Name (Urdu)</label><input name="nameUr" defaultValue={student.nameUr||""} className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2.5 font-urdu"/></div>
             <div><label className="text-sm text-gray-700">Age</label><input name="age" defaultValue={student.age||""} className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2.5"/></div>
-            <div><label className="text-sm text-gray-700">Date of Birth</label><input name="dob" type="text" placeholder="DD/MM/YYYY" inputMode="numeric" defaultValue={toDateInputDMY(student.dob)} className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2.5"/></div>
+            <div><label className="text-sm text-gray-700">Date of Birth</label><DateInputDMY name="dob" defaultValue={toDateInputDMY(student.dob)} className="mt-1" inputClassName="border border-gray-200 rounded-lg px-3 py-2.5" /></div>
             <div><label className="text-sm text-gray-700">Gender</label><select name="gender" defaultValue={student.gender||""} className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2.5 bg-white"><option value="">Select</option><option value="Male">Male</option><option value="Female">Female</option></select></div>
             <div><label className="text-sm text-gray-700">Class for Admission</label><input name="admissionClass" defaultValue={student.admissionClass||""} className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2.5"/></div>
           </div>
