@@ -51,7 +51,6 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
                   name="username"
                   required
                   className="mt-1 w-full border border-gray-300 rounded-xl px-3.5 py-2.5 focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:border-emerald-600 bg-white"
-                  placeholder="admin"
                 />
               </div>
               <div>
@@ -68,9 +67,7 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
                 {ur ? "مینجمنٹ لاگ ان" : "Login as Management"}
               </button>
             </form>
-            <div className="mt-4 text-xs text-gray-600 bg-white/70 border border-emerald-100 rounded-xl p-3">
-              {ur ? "ڈیمو:" : "Demo:"} <b>admin / admin123</b>
-            </div>
+
           </section>
 
           <section className="rounded-2xl border-2 border-amber-200 bg-amber-50/40 p-5 md:p-6 shadow-sm">
@@ -86,7 +83,6 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
                   name="username"
                   required
                   className="mt-1 w-full border border-gray-300 rounded-xl px-3.5 py-2.5 focus:outline-none focus:ring-2 focus:ring-amber-600 focus:border-amber-600 bg-white"
-                  placeholder="parent"
                 />
               </div>
               <div>
@@ -103,10 +99,7 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
                 {ur ? "والدین لاگ ان" : "Login as Parent"}
               </button>
             </form>
-            <div className="mt-4 text-xs text-gray-600 bg-white/70 border border-amber-100 rounded-xl p-3">
-              {ur ? "ڈیمو:" : "Demo:"} <b>parent / parent123</b>
-              <span className="block mt-1">{ur ? "(اگر admin نے password تبدیل نہ کیا ہو)" : "(if admin has not changed the password)"}</span>
-            </div>
+
           </section>
         </div>
       </div>
