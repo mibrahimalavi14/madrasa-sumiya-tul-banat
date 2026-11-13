@@ -40,33 +40,45 @@ export default async function Dashboard() {
   const m = now.getMonth() + 1;
   const y = now.getFullYear();
 
-  const [students, examsCount, feeGroups, resultsCount, certsCount, recentEnrolls, recentExams, monthAgg, monthPaidAgg, recentResults] = session ? await Promise.all([
-    prisma.studentEnrollment.count({ where: { sessionId: session.id } }),
-    prisma.exam.count({ where: { sessionId: session.id } }),
-    prisma.feePayment.groupBy({ by: ["isPaid", "isLate"], where: { sessionId: session.id }, _count: { _all: true } }),
-    prisma.result.count({ where: { exam: { sessionId: session.id } } }),
-    prisma.certificate.count({ where: { sessionId: session.id } }),
-    prisma.studentEnrollment.findMany({
-      where: { sessionId: session.id },
-      select: { id: true, rollNo: true, student: { select: { id: true, admissionNo: true, nameEn: true, admissionClass: true } } },
-      orderBy: { createdAt: "desc" },
-      take: 6,
-    }),
-    prisma.exam.findMany({
-      where: { sessionId: session.id },
-      orderBy: [{ stage: "asc" }, { createdAt: "desc" }] as any,
-      select: { id: true, name: true, stage: true, createdAt: true, _count: { select: { students: true, papers: true, results: true } } },
-      take: 6,
-    }),
-    prisma.feePayment.aggregate({ where: { sessionId: session.id, month: m, year: y }, _count: { _all: true } }),
-    prisma.feePayment.aggregate({ where: { sessionId: session.id, month: m, year: y, isPaid: true }, _count: { _all: true }, _sum: { amount: true } }),
-    prisma.result.findMany({
-      where: { exam: { sessionId: session.id } },
-      select: { id: true, percentage: true, grade: true, status: true, student: { select: { admissionNo: true, nameEn: true } }, exam: { select: { name: true, stage: true } } },
-      orderBy: { createdAt: "desc" },
-      take: 6,
-    }),
-  ]) : [0,0,[] as any[],0,0,[] as any[],[] as any[],{ _count: { _all: 0 } },{ _count: { _all: 0 }, _sum: { amount: 0 } },[] as any[]];
+  let students = 0, examsCount = 0, feeGroups: any[] = [], resultsCount = 0, certsCount = 0;
+  let recentEnrolls: any[] = [], recentExams: any[] = [], recentResults: any[] = [];
+  let monthAgg: any = { _count: { _all: 0 } }, monthPaidAgg: any = { _count: { _all: 0 }, _sum: { amount: 0 } };
+
+  if (session) {
+    const sid = session.id;
+    // Batched queries to avoid connection-pool exhaustion on serverless/pgbouncer
+    [students, examsCount, resultsCount, certsCount] = await Promise.all([
+      prisma.studentEnrollment.count({ where: { sessionId: sid } }),
+      prisma.exam.count({ where: { sessionId: sid } }),
+      prisma.result.count({ where: { exam: { sessionId: sid } } }),
+      prisma.certificate.count({ where: { sessionId: sid } }),
+    ]);
+    [feeGroups, monthAgg, monthPaidAgg] = await Promise.all([
+      prisma.feePayment.groupBy({ by: ["isPaid", "isLate"], where: { sessionId: sid }, _count: { _all: true } }),
+      prisma.feePayment.aggregate({ where: { sessionId: sid, month: m, year: y }, _count: { _all: true } }),
+      prisma.feePayment.aggregate({ where: { sessionId: sid, month: m, year: y, isPaid: true }, _count: { _all: true }, _sum: { amount: true } }),
+    ]);
+    [recentEnrolls, recentExams, recentResults] = await Promise.all([
+      prisma.studentEnrollment.findMany({
+        where: { sessionId: sid },
+        select: { id: true, rollNo: true, student: { select: { id: true, admissionNo: true, nameEn: true, admissionClass: true } } },
+        orderBy: { createdAt: "desc" },
+        take: 6,
+      }),
+      prisma.exam.findMany({
+        where: { sessionId: sid },
+        orderBy: [{ stage: "asc" }, { createdAt: "desc" }] as any,
+        select: { id: true, name: true, stage: true, createdAt: true, _count: { select: { students: true, papers: true, results: true } } },
+        take: 6,
+      }),
+      prisma.result.findMany({
+        where: { exam: { sessionId: sid } },
+        select: { id: true, percentage: true, grade: true, status: true, student: { select: { admissionNo: true, nameEn: true } }, exam: { select: { name: true, stage: true } } },
+        orderBy: { createdAt: "desc" },
+        take: 6,
+      }),
+    ]);
+  }
 
   const feesPaid = (feeGroups as any[]).filter(g => g.isPaid && !g.isLate).reduce((s, g) => s + g._count._all, 0);
   const feesUnpaid = (feeGroups as any[]).filter(g => !g.isPaid).reduce((s, g) => s + g._count._all, 0);
