@@ -3,7 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { getCurrentSession } from "@/lib/session";
 import { getAuthUser } from "@/lib/auth";
 import { getLang } from "@/lib/lang";
-import { formatDateDMY } from "@/lib/utils";
+import { formatDateDMY, parseDateInput } from "@/lib/utils";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 
@@ -21,11 +21,10 @@ async function createExam(formData: FormData) {
   const stageNo = Number(formData.get("stage") || 0);
   const preset = STAGES.find(s => s.stage === stageNo);
   const name = String(formData.get("name") || "").trim();
-  const examDateStr = String(formData.get("examDate") || "").trim();
-  if (!preset || !name || !examDateStr) return;
+  const examDate = parseDateInput(formData.get("examDate"));
+  if (!preset || !name || !examDate) return;
   const existing = await prisma.exam.findFirst({ where: { sessionId: session.id, stage: preset.stage }, select: { id: true } });
   if (existing) redirect(`/examination/${existing.id}`);
-  const examDate = new Date(examDateStr);
   const hasWritten = preset.written;
   const hasOral = preset.oral;
   const exam = await prisma.exam.create({ data: {
@@ -209,7 +208,7 @@ export default async function ExaminationPage() {
           </div>
           <div className="flex flex-col gap-2">
             <label className="text-sm font-medium text-gray-700">{ur ? "امتحان کی تاریخ" : "Exam Date"}</label>
-            <input name="examDate" type="date" required className="w-full border rounded-lg px-3 py-2.5"/>
+            <input name="examDate" type="text" placeholder="DD/MM/YYYY" inputMode="numeric" required className="w-full border rounded-lg px-3 py-2.5"/>
           </div>
           <div>
             <button className="bg-emerald-800 hover:bg-emerald-900 text-white px-4 py-2.5 rounded-lg font-medium w-full">{ur ? "امتحان بنائیں" : "Create Exam"}</button>

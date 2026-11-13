@@ -2,7 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { getAuthUser } from "@/lib/auth";
 import { getLang } from "@/lib/lang";
 import { t } from "@/lib/i18n";
-import { formatDateDMY } from "@/lib/utils";
+import { formatDateDMY, parseDateInput } from "@/lib/utils";
 import { redirect } from "next/navigation";
 import { revalidatePath, revalidateTag } from "next/cache";
 
@@ -10,8 +10,8 @@ async function createSessionAction(formData: FormData) {
   "use server";
   const user = await getAuthUser(); if (user?.role !== "ADMIN") throw new Error("UNAUTHORIZED");
   const name = String(formData.get("name")||"").trim();
-  const startDate = formData.get("startDate") ? new Date(String(formData.get("startDate"))) : null;
-  const endDate = formData.get("endDate") ? new Date(String(formData.get("endDate"))) : null;
+  const startDate = parseDateInput(formData.get("startDate"));
+  const endDate = parseDateInput(formData.get("endDate"));
   const makeCurrent = formData.get("makeCurrent") === "on";
   if (!name) return;
   await prisma.$transaction(async (tx) => {
@@ -70,8 +70,8 @@ export default async function SessionsPage() {
         <h2 className="font-semibold mb-3">{tr.createNewSession}</h2>
         <form action={createSessionAction} className="grid md:grid-cols-4 gap-3 items-end">
           <div><label className="text-sm">{tr.sessionName}</label><input name="name" required className="w-full border rounded px-2 py-2"/></div>
-          <div><label className="text-sm">{tr.startDate}</label><input name="startDate" type="date" className="w-full border rounded px-2 py-2"/></div>
-          <div><label className="text-sm">{tr.endDate}</label><input name="endDate" type="date" className="w-full border rounded px-2 py-2"/></div>
+          <div><label className="text-sm">{tr.startDate}</label><input name="startDate" type="text" placeholder="DD/MM/YYYY" inputMode="numeric" className="w-full border rounded px-2 py-2"/></div>
+          <div><label className="text-sm">{tr.endDate}</label><input name="endDate" type="text" placeholder="DD/MM/YYYY" inputMode="numeric" className="w-full border rounded px-2 py-2"/></div>
           <div className="flex items-center gap-2"><input id="mc" name="makeCurrent" type="checkbox" defaultChecked/><label htmlFor="mc" className="text-sm">{tr.setAsCurrentActive}</label></div>
           <div className="md:col-span-4"><button className="bg-emerald-800 text-white px-4 py-2 rounded">{tr.createSession}</button></div>
         </form>
