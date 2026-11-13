@@ -19,12 +19,22 @@ async function createSessionAction(formData: FormData) {
   if (endDate.getTime() <= startDate.getTime()) { redirect("/sessions?error=dates"); }
   const maxEnd = new Date(startDate);
   maxEnd.setFullYear(maxEnd.getFullYear() + 1);
-  if (endDate.getTime() > maxEnd.getTime()) { redirect("/sessions?error=duration"); }
-  const alreadyExpired = Date.now() > new Date(endDate).setHours(23,59,59,999);
+  // Session must be exactly 1 year (not more, not less)
+  const s = new Date(startDate); s.setHours(0,0,0,0);
+  const e = new Date(endDate); e.setHours(0,0,0,0);
+  const m = new Date(maxEnd); m.setHours(0,0,0,0);
+  if (e.getTime() !== m.getTime()) { redirect("/sessions?error=duration"); }
+  await autoExpireSessionsIfNeeded();
+  const activeExists = await prisma.session.count({ where: { status: "ACTIVE" } });
+  if (activeExists > 0) { redirect("/sessions?error=activeexists"); }
+  const now = new Date();
+  const endOf = new Date(endDate); endOf.setHours(23,59,59,999);
+  const alreadyExpired = now.getTime() > endOf.getTime();
+  // If exact 1-year session ending today/in future hasn't ended yet, it's active; if already past end, treat as expired (and creation of next will be allowed after expiry state)
   const status = alreadyExpired ? "EXPIRED" : "ACTIVE";
   const isCurrent = makeCurrent && !alreadyExpired;
   await prisma.$transaction(async (tx) => {
-    if (makeCurrent) await tx.session.updateMany({ data: { isCurrent: false } });
+    if (isCurrent) await tx.session.updateMany({ data: { isCurrent: false } });
     await tx.session.create({ data: { name, startDate, endDate, status, isCurrent } });
   });
   revalidateTag("current-session", { expire: 0 });
@@ -73,14 +83,18 @@ export default async function SessionsPage({ searchParams }: { searchParams: Pro
     select: { id: true, name: true, status: true, isCurrent: true, startDate: true, endDate: true },
     orderBy: { createdAt: "desc" },
   });
+  const hasActiveSession = sessions.some(s => s.status === "ACTIVE");
+  const canCreateSession = !hasActiveSession;
   const errorMsg = sp.error === "duration"
-    ? (lang === "ur" ? "سیشن کی مدت ایک سال سے زیادہ نہیں ہو سکتی۔ تاریخیں درست کریں۔" : "Session duration cannot be more than 1 year. Please correct the dates.")
+    ? (lang === "ur" ? "سیشن کی مدت بالکل ایک سال ہونی چاہیے (ایک دن کم یا زیادہ نہیں ہو سکتی)۔" : "Session duration must be exactly 1 year (not one day less or more).")
     : sp.error === "required"
     ? (lang === "ur" ? "سیشن کا نام، شروع اور اختتامی تاریخ درج کریں۔" : "Please enter session name, start date and end date.")
     : sp.error === "dates"
     ? (lang === "ur" ? "اختتامی تاریخ شروع کی تاریخ کے بعد ہونی چاہیے۔" : "End date must be after start date.")
     : sp.error === "expiredset"
     ? (lang === "ur" ? "ختم شدہ (Expired) سیشن کو current نہیں بنایا جا سکتا۔" : "An expired session cannot be set as current.")
+    : sp.error === "activeexists"
+    ? (lang === "ur" ? "ایک فعال سیشن موجود ہے۔ نیا سیشن سال ختم/expire ہونے کے بعد ہی بنایا جا سکتا ہے۔" : "An active session already exists. You can create the next session only after the current year/session ends.")
     : "";
   return (
     <div>
@@ -88,13 +102,24 @@ export default async function SessionsPage({ searchParams }: { searchParams: Pro
       <div className="bg-white rounded-xl shadow p-4 mb-6">
         <h2 className="font-semibold mb-3">{tr.createNewSession}</h2>
         {errorMsg && <div className="mb-3 text-sm text-red-700 bg-red-50 border border-red-200 rounded-lg p-3">{errorMsg}</div>}
-        <form action={createSessionAction} className="grid md:grid-cols-4 gap-3 items-end">
-          <div><label className="text-sm">{tr.sessionName}</label><input name="name" required className="w-full border rounded px-2 py-2"/></div>
-          <div><label className="text-sm">{tr.startDate}</label><DateInputDMY name="startDate" required inputClassName="border rounded px-2 py-2" /></div>
-          <div><label className="text-sm">{tr.endDate}</label><DateInputDMY name="endDate" required inputClassName="border rounded px-2 py-2" /></div>
-          <div className="flex items-center gap-2"><input id="mc" name="makeCurrent" type="checkbox" defaultChecked/><label htmlFor="mc" className="text-sm">{tr.setAsCurrentActive}</label></div>
-          <div className="md:col-span-4"><button className="bg-emerald-800 text-white px-4 py-2 rounded">{tr.createSession}</button></div>
-        </form>
+        {canCreateSession ? (
+          <form action={createSessionAction} className="grid md:grid-cols-4 gap-3 items-end">
+            <div><label className="text-sm">{tr.sessionName}</label><input name="name" required className="w-full border rounded px-2 py-2"/></div>
+            <div><label className="text-sm">{tr.startDate}</label><DateInputDMY name="startDate" required inputClassName="border rounded px-2 py-2" /></div>
+            <div><label className="text-sm">{tr.endDate}</label><DateInputDMY name="endDate" required inputClassName="border rounded px-2 py-2" /></div>
+            <div className="flex items-center gap-2"><input id="mc" name="makeCurrent" type="checkbox" defaultChecked/><label htmlFor="mc" className="text-sm">{tr.setAsCurrentActive}</label></div>
+            <div className="md:col-span-4 space-y-1">
+              <button className="bg-emerald-800 hover:bg-emerald-900 text-white px-4 py-2 rounded">{tr.createSession}</button>
+              <p className="text-xs text-gray-500">{lang === "ur" ? "سیشن کی مدت بالکل 1 سال ہونی چاہیے۔ سال ختم/expire ہونے کے بعد ہی اگلا سیشن بنایا جا سکے گا۔" : "Session duration must be exactly 1 year. Next session can be created only after the current session ends/expires."}</p>
+            </div>
+          </form>
+        ) : (
+          <div className="rounded-xl border border-blue-200 bg-blue-50 text-blue-900 p-4 text-sm">
+            {lang === "ur"
+              ? "ایک فعال سیشن موجود ہے، اس لیے نیا سیشن بنانے کا آپشن بند ہے۔ موجودہ سیشن کی مدت پوری ہونے/خودکار طور پر ختم ہونے کے بعد اگلا سیشن بنانے کا آپشن ظاہر ہوگا۔"
+              : "An active session exists, so session creation is currently closed. The option to create the next session will appear after the current session ends/expires."}
+          </div>
+        )}
       </div>
       <div className="bg-white rounded-xl shadow p-4 mb-6">
         <h2 className="font-semibold mb-3">{tr.carryStudents}</h2>
