@@ -3,11 +3,12 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
-// SQLite does not support enums in Prisma; use String values.
+// String values used for role/status/type fields.
 // Role: ADMIN | PARENT
 // SessionStatus: ACTIVE | EXPIRED | ARCHIVED
 // StudentStatus: REGISTERED | ACTIVE | LEFT
