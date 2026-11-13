@@ -32,7 +32,7 @@ const getCurrentSessionCached = unstable_cache(
 export const getCurrentSession = cache(async () => {
   const s = await getCurrentSessionCached();
   if (s && isSessionExpiredByDate(s)) {
-    await prisma.session.update({ where: { id: s.id }, data: { status: "EXPIRED", isCurrent: false } }).catch(() => {});
+    // Avoid write on read path for speed; mutations/pages run autoExpireSessionsIfNeeded() to persist.
     return { ...s, status: "EXPIRED", isCurrent: false } as any;
   }
   return s;
