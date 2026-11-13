@@ -1,8 +1,9 @@
+import { cache } from "react";
 import prisma from "./prisma";
 
-export async function getCurrentSession() {
+export const getCurrentSession = cache(async () => {
   return prisma.session.findFirst({ where: { isCurrent: true } });
-}
+});
 
 export async function requireCurrentSession() {
   const s = await getCurrentSession();

@@ -58,24 +58,41 @@ export default async function ExaminationPage() {
   const session = await getCurrentSession();
   if (!session) return <p>{ur ? "براہ کرم پہلے فعال سیشن بنائیں/منتخب کریں۔" : "Create/select an active session first."}</p>;
 
-  for (const preset of STAGES) {
-    const exists = await prisma.exam.findFirst({ where: { sessionId: session.id, stage: preset.stage } });
-    if (!exists) {
-      const exam = await prisma.exam.create({ data: {
-        name: preset.name, sessionId: session.id, subject: "Nazra Quran & Basic Islamic Studies",
-        stage: preset.stage, stageLabel: preset.name, monthLabel: preset.month,
-        isDiagnostic: preset.diagnostic, hasWritten: preset.written, hasOral: preset.oral, includedInAnnual: preset.included,
-      }});
-      for (const code of ["01","02","03"]) {
-        if (preset.written) await prisma.questionPaper.create({ data: { examId: exam.id, type: "WRITTEN", paperCode: code, mazhmoon: "بنیادی اسلامیات", className: "ناظرہ قرآن و بنیادی اسلامیات", title: `تحریری پرچہ ${code}` } });
-        if (preset.oral) await prisma.questionPaper.create({ data: { examId: exam.id, type: "ORAL", paperCode: code, mazhmoon: "ناظرہ قرآن و بنیادی اسلامیات", className: "ناظرہ قرآن و بنیادی اسلامیات", title: `زبانی پرچہ ${code}` } });
+  const existingStages = await prisma.exam.findMany({
+    where: { sessionId: session.id, stage: { in: STAGES.map(s => s.stage) } },
+    select: { stage: true },
+  });
+  const have = new Set(existingStages.map(e => e.stage));
+  const missing = STAGES.filter(s => !have.has(s.stage));
+  if (missing.length) {
+    await prisma.$transaction(async (tx) => {
+      for (const preset of missing) {
+        const exam = await tx.exam.create({ data: {
+          name: preset.name, sessionId: session.id, subject: "Nazra Quran & Basic Islamic Studies",
+          stage: preset.stage, stageLabel: preset.name, monthLabel: preset.month,
+          isDiagnostic: preset.diagnostic, hasWritten: preset.written, hasOral: preset.oral, includedInAnnual: preset.included,
+        }});
+        const papers: any[] = [];
+        for (const code of ["01","02","03"]) {
+          if (preset.written) papers.push({ examId: exam.id, type: "WRITTEN", paperCode: code, mazhmoon: "بنیادی اسلامیات", className: "ناظرہ قرآن و بنیادی اسلامیات", title: `تحریری پرچہ ${code}` });
+          if (preset.oral) papers.push({ examId: exam.id, type: "ORAL", paperCode: code, mazhmoon: "ناظرہ قرآن و بنیادی اسلامیات", className: "ناظرہ قرآن و بنیادی اسلامیات", title: `زبانی پرچہ ${code}` });
+        }
+        if (papers.length) await tx.questionPaper.createMany({ data: papers });
       }
-    }
+    });
   }
 
-  const examsRaw = await prisma.exam.findMany({ where: { sessionId: session.id }, orderBy: { createdAt: "desc" }, include: { _count: { select: { students: true, papers: true, results: true } }, students: { select: { studentId: true } } } });
+  const [examsRaw, enrollmentsRaw] = await Promise.all([
+    prisma.exam.findMany({
+      where: { sessionId: session.id },
+      include: { _count: { select: { students: true, papers: true, results: true } }, students: { select: { studentId: true } } },
+    }),
+    prisma.studentEnrollment.findMany({
+      where: { sessionId: session.id },
+      select: { id: true, studentId: true, student: { select: { admissionNo: true, nameEn: true } } },
+    }),
+  ]);
   const exams = [...examsRaw].sort((a, b) => ((a as any).stage ?? 99) - ((b as any).stage ?? 99) || b.createdAt.getTime() - a.createdAt.getTime());
-  const enrollmentsRaw = await prisma.studentEnrollment.findMany({ where: { sessionId: session.id }, include: { student: true } });
   const enrollments = [...enrollmentsRaw].sort((a, b) => {
     const na = parseInt((a.student.admissionNo || "").replace(/\D/g, "")) || 0;
     const nb = parseInt((b.student.admissionNo || "").replace(/\D/g, "")) || 0;

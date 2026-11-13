@@ -19,8 +19,16 @@ export default async function StudentsPage({ searchParams }: { searchParams: Pro
   if (!session) return <div className="text-amber-800">{lang==="ur" ? "براہ کرم پہلے فعال سیشن بنائیں/منتخب کریں۔" : "Create/select an active session first."}</div>;
   const enrollments = await prisma.studentEnrollment.findMany({
     where: { sessionId: session.id },
-    include: { student: true },
-    orderBy: { createdAt: "desc" },
+    select: {
+      id: true,
+      rollNo: true,
+      student: {
+        select: {
+          id: true, admissionNo: true, applicationNo: true, nameEn: true, nameUr: true,
+          fatherName: true, motherName: true, admissionClass: true,
+        },
+      },
+    },
   });
   const ql = q.toLowerCase();
   const sorted = [...enrollments].sort((a, b) => {

@@ -14,7 +14,14 @@ export default async function Dashboard() {
   const tr = t[lang];
 
   if (user?.role === "PARENT") {
-    const student = user.parentStudentId ? await prisma.student.findUnique({ where: { id: user.parentStudentId }, include: { results: { take: 5, orderBy: { createdAt: "desc" } }, feePayments: { take: 6, orderBy: { createdAt: "desc" } } } }) : null;
+    const student = user.parentStudentId ? await prisma.student.findUnique({
+      where: { id: user.parentStudentId },
+      select: {
+        nameEn: true, nameUr: true, admissionNo: true, registrationNo: true,
+        results: { take: 5, orderBy: { createdAt: "desc" }, select: { id: true, percentage: true, grade: true, status: true, position: true } },
+        feePayments: { take: 6, orderBy: { createdAt: "desc" }, select: { id: true, month: true, year: true, amount: true, isPaid: true, isLate: true } },
+      }
+    }) : null;
     return (
       <div>
         <h1 className="text-2xl font-bold text-emerald-900 mb-4">{tr.parentDashboard}</h1>
@@ -33,23 +40,40 @@ export default async function Dashboard() {
   const m = now.getMonth() + 1;
   const y = now.getFullYear();
 
-  const [students, examsCount, feesPaid, feesUnpaid, lateFees, resultsCount, certsCount, recentEnrolls, recentExams, monthFees, recentResults] = session ? await Promise.all([
+  const [students, examsCount, feeGroups, resultsCount, certsCount, recentEnrolls, recentExams, monthAgg, monthPaidAgg, recentResults] = session ? await Promise.all([
     prisma.studentEnrollment.count({ where: { sessionId: session.id } }),
     prisma.exam.count({ where: { sessionId: session.id } }),
-    prisma.feePayment.count({ where: { sessionId: session.id, isPaid: true, isLate: false } }),
-    prisma.feePayment.count({ where: { sessionId: session.id, isPaid: false } }),
-    prisma.feePayment.count({ where: { sessionId: session.id, isPaid: true, isLate: true } }),
+    prisma.feePayment.groupBy({ by: ["isPaid", "isLate"], where: { sessionId: session.id }, _count: { _all: true } }),
     prisma.result.count({ where: { exam: { sessionId: session.id } } }),
     prisma.certificate.count({ where: { sessionId: session.id } }),
-    prisma.studentEnrollment.findMany({ where: { sessionId: session.id }, include: { student: true }, orderBy: { createdAt: "desc" }, take: 6 }),
-    prisma.exam.findMany({ where: { sessionId: session.id }, orderBy: [{ stage: "asc" }, { createdAt: "desc" }] as any, include: { _count: { select: { students: true, papers: true, results: true } } }, take: 6 }),
-    prisma.feePayment.findMany({ where: { sessionId: session.id, month: m, year: y } }),
-    prisma.result.findMany({ where: { exam: { sessionId: session.id } }, include: { student: true, exam: true }, orderBy: { createdAt: "desc" }, take: 6 }),
-  ]) : [0,0,0,0,0,0,0,[],[],[],[]];
+    prisma.studentEnrollment.findMany({
+      where: { sessionId: session.id },
+      select: { id: true, rollNo: true, student: { select: { id: true, admissionNo: true, nameEn: true, admissionClass: true } } },
+      orderBy: { createdAt: "desc" },
+      take: 6,
+    }),
+    prisma.exam.findMany({
+      where: { sessionId: session.id },
+      orderBy: [{ stage: "asc" }, { createdAt: "desc" }] as any,
+      select: { id: true, name: true, stage: true, createdAt: true, _count: { select: { students: true, papers: true, results: true } } },
+      take: 6,
+    }),
+    prisma.feePayment.aggregate({ where: { sessionId: session.id, month: m, year: y }, _count: { _all: true } }),
+    prisma.feePayment.aggregate({ where: { sessionId: session.id, month: m, year: y, isPaid: true }, _count: { _all: true }, _sum: { amount: true } }),
+    prisma.result.findMany({
+      where: { exam: { sessionId: session.id } },
+      select: { id: true, percentage: true, grade: true, status: true, student: { select: { admissionNo: true, nameEn: true } }, exam: { select: { name: true, stage: true } } },
+      orderBy: { createdAt: "desc" },
+      take: 6,
+    }),
+  ]) : [0,0,[] as any[],0,0,[] as any[],[] as any[],{ _count: { _all: 0 } },{ _count: { _all: 0 }, _sum: { amount: 0 } },[] as any[]];
 
-  const monthPaid = monthFees.filter(f => f.isPaid).length;
-  const monthTotal = monthFees.length;
-  const monthCollected = monthFees.filter(f => f.isPaid).reduce((s, f) => s + (f.amount || 0), 0);
+  const feesPaid = (feeGroups as any[]).filter(g => g.isPaid && !g.isLate).reduce((s, g) => s + g._count._all, 0);
+  const feesUnpaid = (feeGroups as any[]).filter(g => !g.isPaid).reduce((s, g) => s + g._count._all, 0);
+  const lateFees = (feeGroups as any[]).filter(g => g.isPaid && g.isLate).reduce((s, g) => s + g._count._all, 0);
+  const monthPaid = (monthPaidAgg as any)._count._all;
+  const monthTotal = (monthAgg as any)._count._all;
+  const monthCollected = (monthPaidAgg as any)._sum.amount || 0;
 
   const cards = [
     [tr.activeSession, session ? session.name : tr.none, ur ? "موجودہ تعلیمی سال" : "Current academic year"],

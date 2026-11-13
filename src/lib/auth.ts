@@ -1,4 +1,5 @@
 import { cookies } from "next/headers";
+import { cache } from "react";
 import { prisma } from "./prisma";
 import bcrypt from "bcryptjs";
 
@@ -34,13 +35,13 @@ export async function destroySession() {
   jar.set(COOKIE, "", { path: "/", maxAge: 0 });
 }
 
-export async function getAuthUser(): Promise<AuthUser | null> {
+export const getAuthUser = cache(async (): Promise<AuthUser | null> => {
   const jar = await cookies();
   const c = jar.get(COOKIE)?.value;
   if (!c) return null;
   const data = decode<{ u: AuthUser }>(c);
   return data?.u ?? null;
-}
+});
 
 export async function requireAdmin() {
   const u = await getAuthUser();

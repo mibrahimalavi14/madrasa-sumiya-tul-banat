@@ -54,10 +54,20 @@ export default async function FeesPage({ searchParams }: { searchParams: Promise
   const sp = await searchParams;
   const now = new Date();
   const month = Number(sp.month || (now.getMonth()+1)); const year = Number(sp.year || now.getFullYear());
-  const defaultAmountSetting = await prisma.setting.findFirst({ where: { key: "monthlyFee", sessionId: session.id } }) || await prisma.setting.findFirst({ where: { key: "monthlyFee", sessionId: null } });
-  const defaultAmount = Number(defaultAmountSetting?.value || 0);
-  const enrolls = await prisma.studentEnrollment.findMany({ where: { sessionId: session.id }, include: { student: true }, orderBy: { student: { nameEn: "asc" } } });
-  const fees = await prisma.feePayment.findMany({ where: { sessionId: session.id, month, year } });
+  const [defaultAmountSettingSession, defaultAmountSettingGlobal, enrolls, fees] = await Promise.all([
+    prisma.setting.findFirst({ where: { key: "monthlyFee", sessionId: session.id }, select: { value: true } }),
+    prisma.setting.findFirst({ where: { key: "monthlyFee", sessionId: null }, select: { value: true } }),
+    prisma.studentEnrollment.findMany({
+      where: { sessionId: session.id },
+      select: { id: true, studentId: true, monthlyFee: true, student: { select: { id: true, admissionNo: true, nameEn: true } } },
+      orderBy: { student: { nameEn: "asc" } },
+    }),
+    prisma.feePayment.findMany({
+      where: { sessionId: session.id, month, year },
+      select: { studentId: true, amount: true, isPaid: true, isLate: true, paidAt: true },
+    }),
+  ]);
+  const defaultAmount = Number((defaultAmountSettingSession || defaultAmountSettingGlobal)?.value || 0);
   const map = new Map(fees.map(f=>[f.studentId,f]));
   return (
     <div className="space-y-4">

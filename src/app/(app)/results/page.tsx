@@ -21,9 +21,17 @@ async function saveWritten(formData: FormData) {
     update: { writtenObtained, writtenTotal, oralObtained: oralObt, oralTotal: oralTot, totalObtained: totalObt, totalMarks, percentage: pct, grade: g.grade, status: g.status },
     create: { examId, studentId, writtenObtained, writtenTotal, oralObtained: oralObt, oralTotal: oralTot, totalObtained: totalObt, totalMarks, percentage: pct, grade: g.grade, status: g.status },
   });
-  const results = await prisma.result.findMany({ where: { examId } });
+  const results = await prisma.result.findMany({ where: { examId }, select: { id: true, percentage: true, position: true } });
   const posMap = calculatePositions(results.map(r=>({id:r.id, percentage:r.percentage})));
-  for (const r of results) await prisma.result.update({ where: { id: r.id }, data: { position: posMap.get(r.id) ?? null } });
+  const updates = results
+    .map(r => ({ id: r.id, position: posMap.get(r.id) ?? null }))
+    .filter(u => {
+      const cur = results.find(r => r.id === u.id)?.position ?? null;
+      return cur !== u.position;
+    });
+  if (updates.length) {
+    await prisma.$transaction(updates.map(u => prisma.result.update({ where: { id: u.id }, data: { position: u.position } })));
+  }
   revalidatePath("/results");
 }
 
@@ -35,8 +43,10 @@ export default async function ResultsPage({ searchParams }: { searchParams: Prom
   const sp = await searchParams;
   if (user?.role === "PARENT") {
     if (!user.parentStudentId) return <p>{ur ? "کوئی منسلک طالب علم نہیں۔" : "No linked student."}</p>;
-    const results = await prisma.result.findMany({ where: { studentId: user.parentStudentId }, include: { exam: { include: { session: true } }, student: true }, orderBy: { createdAt: "desc" } });
-    const enrolls = await prisma.studentEnrollment.findMany({ where: { studentId: user.parentStudentId }, select: { studentId: true, sessionId: true, rollNo: true } });
+    const [results, enrolls] = await Promise.all([
+      prisma.result.findMany({ where: { studentId: user.parentStudentId }, include: { exam: { select: { name: true, stage: true, sessionId: true } }, student: { select: { nameEn: true } } }, orderBy: { createdAt: "desc" } }),
+      prisma.studentEnrollment.findMany({ where: { studentId: user.parentStudentId }, select: { sessionId: true, rollNo: true } }),
+    ]);
     const rollBySession = new Map(enrolls.map(e => [e.sessionId, e.rollNo]));
     const resultsWithRoll = results.map(r => ({ ...r, rollNo: (r.exam as any)?.sessionId ? rollBySession.get((r.exam as any).sessionId) : null }));
     return <div className="space-y-4"><h1 className="text-2xl font-bold text-emerald-900">{ur ? "میرے نتائج" : "My Results"}</h1><ResultsTable results={resultsWithRoll} ur={ur} /></div>;
@@ -58,11 +68,13 @@ export default async function ResultsPage({ searchParams }: { searchParams: Prom
     const examById = new Map(annualExams.map(e => [e.id, e]));
     const enrollments = await prisma.studentEnrollment.findMany({ where: { sessionId: session.id }, select: { studentId: true, rollNo: true } });
     const rollMap = new Map(enrollments.map(e => [e.studentId, e.rollNo]));
-    const allResults = await prisma.result.findMany({ where: { examId: { in: annualExams.map(e=>e.id) } }, include: { student: true, exam: true } });
-    const byStudent = new Map<string, { student: any; byExam: any[]; stagePct: Record<number, number>; stageMarks: Record<number, {o:number;t:number}> }>();
+    const allResults = annualExams.length ? await prisma.result.findMany({
+      where: { examId: { in: annualExams.map(e=>e.id) } },
+      select: { studentId: true, examId: true, totalObtained: true, totalMarks: true, percentage: true, student: { select: { id: true, nameEn: true } }, exam: { select: { stage: true } } },
+    }) : [];
+    const byStudent = new Map<string, { student: any; stagePct: Record<number, number>; stageMarks: Record<number, {o:number;t:number}> }>();
     for (const r of allResults) {
-      const cur = byStudent.get(r.studentId) || { student: r.student, byExam: [], stagePct: {}, stageMarks: {} };
-      cur.byExam.push(r);
+      const cur = byStudent.get(r.studentId) || { student: r.student, stagePct: {}, stageMarks: {} };
       const ex = examById.get(r.examId) || (r as any).exam;
       const st = (ex as any).stage as number | undefined;
       if (st) {
@@ -88,7 +100,7 @@ export default async function ResultsPage({ searchParams }: { searchParams: Prom
       }
       const pct = usedWeight > 0 ? (weighted / usedWeight) * 100 : 0; // normalize if some stages missing
       const g = gradeFromPercentage(pct);
-      return { id: v.student.id, student: v.student, rollNo: rollMap.get(v.student.id) || null, totalObtained: obtained, totalMarks: total, percentage: pct, grade: g.grade, status: g.status, byExam: v.byExam, stagePct: v.stagePct };
+      return { id: v.student.id, student: v.student, rollNo: rollMap.get(v.student.id) || null, totalObtained: obtained, totalMarks: total, percentage: pct, grade: g.grade, status: g.status, stagePct: v.stagePct };
     });
     const posMap = calculatePositions(annual.map(a=>({id:a.id, percentage:a.percentage})));
     const annualWithPos = annual.map(a => ({ ...a, position: posMap.get(a.id) ?? null })).sort((a,b)=> (a.position ?? 999) - (b.position ?? 999) || (b.percentage - a.percentage));
@@ -139,9 +151,14 @@ export default async function ResultsPage({ searchParams }: { searchParams: Prom
   }
 
   const examId = sp.examId || exams[0]?.id;
-  const exam = examId ? await prisma.exam.findUnique({ where: { id: examId }, include: { students: { include: { student: true } } } }) : null;
-  const results = examId ? await prisma.result.findMany({ where: { examId }, include: { student: true, exam: true }, orderBy: [{ position: "asc" }, { percentage: "desc" }] }) : [];
-  const enrolls = exam ? await prisma.studentEnrollment.findMany({ where: { sessionId: exam.sessionId } }) : [];
+  const exam = examId ? await prisma.exam.findUnique({
+    where: { id: examId },
+    select: { id: true, name: true, stage: true, sessionId: true, students: { select: { studentId: true, student: { select: { id: true, nameEn: true } } } } },
+  }) : null;
+  const [results, enrolls] = examId ? await Promise.all([
+    prisma.result.findMany({ where: { examId }, select: { id: true, studentId: true, writtenObtained: true, writtenTotal: true, oralObtained: true, oralTotal: true, totalObtained: true, totalMarks: true, percentage: true, grade: true, status: true, position: true, student: { select: { nameEn: true } }, exam: { select: { name: true, stage: true } } }, orderBy: [{ position: "asc" }, { percentage: "desc" }] }),
+    exam ? prisma.studentEnrollment.findMany({ where: { sessionId: exam.sessionId }, select: { studentId: true, rollNo: true } }) : Promise.resolve([] as any[]),
+  ]) : [[], [] as any[]];
   const rollMap = new Map(enrolls.map(e=>[e.studentId,e.rollNo]));
   const resMap = new Map(results.map(r=>[r.studentId,r]));
   return (
