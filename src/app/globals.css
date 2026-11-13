@@ -1,0 +1,181 @@
+@import "tailwindcss";
+
+:root {
+  --background: #f3f6f2;
+  --foreground: #132015;
+  --brand: #14532d;
+  --brand-2: #b45309;
+  --card: #ffffff;
+  --muted: #6b7280;
+}
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-brand: var(--brand);
+  --color-brand2: var(--brand-2);
+  --color-card: var(--card);
+  --color-muted: var(--muted);
+}
+body {
+  background:
+    radial-gradient(1200px 500px at 100% -10%, rgba(180,83,9,0.10), transparent 60%),
+    radial-gradient(900px 400px at -10% 0%, rgba(20,83,45,0.12), transparent 55%),
+    var(--background);
+  color: var(--foreground);
+  font-family: ui-sans-serif, system-ui, "Segoe UI", Arial, sans-serif;
+}
+input:not([type="checkbox"]):not([type="radio"]):not([type="range"]), select, textarea {
+  border-color: #d7e2db;
+}
+input:focus, select:focus, textarea:focus {
+  outline: none;
+  border-color: #86b39a;
+  box-shadow: 0 0 0 3px rgba(20,83,45,0.10);
+}
+hr { border-color: #e6ece8; }
+.font-urdu {
+  font-family: "Noto Nastaliq Urdu", "Jameel Noori Nastaleeq", "Nafees Nastaleeq", serif;
+  direction: rtl;
+}
+h1, h2, h3, h4 {
+  line-height: 1.35;
+  letter-spacing: -0.01em;
+}
+h1 { font-weight: 800; }
+h2 { font-weight: 700; color: #064e3b; }
+h3 { font-weight: 700; color: #065f46; }
+/* nicer default heading spacing inside content cards */
+.bg-white > h1, .bg-white > h2, .bg-white > h3,
+[class*="rounded"] > h1, [class*="rounded"] > h2, [class*="rounded"] > h3 {
+  margin-bottom: 0.85rem;
+  padding-bottom: 0.35rem;
+}
+/* subtle accent for section headings inside boxes */
+.bg-white > h2, .bg-white > h3,
+[class*="shadow"] > h2, [class*="shadow"] > h3 {
+  position: relative;
+}
+.bg-white > h2::after, [class*="shadow"] > h2::after {
+  content: "";
+  display: block;
+  width: 3rem;
+  height: 3px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #059669, #f59e0b);
+  margin-top: 0.45rem;
+}
+/* visible lines inside boxes */
+main :is(.bg-white, .card):is([class*="rounded"]) > h2,
+main :is(.bg-white, .card):is([class*="rounded"]) > h3 {
+  border-bottom: 2px solid #b8ccbf !important;
+  padding-bottom: 0.6rem !important;
+}
+main :is(.bg-white, .card):is([class*="rounded"]) > * + * {
+  border-top: 1px solid #cfdcd4 !important;
+  margin-top: 1rem !important;
+  padding-top: 1rem !important;
+}
+main :is(.bg-white, .card):is([class*="rounded"]) > h1 + *,
+main :is(.bg-white, .card):is([class*="rounded"]) > h2 + *,
+main :is(.bg-white, .card):is([class*="rounded"]) > h3 + * {
+  border-top: 1px solid #cfdcd4 !important;
+  margin-top: 0.85rem !important;
+  padding-top: 0.85rem !important;
+}
+.print-area :is(.bg-white, .card) > h2,
+.print-area :is(.bg-white, .card) > h3,
+.print-area :is(.bg-white, .card) > * + * {
+  border-top: none !important;
+  border-bottom: none !important;
+  margin-top: revert !important;
+  padding-top: revert !important;
+  padding-bottom: revert !important;
+}
+.card {
+  background: var(--card);
+  border: 1px solid rgba(20,83,45,0.10);
+  border-radius: 1rem;
+  box-shadow: 0 8px 24px rgba(20,83,45,0.05);
+}
+.btn-primary { background: #14532d; color: #fff; border-radius: .6rem; padding: .55rem 1rem; font-weight: 600; }
+.btn-primary:hover { background: #166534; }
+.input { width: 100%; border: 1px solid #d7e2db; border-radius: .7rem; padding: .55rem .75rem; background: #fff; }
+.input:focus { outline: none; box-shadow: 0 0 0 3px rgba(20,83,45,.14); border-color: #14532d; }
+@media print {
+  .no-print { display: none !important; }
+  body { background: white; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .print-area { box-shadow: none !important; border: none !important; }
+  svg, img { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+}
+.paper-lines { background-image: repeating-linear-gradient(transparent, transparent 31px, #cbd5e1 32px); line-height: 32px; }
+table { border-collapse: collapse; border-spacing: 0; }
+th, td {
+  border: 1px solid #c8d8ce;
+  vertical-align: middle;
+  line-height: 1.5;
+}
+:not(.print-area) table th, :not(.print-area) table td {
+  padding: 0.85rem 1rem !important;
+}
+thead th {
+  font-weight: 700;
+}
+:not(.print-area) thead th {
+  background: linear-gradient(180deg, #166534, #14532d) !important;
+  color: #ffffff !important;
+  border: 1px solid #0f3f24 !important;
+  padding-top: 0.9rem !important;
+  padding-bottom: 0.9rem !important;
+}
+:not(.print-area) thead th * {
+  color: inherit;
+}
+:not(.print-area) tbody td {
+  border-color: #d6e2da;
+}
+:not(.print-area) tbody tr:hover td {
+  background-color: #f7fbf8;
+}
+.print-area thead th {
+  background: #f3f4f6;
+  color: #111827;
+}
+.print-area th, .print-area td {
+  border: 1px solid #94a3b8;
+}
+/* ensure bordered containers don't let text touch lines */
+.border > :first-child, [class*="border rounded"] > :first-child { margin-top: 0; }
+td > div, th > div { line-height: 1.5; }
+main [class*="border-b"]:not(td):not(th):not([class*="pb-"]) { padding-bottom: 0.6rem !important; }
+main [class*="border-t"]:not(td):not(th):not([class*="pt-"]) { padding-top: 0.6rem !important; }
+main :is(.bg-white,.card)[class*="rounded"][class*="border"]:not([class*="p-"]):not([class*="px-"]):not([class*="py-"]) { padding: 1.1rem !important; }
+.print-area h2::after, .print-area h1::after, .print-area h3::after { display: none !important; }
+.print-area [class*="border-b"], .print-area [class*="border-t"] { padding-top: revert !important; padding-bottom: revert !important; }
+
+/* more spacing between stacked boxes/cards + clean divider lines */
+main :where(.space-y-3, .space-y-4, .space-y-5, .space-y-6) > * + * {
+  border-top: 1.5px solid #b7c8be !important;
+  box-shadow: 0 -1px 0 0 rgba(20,83,45,0.06);
+}
+main .space-y-3 > * + * { margin-top: 1.5rem !important; padding-top: 1.5rem !important; }
+main .space-y-4 > * + * { margin-top: 1.75rem !important; padding-top: 1.75rem !important; }
+main .space-y-5 > * + * { margin-top: 2rem !important; padding-top: 2rem !important; }
+main .space-y-6 > * + * { margin-top: 2.25rem !important; padding-top: 2.25rem !important; }
+
+/* extra breathing room inside common boxes so text never touches borders */
+main :is(.bg-white, .card):is([class*="rounded-xl"], [class*="rounded-2xl"], [class*="rounded-lg"]) {
+  padding: 1.25rem;
+}
+main :is(.bg-white, .card):is([class*="rounded-xl"], [class*="rounded-2xl"], [class*="rounded-lg"])[class*="p-"] {
+  padding: revert-layer;
+}
+main :is(.bg-white, .card) :is(h1,h2,h3,h4) {
+  margin-bottom: 0.75rem;
+}
+.print-area :is(.bg-white, .card) { padding: revert !important; }
+
+.print-area :where(.space-y-3, .space-y-4, .space-y-5, .space-y-6) > * + * {
+  border-top: none !important;
+  margin-top: revert !important;
+  padding-top: revert !important;
+}

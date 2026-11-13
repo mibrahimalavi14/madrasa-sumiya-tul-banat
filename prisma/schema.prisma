@@ -1,0 +1,252 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// SQLite does not support enums in Prisma; use String values.
+// Role: ADMIN | PARENT
+// SessionStatus: ACTIVE | EXPIRED | ARCHIVED
+// StudentStatus: REGISTERED | ACTIVE | LEFT
+// PaperType: WRITTEN | ORAL
+// CertificateType: ANNUAL | NAZRA_COMPLETION
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  username      String    @unique
+  email         String?   @unique
+  passwordHash  String
+  role          String    // ADMIN | PARENT
+  parentStudentId String?
+  parentStudent   Student? @relation("ParentUser", fields: [parentStudentId], references: [id])
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+model Session {
+  id            String        @id @default(cuid())
+  name          String        // e.g. 2026-2027
+  startDate     DateTime?
+  endDate       DateTime?
+  status        String        @default("ACTIVE") // ACTIVE|EXPIRED|ARCHIVED
+  isCurrent     Boolean       @default(false)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  enrollments   StudentEnrollment[]
+  exams         Exam[]
+  feePayments   FeePayment[]
+  certificates  Certificate[]
+  settings      Setting[]
+}
+
+model Setting {
+  id              String   @id @default(cuid())
+  sessionId       String?
+  session         Session? @relation(fields: [sessionId], references: [id])
+  key             String
+  value           String
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@unique([sessionId, key])
+}
+
+model Student {
+  id              String   @id @default(cuid())
+  admissionNo     String   @unique // MSB...
+  registrationNo  String   @unique
+  applicationNo   String?  // Darkhwast No
+  nameEn          String
+  nameUr          String?
+  fatherName      String?
+  motherName      String?
+  guardianName    String?
+  gender          String?  @default("Female")
+  dob             DateTime?
+  age             String?
+  admissionClass  String?
+  bFormOrCNIC     String?
+  address         String?
+  phone           String?
+  parentPhone     String?
+  previousSchool  String?
+  admissionDate   DateTime @default(now())
+  status          String   @default("REGISTERED") // REGISTERED|ACTIVE|LEFT
+  notes           String?
+  photoUrl        String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  enrollments     StudentEnrollment[]
+  examStudents    ExamStudent[]
+  feePayments     FeePayment[]
+  results         Result[]
+  certificates    Certificate[]
+  oralMarks       OralMark[]
+  parentUsers     User[]   @relation("ParentUser")
+  siblingsA       Sibling[] @relation("SiblingA")
+  siblingsB       Sibling[] @relation("SiblingB")
+}
+
+model StudentEnrollment {
+  id          String   @id @default(cuid())
+  studentId   String
+  sessionId   String
+  student     Student  @relation(fields: [studentId], references: [id])
+  session     Session  @relation(fields: [sessionId], references: [id])
+  rollNo      String?
+  rollLocked  Boolean  @default(false)
+  carriedFromId String?
+  monthlyFee  Float?
+  createdAt   DateTime @default(now())
+
+  @@unique([studentId, sessionId])
+  @@unique([sessionId, rollNo])
+}
+
+model Sibling {
+  id         String  @id @default(cuid())
+  studentAId String
+  studentBId String
+  studentA   Student @relation("SiblingA", fields: [studentAId], references: [id])
+  studentB   Student @relation("SiblingB", fields: [studentBId], references: [id])
+
+  @@unique([studentAId, studentBId])
+}
+
+model Exam {
+  id              String   @id @default(cuid())
+  sessionId       String
+  session         Session  @relation(fields: [sessionId], references: [id])
+  name            String
+  stage           Int?     // 1-4 annual calendar stage
+  stageLabel      String?
+  monthLabel      String?
+  isDiagnostic    Boolean  @default(false)
+  hasWritten      Boolean  @default(true)
+  hasOral         Boolean  @default(true)
+  includedInAnnual Boolean @default(true)
+  subject         String   @default("Nazra Quran & Basic Islamic Studies")
+  examDate        DateTime?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  students        ExamStudent[]
+  papers          QuestionPaper[]
+  results         Result[]
+  oralMarks       OralMark[]
+}
+
+model ExamStudent {
+  id        String  @id @default(cuid())
+  examId    String
+  studentId String
+  exam      Exam    @relation(fields: [examId], references: [id])
+  student   Student @relation(fields: [studentId], references: [id])
+
+  @@unique([examId, studentId])
+}
+
+model QuestionPaper {
+  id          String    @id @default(cuid())
+  examId      String
+  exam        Exam      @relation(fields: [examId], references: [id])
+  type        String    // WRITTEN or ORAL
+  paperCode   String    // 01,02,03
+  title       String?
+  className   String    @default("Nazra Quran & Basic Islamic Studies")
+  mazhmoon    String
+  instructions String?
+  questions   Question[]
+  oralMarks   OralMark[]
+  createdAt   DateTime  @default(now())
+
+  @@unique([examId, type, paperCode])
+}
+
+model Question {
+  id            String        @id @default(cuid())
+  paperId       String
+  paper         QuestionPaper @relation(fields: [paperId], references: [id], onDelete: Cascade)
+  order         Int
+  type          String        @default("short") // short,long,mcq,fill,other
+  textUr        String
+  textEn        String?
+  marks         Float?
+  optionsJson   String?       // for MCQ
+  answerSpace   Int?          @default(3) // lines for written
+}
+
+model OralMark {
+  id          String        @id @default(cuid())
+  examId      String
+  paperId     String
+  studentId   String
+  exam        Exam          @relation(fields: [examId], references: [id])
+  paper       QuestionPaper @relation(fields: [paperId], references: [id])
+  student     Student       @relation(fields: [studentId], references: [id])
+  obtained    Float         @default(0)
+  total       Float         @default(100)
+  remarks     String?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  @@unique([examId, paperId, studentId])
+}
+
+model Result {
+  id            String   @id @default(cuid())
+  examId        String
+  studentId     String
+  exam          Exam     @relation(fields: [examId], references: [id])
+  student       Student  @relation(fields: [studentId], references: [id])
+  writtenObtained Float? 
+  writtenTotal    Float?
+  oralObtained    Float?
+  oralTotal       Float?
+  totalObtained   Float?
+  totalMarks      Float?
+  percentage      Float?
+  grade           String?
+  status          String?  // Pass/Fail
+  position        Int?
+  remarks         String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@unique([examId, studentId])
+}
+
+model FeePayment {
+  id          String   @id @default(cuid())
+  sessionId   String
+  studentId   String
+  session     Session  @relation(fields: [sessionId], references: [id])
+  student     Student  @relation(fields: [studentId], references: [id])
+  month       Int      // 1-12
+  year        Int
+  amount      Float
+  isPaid      Boolean  @default(false)
+  paidAt      DateTime?
+  isLate      Boolean  @default(false)
+  note        String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([sessionId, studentId, month, year])
+}
+
+model Certificate {
+  id          String          @id @default(cuid())
+  sessionId   String
+  studentId   String
+  session     Session         @relation(fields: [sessionId], references: [id])
+  student     Student         @relation(fields: [studentId], references: [id])
+  type        String          // ANNUAL | NAZRA_COMPLETION
+  serialNo    String?         @unique
+  issueDate   DateTime        @default(now())
+  details     String?
+  createdAt   DateTime        @default(now())
+}
