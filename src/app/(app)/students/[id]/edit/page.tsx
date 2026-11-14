@@ -134,7 +134,7 @@ export default async function EditStudent({ params, searchParams }: { params: Pr
 
             </div>
             <div><label className="text-sm text-gray-700">Application No</label><input name="applicationNo" defaultValue={student.applicationNo||""} className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2.5"/></div>
-            <div><label className="text-sm text-gray-700">Status</label><select name="status" defaultValue={student.status || "ACTIVE"} className="mt-1 block w-full h-[42px] border border-gray-200 rounded-lg px-3 py-0 leading-[40px] bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-200"><option value="REGISTERED">REGISTERED</option><option value="ACTIVE">ACTIVE</option><option value="LEFT">LEFT</option></select></div>
+            <div><label className="text-sm text-gray-700">Status</label><select name="status" defaultValue={student.status || "ACTIVE"} className="mt-1 block w-full h-[42px] border border-gray-200 rounded-lg px-3 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-200" style={{ paddingTop: 0, paddingBottom: 0, lineHeight: "40px" }}><option value="REGISTERED">REGISTERED</option><option value="ACTIVE">ACTIVE</option><option value="LEFT">LEFT</option></select></div>
           </div>
           <div className="mt-4 flex items-start gap-3 p-3 rounded-xl border border-amber-200 bg-amber-50/60">
             <input id="feeExempt" name="feeExempt" type="checkbox" defaultChecked={!!(enrollment as any)?.feeExempt} className="mt-1 h-4 w-4" />
@@ -152,7 +152,7 @@ export default async function EditStudent({ params, searchParams }: { params: Pr
             <div><label className="text-sm text-gray-700">Student Name (Urdu)</label><input name="nameUr" defaultValue={student.nameUr||""} className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2.5 font-urdu"/></div>
             <div><label className="text-sm text-gray-700">Age</label><input name="age" defaultValue={student.age||""} className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2.5"/></div>
             <div><label className="text-sm text-gray-700">Date of Birth</label><DateInputDMY name="dob" defaultValue={toDateInputDMY(student.dob)} className="mt-1" inputClassName="border border-gray-200 rounded-lg px-3 py-2.5" /></div>
-            <div><label className="text-sm text-gray-700">Gender</label><select name="gender" defaultValue={student.gender||""} className="mt-1 block w-full h-[42px] border border-gray-200 rounded-lg px-3 py-0 leading-[40px] bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-200"><option value="">Select</option><option value="Male">Male</option><option value="Female">Female</option></select></div>
+            <div><label className="text-sm text-gray-700">Gender</label><select name="gender" defaultValue={student.gender||""} className="mt-1 block w-full h-[42px] border border-gray-200 rounded-lg px-3 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-200" style={{ paddingTop: 0, paddingBottom: 0, lineHeight: "40px" }}><option value="">Select</option><option value="Male">Male</option><option value="Female">Female</option></select></div>
             <div><label className="text-sm text-gray-700">Class for Admission</label><input name="admissionClass" defaultValue={student.admissionClass||""} className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2.5"/></div>
           </div>
         </div>
