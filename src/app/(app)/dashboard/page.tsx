@@ -88,6 +88,7 @@ export default async function Dashboard() {
   const monthPaid = (monthPaidAgg as any)._count._all;
   const monthTotal = (monthAgg as any)._count._all;
   const monthCollected = (monthPaidAgg as any)._sum.amount || 0;
+  const pendingExams = Math.max(0, examsCount - examsConducted);
 
   const cards = [
     [tr.activeSession, session ? session.name : tr.none, ur ? "موجودہ تعلیمی سال" : "Current academic year"],
@@ -95,6 +96,7 @@ export default async function Dashboard() {
     [ur ? "فعال طلبہ" : "Active Students", String(activeStudents), ur ? "جن کا اسٹیٹس فعال ہے" : "Students with ACTIVE status"],
     [ur ? "امتحانی مراحل (شیڈول)" : "Exam Stages (Schedule)", String(examsCount), ur ? "سیشن کے شیڈول شدہ/موجود مراحل" : "Scheduled/existing stages in session"],
     [ur ? "لیے گئے امتحانات" : "Exams Conducted", String(examsConducted), ur ? "جن کے نتائج محفوظ ہیں (اس سیشن میں)" : "Exams with saved results (in this session)"],
+    [ur ? "زیر التواء امتحانات" : "Pending Exams", String(pendingExams), ur ? "جن کے نتائج ابھی محفوظ نہیں" : "Stages with no saved results yet"],
     [ur ? "نتائج (محفوظ)" : "Results (Saved)", String(resultsCount), ur ? "محفوظ شدہ نتائج" : "Saved result entries"],
     [tr.certificates, String(certsCount), ur ? "جاری شدہ سرٹیفکیٹس" : "Issued certificates"],
     [tr.feesPaid, String(feesPaid), ur ? "وقت پر ادائیگیاں" : "On time payments"],

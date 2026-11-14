@@ -1,12 +1,16 @@
 import { prisma } from "@/lib/prisma";
-import { notFound } from "next/navigation";
+import { getAuthUser } from "@/lib/auth";
+import { notFound, redirect } from "next/navigation";
 import Logo from "@/components/Logo";
 import { formatDateDMY } from "@/lib/utils";
 
 export default async function CertPrint({ params }: { params: Promise<{ id: string }> }) {
+  const user = await getAuthUser();
+  if (!user) redirect("/login");
   const { id } = await params;
   const cert = await prisma.certificate.findUnique({ where: { id }, include: { student: true, session: true } });
   if (!cert) notFound();
+  if (user.role === "PARENT" && user.parentStudentId !== cert.studentId) redirect("/dashboard");
   const titleUr = cert.type === "ANNUAL" ? "سالانہ سند" : "سند تکمیلِ ناظرہ";
   const titleEn = cert.type === "ANNUAL" ? "Annual Examination Certificate" : "Nazra Completion Certificate";
   const textUr = cert.type === "ANNUAL"

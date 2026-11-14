@@ -1,30 +1,51 @@
 import { prisma } from "@/lib/prisma";
 import { getCurrentSession } from "@/lib/session";
+import { getAuthUser } from "@/lib/auth";
 import { gradeFromPercentage, calculatePositions } from "@/lib/grading";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import PrintButton from "@/components/PrintButton";
 import Link from "next/link";
 
 export default async function AnnualResultCard({ params }: { params: Promise<{ id: string }> }) {
+  const user = await getAuthUser();
+  if (!user) redirect("/login");
   const { id } = await params;
+  if (user.role === "PARENT" && user.parentStudentId !== id) redirect("/dashboard");
   const session = await getCurrentSession();
   if (!session) notFound();
-  const student = await prisma.student.findUnique({ where: { id }, include: { enrollments: { include: { session: true } } } });
+  const student = await prisma.student.findUnique({
+    where: { id },
+    select: {
+      id: true, admissionNo: true, applicationNo: true, nameEn: true, nameUr: true, fatherName: true, motherName: true, admissionClass: true,
+      enrollments: { where: { sessionId: session.id }, select: { rollNo: true, sessionId: true, session: { select: { name: true } } } },
+    },
+  });
   if (!student) notFound();
-  const examsRaw = await prisma.exam.findMany({ where: { sessionId: session.id }, orderBy: { createdAt: "asc" } });
+  const examsRaw = await prisma.exam.findMany({
+    where: { sessionId: session.id },
+    select: { id: true, name: true, stage: true, stageLabel: true, includedInAnnual: true, isDiagnostic: true, hasOral: true, createdAt: true },
+    orderBy: { createdAt: "asc" },
+  });
   const exams = [...examsRaw].sort((a, b) => ((a as any).stage ?? 99) - ((b as any).stage ?? 99) || a.createdAt.getTime() - b.createdAt.getTime());
   const stageWeight: Record<number, number> = { 1: 20, 2: 20, 3: 20, 4: 40 };
   const included = exams.filter(e => {
-    const st = (e as any).stage as number | null | undefined;
+    const st = e.stage as number | null | undefined;
     if (st && stageWeight[st]) return true;
-    return (e as any).includedInAnnual !== false && !(e as any).isDiagnostic;
+    return e.includedInAnnual !== false && !e.isDiagnostic;
   });
+  const includedIds = included.map(e => e.id);
   const examById = new Map(included.map(e => [e.id, e]));
-  const results = await prisma.result.findMany({ where: { studentId: id, examId: { in: included.map(e => e.id) } }, include: { exam: true } });
-  const resMap = new Map(results.map(r => [r.examId, r]));
-
-  // compute weighted annual aggregate and positions across all students
-  const allResults = await prisma.result.findMany({ where: { examId: { in: included.map(e => e.id) } }, include: { student: true } });
+  const [results, allResults] = await Promise.all([
+    includedIds.length ? prisma.result.findMany({
+      where: { studentId: id, examId: { in: includedIds } },
+      select: { examId: true, writtenObtained: true, writtenTotal: true, oralObtained: true, oralTotal: true, totalObtained: true, totalMarks: true, percentage: true },
+    }) : Promise.resolve([] as any[]),
+    includedIds.length ? prisma.result.findMany({
+      where: { examId: { in: includedIds } },
+      select: { studentId: true, examId: true, totalObtained: true, totalMarks: true, percentage: true, exam: { select: { stage: true } } },
+    }) : Promise.resolve([] as any[]),
+  ]);
+  const resMap = new Map(results.map((r: any) => [r.examId, r]));
   const byStudent = new Map<string, { stagePct: Record<number, number> }>();
   for (const r of allResults) {
     const cur = byStudent.get(r.studentId) || { stagePct: {} };
@@ -47,7 +68,7 @@ export default async function AnnualResultCard({ params }: { params: Promise<{ i
   const pct = weightedPct(mineStagePct);
   const g = gradeFromPercentage(pct);
   const position = posMap.get(id) ?? null;
-  const enr = student.enrollments.find(e => e.sessionId === session.id) || student.enrollments[0];
+  const enr = student.enrollments[0];
 
   return (
     <div className="bg-white p-3 md:p-6 max-w-4xl mx-auto print-area">
