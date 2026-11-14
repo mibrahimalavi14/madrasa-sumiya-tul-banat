@@ -40,16 +40,17 @@ export default async function Dashboard() {
   const m = now.getMonth() + 1;
   const y = now.getFullYear();
 
-  let students = 0, examsCount = 0, feeGroups: any[] = [], resultsCount = 0, certsCount = 0;
+  let students = 0, examsCount = 0, examsConducted = 0, feeGroups: any[] = [], resultsCount = 0, certsCount = 0;
   let recentEnrolls: any[] = [], recentExams: any[] = [], recentResults: any[] = [];
   let monthAgg: any = { _count: { _all: 0 } }, monthPaidAgg: any = { _count: { _all: 0 }, _sum: { amount: 0 } };
 
   if (session) {
     const sid = session.id;
     // Batched queries to avoid connection-pool exhaustion on serverless/pgbouncer
-    [students, examsCount, resultsCount, certsCount] = await Promise.all([
+    [students, examsCount, examsConducted, resultsCount, certsCount] = await Promise.all([
       prisma.studentEnrollment.count({ where: { sessionId: sid } }),
       prisma.exam.count({ where: { sessionId: sid } }),
+      prisma.exam.count({ where: { sessionId: sid, results: { some: {} } } }),
       prisma.result.count({ where: { exam: { sessionId: sid } } }),
       prisma.certificate.count({ where: { sessionId: sid } }),
     ]);
@@ -90,11 +91,12 @@ export default async function Dashboard() {
   const cards = [
     [tr.activeSession, session ? session.name : tr.none, ur ? "موجودہ تعلیمی سال" : "Current academic year"],
     [tr.enrolledStudents, String(students), ur ? "موجودہ سیشن میں" : "In current session"],
-    [tr.exams, String(examsCount), ur ? "موجودہ سیشن میں" : "In current session"],
-    [ur ? "نتائج (ریکارڈ)" : "Results (Saved)", String(resultsCount), ur ? "محفوظ شدہ نتائج" : "Saved result entries"],
+    [ur ? "امتحانی مراحل (شیڈول)" : "Exam Stages (Schedule)", String(examsCount), ur ? "سیشن کے شیڈول شدہ/موجود مراحل" : "Scheduled/existing stages in session"],
+    [ur ? "لیے گئے امتحانات" : "Exams Conducted", String(examsConducted), ur ? "جن کے نتائج محفوظ ہیں (اس سیشن میں)" : "Exams with saved results (in this session)"],
+    [ur ? "نتائج (محفوظ)" : "Results (Saved)", String(resultsCount), ur ? "محفوظ شدہ نتائج" : "Saved result entries"],
     [tr.certificates, String(certsCount), ur ? "جاری شدہ سرٹیفکیٹس" : "Issued certificates"],
-    [tr.feesPaid, String(feesPaid), ur ? "وقت پر ادائیگی" : "On time payments"],
-    [tr.feesUnpaid, String(feesUnpaid), ur ? "زیر التواء" : "Pending"],
+    [tr.feesPaid, String(feesPaid), ur ? "وقت پر ادائیگیاں" : "On time payments"],
+    [tr.feesUnpaid, String(feesUnpaid), ur ? "باقی ادائیگیاں" : "Pending"],
     [tr.latePayments, String(lateFees), ur ? "7 تاریخ کے بعد ادا شدہ" : "Paid after 7th"],
   ];
 
@@ -102,7 +104,7 @@ export default async function Dashboard() {
   const examDisplayName = (ex: any) => (ur && ex?.stage && examNameUr[Number(ex.stage)]) || ex?.name || "-";
   const latestExam = [...(recentExams as any[])].sort((a,b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())[0];
   const latestExamHref = latestExam ? `/results?examId=${latestExam.id}` : "/examination";
-  const latestExamLabel = latestExam ? (ur ? `تازہ ترین امتحان: ${examDisplayName(latestExam)}` : `Latest Exam: ${examDisplayName(latestExam)}`) : (ur ? "امتحانات" : "Examinations");
+  const latestExamLabel = latestExam ? (ur ? `تازہ ترین امتحانی مرحلہ: ${examDisplayName(latestExam)}` : `Latest Exam Stage: ${examDisplayName(latestExam)}`) : (ur ? "امتحانات" : "Examinations");
 
   const quickLinks = [
     ["/students/new", ur ? "نیا داخلہ" : "New Admission", "from-emerald-600 to-emerald-700"],
@@ -160,7 +162,7 @@ export default async function Dashboard() {
       <div className="grid lg:grid-cols-2 gap-5">
         <div className="bg-white rounded-2xl shadow-sm border border-emerald-100 p-5">
           <div className="flex items-center justify-between mb-3">
-            <h2 className="font-semibold text-lg text-emerald-950">{ur ? "حالیہ داخلہ / طلبہ" : "Recent Admissions / Students"}</h2>
+            <h2 className="font-semibold text-lg text-emerald-950">{ur ? "حالیہ داخلے / طلبہ" : "Recent Admissions / Students"}</h2>
             <Link href="/students" className="text-sm text-emerald-700 underline">{ur ? "سب دیکھیں" : "View all"}</Link>
           </div>
           {recentEnrolls.length === 0 ? <p className="text-sm text-gray-500">{ur ? "کوئی ریکارڈ نہیں۔" : "No records."}</p> : (
@@ -168,7 +170,7 @@ export default async function Dashboard() {
               {recentEnrolls.map((e: any) => (
                 <li key={e.id} className="py-2.5 flex items-center justify-between gap-3">
                   <div>
-                    <div className="font-medium text-gray-900">{e.student.admissionNo} — {e.student.nameEn}</div>
+                    <div className="font-medium text-gray-900">{e.student.admissionNo} - {e.student.nameEn}</div>
                     <div className="text-xs text-gray-500">{e.student.admissionClass || "-"} {e.rollNo ? `• Roll: ${e.rollNo}` : ""}</div>
                   </div>
                   <Link href={`/students/${e.student.id}`} className="text-sm text-emerald-700 underline">{ur ? "پروفائل" : "Profile"}</Link>
@@ -180,10 +182,10 @@ export default async function Dashboard() {
 
         <div className="bg-white rounded-2xl shadow-sm border border-emerald-100 p-5">
           <div className="flex items-center justify-between mb-3">
-            <h2 className="font-semibold text-lg text-emerald-950">{ur ? "امتحانات کا خلاصہ" : "Exams Overview"}</h2>
+            <h2 className="font-semibold text-lg text-emerald-950">{ur ? "امتحانی مراحل کا خلاصہ" : "Exam Stages Overview"}</h2>
             <Link href="/examination" className="text-sm text-emerald-700 underline">{ur ? "سب دیکھیں" : "View all"}</Link>
           </div>
-          {recentExams.length === 0 ? <p className="text-sm text-gray-500">{ur ? "کوئی امتحان نہیں۔" : "No exams."}</p> : (
+          {recentExams.length === 0 ? <p className="text-sm text-gray-500">{ur ? "کوئی امتحانی مرحلہ موجود نہیں۔" : "No exam stages."}</p> : (
             <ul className="divide-y">
               {[...recentExams].sort((a:any,b:any)=>((a.stage??99)-(b.stage??99))).map((ex: any) => (
                 <li key={ex.id} className="py-2.5 flex items-center justify-between gap-3">
@@ -210,7 +212,7 @@ export default async function Dashboard() {
             <tbody>
               {recentResults.map((r: any) => (
                 <tr key={r.id} className="border-t">
-                  <td className="p-2">{r.student?.admissionNo} — {r.student?.nameEn}</td>
+                  <td className="p-2">{r.student?.admissionNo} - {r.student?.nameEn}</td>
                   <td className={`p-2 ${ur ? "font-urdu" : ""}`} dir={ur ? "rtl" : "ltr"}>{examDisplayName(r.exam)}</td>
                   <td className="p-2 text-center">{r.percentage != null ? Number(r.percentage).toFixed(2) : "-"}</td>
                   <td className="p-2 text-center font-semibold">{r.grade || "-"}</td>
