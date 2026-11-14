@@ -178,7 +178,7 @@ export default async function NewStudent({ searchParams }: { searchParams?: Prom
               <datalist id="prev-ages">{ageOpts.map((v) => <option key={v} value={v} />)}</datalist>
             </div>
             <div><label className="text-sm text-gray-700">Date of Birth / تاریخ پیدائش</label><DateInputDMY name="dob" className="mt-1" inputClassName="border border-gray-200 rounded-lg px-3 py-2.5" /></div>
-            <div><label className="text-sm text-gray-700">Gender / جنس</label><select name="gender" className="mt-1 block w-full border border-gray-200 rounded-lg px-3 py-2.5 bg-white focus:outline-none focus:ring-2 focus:ring-emerald-200"><option value="">Select</option><option value="Male">Male / لڑکا</option><option value="Female">Female / لڑکی</option></select></div>
+            <div><label className="text-sm text-gray-700">Gender / جنس</label><select name="gender" className="mt-1 block w-full h-[46px] border border-gray-200 rounded-lg px-3 bg-white focus:outline-none focus:ring-2 focus:ring-emerald-200"><option value="">Select</option><option value="Male">Male / لڑکا</option><option value="Female">Female / لڑکی</option></select></div>
             <div>
               <label className="text-sm text-gray-700">Class for Admission / کس جماعت میں داخلہ چاہیے</label>
               <input name="admissionClass" list="prev-classes" className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2.5" placeholder="e.g. Nazra / Class 1"/>
@@ -229,16 +229,16 @@ export default async function NewStudent({ searchParams }: { searchParams?: Prom
           <summary className="cursor-pointer list-none flex items-center justify-between">
             <div>
               <div className="font-semibold text-emerald-900">Add Siblings / بہن بھائی شامل کریں (اختیاری)</div>
-              <p className="text-xs text-gray-500 mt-0.5">Agar pehle se registered behan bhai hain to yahan select karein.</p>
+              <p className="text-xs text-gray-500 mt-0.5">If any siblings are already registered, select them here.</p>
             </div>
             <span className="text-sm bg-emerald-50 text-emerald-800 border border-emerald-200 px-3 py-1 rounded-lg">+ Add Siblings</span>
           </summary>
           <div className="mt-4 border-t pt-4">
-            <label className="text-sm text-gray-700">Registered Students se select karein</label>
+            <label className="text-sm text-gray-700">Select from registered students</label>
             <select name="siblings" multiple className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2.5 h-36">
               {all.map(s => <option key={s.id} value={s.id}>{s.admissionNo} - {s.nameEn}</option>)}
             </select>
-            <p className="text-xs text-gray-500 mt-1">Multiple select ke liye Ctrl/Cmd dabayein. Zaroorat na ho to khali chhor dein.</p>
+            <p className="text-xs text-gray-500 mt-1">Hold Ctrl/Cmd to select multiple. Leave empty if not needed.</p>
           </div>
         </details>
 

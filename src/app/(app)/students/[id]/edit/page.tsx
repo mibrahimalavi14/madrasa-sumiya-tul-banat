@@ -135,7 +135,7 @@ export default async function EditStudent({ params, searchParams }: { params: Pr
               ) : null}
             </div>
             <div><label className="text-sm text-gray-700">Application No</label><input name="applicationNo" defaultValue={student.applicationNo||""} className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2.5"/></div>
-            <div><label className="text-sm text-gray-700">Status</label><select name="status" defaultValue={student.status} className="mt-1 block w-full border border-gray-200 rounded-lg px-3 py-2.5 bg-white focus:outline-none focus:ring-2 focus:ring-emerald-200"><option value="REGISTERED">REGISTERED</option><option value="ACTIVE">ACTIVE</option><option value="LEFT">LEFT</option></select></div>
+            <div><label className="text-sm text-gray-700">Status</label><select name="status" defaultValue={student.status} className="mt-1 block w-full h-[46px] border border-gray-200 rounded-lg px-3 bg-white focus:outline-none focus:ring-2 focus:ring-emerald-200"><option value="REGISTERED">REGISTERED</option><option value="ACTIVE">ACTIVE</option><option value="LEFT">LEFT</option></select></div>
           </div>
           <div className="mt-4 flex items-start gap-3 p-3 rounded-xl border border-amber-200 bg-amber-50/60">
             <input id="feeExempt" name="feeExempt" type="checkbox" defaultChecked={!!(enrollment as any)?.feeExempt} className="mt-1 h-4 w-4" />
