@@ -42,11 +42,25 @@ export default async function CertPrint({ params }: { params: Promise<{ id: stri
           </p>
           {cert.details && <p className="mt-3 text-sm text-gray-700"><b>Details:</b> {cert.details}</p>}
 
-          <div className="mt-8 grid sm:grid-cols-2 gap-3 text-sm text-left max-w-2xl mx-auto">
-            <div className="border border-emerald-100 rounded-lg p-3 bg-white/80"><div className="text-xs text-gray-500">Serial / Verification No</div><div className="font-semibold text-emerald-900">{cert.serialNo || "-"}</div></div>
-            <div className="border border-emerald-100 rounded-lg p-3 bg-white/80"><div className="text-xs text-gray-500">Issue Date</div><div className="font-semibold text-emerald-900">{formatDateDMY(cert.issueDate)}</div></div>
-            <div className="border border-emerald-100 rounded-lg p-3 bg-white/80"><div className="text-xs text-gray-500">Student / Admission</div><div className="font-semibold text-emerald-900">{cert.student.admissionNo} — {cert.student.nameEn}</div></div>
-            <div className="border border-emerald-100 rounded-lg p-3 bg-white/80"><div className="text-xs text-gray-500">Session / Type</div><div className="font-semibold text-emerald-900">{cert.session.name} — {isAnnual ? "Annual" : "Nazra Completion"}</div></div>
+          <div className="mt-8 grid md:grid-cols-[1fr_auto] gap-4 items-start text-sm text-left max-w-3xl mx-auto">
+            <div className="grid sm:grid-cols-2 gap-3">
+              <div className="border border-emerald-100 rounded-lg p-3 bg-white/80"><div className="text-xs text-gray-500">Serial / Verification No</div><div className="font-semibold text-emerald-900">{cert.serialNo || "-"}</div></div>
+              <div className="border border-emerald-100 rounded-lg p-3 bg-white/80"><div className="text-xs text-gray-500">Issue Date</div><div className="font-semibold text-emerald-900">{formatDateDMY(cert.issueDate)}</div></div>
+              <div className="border border-emerald-100 rounded-lg p-3 bg-white/80"><div className="text-xs text-gray-500">Student / Admission</div><div className="font-semibold text-emerald-900">{cert.student.admissionNo} — {cert.student.nameEn}</div></div>
+              <div className="border border-emerald-100 rounded-lg p-3 bg-white/80"><div className="text-xs text-gray-500">Session / Type</div><div className="font-semibold text-emerald-900">{cert.session.name} — {isAnnual ? "Annual" : "Nazra Completion"}</div></div>
+            </div>
+            <div className="border border-emerald-100 rounded-lg p-3 bg-white/90 text-center">
+              <div className="text-xs text-gray-500 mb-2">Verification QR</div>
+              {/* External QR image for quick scan/verification; serial remains the source of truth */}
+              <img
+                src={`https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${encodeURIComponent(`MSB Certificate ${cert.serialNo || cert.id} | ${cert.student.admissionNo} | ${cert.session.name} | ${cert.type}`)}`}
+                alt="Certificate verification QR"
+                width={120}
+                height={120}
+                className="mx-auto border border-emerald-100 rounded"
+              />
+              <div className="text-[10px] text-gray-500 mt-2 max-w-[140px] mx-auto">Scan to view encoded certificate details (requires internet)</div>
+            </div>
           </div>
 
           <div className="mt-10 grid grid-cols-3 gap-6 text-sm">
