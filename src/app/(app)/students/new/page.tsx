@@ -178,7 +178,7 @@ export default async function NewStudent({ searchParams }: { searchParams?: Prom
               <datalist id="prev-ages">{ageOpts.map((v) => <option key={v} value={v} />)}</datalist>
             </div>
             <div><label className="text-sm text-gray-700">Date of Birth / تاریخ پیدائش</label><DateInputDMY name="dob" className="mt-1" inputClassName="border border-gray-200 rounded-lg px-3 py-2.5" /></div>
-            <div><label className="text-sm text-gray-700">Gender / جنس</label><select name="gender" className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2.5 bg-white"><option value="">Select</option><option value="Male">Male / لڑکا</option><option value="Female">Female / لڑکی</option></select></div>
+            <div><label className="text-sm text-gray-700">Gender / جنس</label><select name="gender" className="mt-1 block w-full border border-gray-200 rounded-lg px-3 py-2.5 bg-white focus:outline-none focus:ring-2 focus:ring-emerald-200"><option value="">Select</option><option value="Male">Male / لڑکا</option><option value="Female">Female / لڑکی</option></select></div>
             <div>
               <label className="text-sm text-gray-700">Class for Admission / کس جماعت میں داخلہ چاہیے</label>
               <input name="admissionClass" list="prev-classes" className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2.5" placeholder="e.g. Nazra / Class 1"/>
