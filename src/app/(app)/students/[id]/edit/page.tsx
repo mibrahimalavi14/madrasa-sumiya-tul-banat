@@ -12,7 +12,7 @@ async function updateStudent(formData: FormData) {
   const user = await getAuthUser(); if (user?.role !== "ADMIN") throw new Error("UNAUTHORIZED");
   const id = String(formData.get("id"));
   const sessionId = String(formData.get("sessionId") || "");
-  const rollNo = String(formData.get("rollNo") || "").trim() || null;
+  const rollNoInput = String(formData.get("rollNo") || "").trim() || null;
   const feeExempt = formData.get("feeExempt") === "on";
   const dob = parseDateInput(formData.get("dob"));
   const computedAge = (() => {
@@ -38,27 +38,37 @@ async function updateStudent(formData: FormData) {
     status: String(formData.get("status")||"ACTIVE"),
   }});
   if (sessionId) {
+    const existing = await prisma.studentEnrollment.findUnique({
+      where: { studentId_sessionId: { studentId: id, sessionId } },
+      select: { rollNo: true, rollLocked: true }
+    });
+    const locked = !!(existing?.rollLocked && existing?.rollNo);
+    const rollNo = locked ? existing!.rollNo : rollNoInput;
     if (rollNo) {
       const conflict = await prisma.studentEnrollment.findFirst({ where: { sessionId, rollNo, NOT: { studentId: id } }, select: { id: true } });
       if (conflict) redirect(`/students/${id}/edit?error=roll`);
     }
+    const rollLocked = !!rollNo; // once a roll no is set for this session, lock it
     try {
       await prisma.studentEnrollment.upsert({
         where: { studentId_sessionId: { studentId: id, sessionId } },
-        update: { rollNo, feeExempt, ...(feeExempt ? { monthlyFee: 0 } : {}) } as any,
-        create: { studentId: id, sessionId, rollNo, feeExempt, monthlyFee: feeExempt ? 0 : null } as any,
+        update: { rollNo, rollLocked, feeExempt, ...(feeExempt ? { monthlyFee: 0 } : {}) } as any,
+        create: { studentId: id, sessionId, rollNo, rollLocked, feeExempt, monthlyFee: feeExempt ? 0 : null } as any,
       });
     } catch {
       redirect(`/students/${id}/edit?error=roll`);
     }
   }
   await prisma.sibling.deleteMany({ where: { OR: [{ studentAId: id }, { studentBId: id }] } });
-  const siblingIds = formData.getAll("siblings").map(String).filter(Boolean).filter(s=>s!==id);
-  for (const sid of siblingIds) {
-    const [a,b] = id < sid ? [id, sid] : [sid, id];
-    await prisma.sibling.upsert({ where: { studentAId_studentBId: { studentAId: a, studentBId: b } }, update: {}, create: { studentAId: a, studentBId: b } });
+  const siblingIds = Array.from(new Set(formData.getAll("siblings").map(String).filter(Boolean).filter(s=>s!==id)));
+  if (siblingIds.length) {
+    const pairs = siblingIds.map((sid) => {
+      const [a,b] = id < sid ? [id, sid] : [sid, id];
+      return { studentAId: a, studentBId: b };
+    });
+    await prisma.sibling.createMany({ data: pairs, skipDuplicates: true });
   }
-  revalidatePath(`/students/${id}`); revalidatePath("/students"); redirect(`/students/${id}`);
+  revalidatePath(`/students/${id}`); revalidatePath("/students"); redirect(`/students`);
 }
 
 export default async function EditStudent({ params, searchParams }: { params: Promise<{ id: string }>, searchParams?: Promise<{ error?: string }> }) {
@@ -90,7 +100,19 @@ export default async function EditStudent({ params, searchParams }: { params: Pr
           <div className="flex items-center gap-2 mb-3"><span className="h-7 w-7 rounded-full bg-emerald-100 text-emerald-800 text-sm font-bold grid place-items-center">1</span><h2 className="font-semibold text-emerald-900">Office Use</h2></div>
           <div className="grid md:grid-cols-4 gap-4">
             <div><label className="text-sm text-gray-700">Admission No</label><input value={student.admissionNo} disabled className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2.5 bg-gray-50"/></div>
-            <div><label className="text-sm text-gray-700">Roll No (Session)</label><input name="rollNo" defaultValue={enrollment?.rollNo||""} placeholder={session ? `Session ${session.name}` : "No active session"} disabled={!session} className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2.5 disabled:bg-gray-50"/></div>
+            <div>
+              <label className="text-sm text-gray-700">Roll No (Session)</label>
+              <input
+                name="rollNo"
+                defaultValue={enrollment?.rollNo || ""}
+                placeholder={session ? `Session ${session.name}` : "No active session"}
+                disabled={!session || !!(enrollment as any)?.rollLocked}
+                className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2.5 disabled:bg-gray-50"
+              />
+              {(enrollment as any)?.rollLocked && (enrollment as any)?.rollNo ? (
+                <p className="text-xs text-amber-700 mt-1">Roll No locked ہے (اس سیشن میں تبدیل نہیں ہو سکتا)۔ اگلے سیشن میں نیا/غیر مقفل رول نمبر دیا جا سکے گا۔</p>
+              ) : null}
+            </div>
             <div><label className="text-sm text-gray-700">Application No</label><input name="applicationNo" defaultValue={student.applicationNo||""} className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2.5"/></div>
             <div><label className="text-sm text-gray-700">Status</label><select name="status" defaultValue={student.status} className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2.5 bg-white"><option value="REGISTERED">REGISTERED</option><option value="ACTIVE">ACTIVE</option><option value="LEFT">LEFT</option></select></div>
           </div>
@@ -152,7 +174,7 @@ export default async function EditStudent({ params, searchParams }: { params: Pr
         </details>
 
         <div className="flex items-center justify-end gap-3">
-          <button className="bg-emerald-800 hover:bg-emerald-900 text-white px-6 py-3 rounded-xl font-semibold shadow-sm">Update Student</button>
+          <button type="submit" className="bg-emerald-800 hover:bg-emerald-900 text-white px-6 py-3 rounded-xl font-semibold shadow-sm">Update Student</button>
         </div>
       </form>
     </div>

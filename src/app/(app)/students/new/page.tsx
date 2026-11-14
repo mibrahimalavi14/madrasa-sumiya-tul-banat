@@ -54,18 +54,21 @@ async function createStudent(formData: FormData) {
       }
     });
     try {
-      await prisma.studentEnrollment.create({ data: { studentId: student.id, sessionId: session.id, rollNo, feeExempt, monthlyFee: feeExempt ? 0 : undefined } as any });
+      await prisma.studentEnrollment.create({ data: { studentId: student.id, sessionId: session.id, rollNo, rollLocked: !!rollNo, feeExempt, monthlyFee: feeExempt ? 0 : undefined } as any });
     } catch {
       await prisma.student.delete({ where: { id: student.id } }).catch(() => {});
       redirect("/students/new?error=roll");
     }
-    const siblingIds = formData.getAll("siblings").map(String).filter(Boolean);
-    for (const sid of siblingIds) {
-      const [a, b] = student.id < sid ? [student.id, sid] : [sid, student.id];
-      await prisma.sibling.upsert({ where: { studentAId_studentBId: { studentAId: a, studentBId: b } }, update: {}, create: { studentAId: a, studentBId: b } });
+    const siblingIds = Array.from(new Set(formData.getAll("siblings").map(String).filter(Boolean)));
+    if (siblingIds.length) {
+      const pairs = siblingIds.map((sid) => {
+        const [a, b] = student.id < sid ? [student.id, sid] : [sid, student.id];
+        return { studentAId: a, studentBId: b };
+      });
+      await prisma.sibling.createMany({ data: pairs, skipDuplicates: true });
     }
     revalidatePath("/students");
-    redirect(`/students/${student.id}`);
+    redirect("/students");
   } catch (e: any) {
     if (e?.digest?.startsWith?.("NEXT_REDIRECT")) throw e;
     console.error("createStudent failed", e);
