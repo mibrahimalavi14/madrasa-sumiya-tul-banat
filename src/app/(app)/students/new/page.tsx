@@ -15,10 +15,20 @@ async function createStudent(formData: FormData) {
   const session = await getCurrentSession();
   if (!session || session.status !== "ACTIVE") redirect("/students/new?error=session");
   const count = await prisma.student.count();
-  const admissionNo = String(formData.get("admissionNo") || "").trim() || formatAdmissionNo(count + 1);
+  const admissionNo = String(formData.get("admissionNo") || "").trim();
   const registrationNo = formatRegNo(count + 1); // internal, not shown on admission form
   const rollNo = String(formData.get("rollNo") || "").trim() || null;
   const feeExempt = formData.get("feeExempt") === "on";
+  const applicationNo = String(formData.get("applicationNo") || "").trim();
+  const ageInput = String(formData.get("age") || "").trim();
+  const gender = String(formData.get("gender") || "").trim();
+  const admissionClass = String(formData.get("admissionClass") || "").trim();
+  const fatherOrMotherName = String(formData.get("fatherName") || "").trim();
+  const phone = String(formData.get("phone") || "").trim();
+  const address = String(formData.get("address") || "").trim();
+  if (!admissionNo || !applicationNo || !rollNo || !ageInput || !gender || !admissionClass || !fatherOrMotherName || !phone || !address) {
+    redirect("/students/new?error=required");
+  }
   if (rollNo) {
     const conflict = await prisma.studentEnrollment.findFirst({ where: { sessionId: session.id, rollNo } });
     if (conflict) redirect("/students/new?error=roll");
@@ -52,18 +62,18 @@ async function createStudent(formData: FormData) {
     const student = await prisma.student.create({
       data: {
         admissionNo, registrationNo,
-        applicationNo: String(formData.get("applicationNo") || "") || null,
+        applicationNo,
         nameEn,
         nameUr: String(formData.get("nameUr") || "") || null,
-        fatherName: String(formData.get("fatherName") || "") || null,
+        fatherName: fatherOrMotherName,
         motherName: String(formData.get("motherName") || "") || null,
         guardianName: String(formData.get("guardianName") || "") || null,
-        gender: String(formData.get("gender") || "") || null,
+        gender,
         age: computedAge,
-        admissionClass: String(formData.get("admissionClass") || "") || null,
+        admissionClass,
         dob,
-        address: String(formData.get("address") || "") || null,
-        phone: String(formData.get("phone") || "") || null,
+        address,
+        phone,
         previousSchool: String(formData.get("previousSchool") || "") || null,
         status: "REGISTERED",
       }
@@ -130,7 +140,7 @@ export default async function NewStudent({ searchParams }: { searchParams?: Prom
       )}
       {sp.error === "required" && (
         <div className="text-sm text-red-700 bg-red-50 border border-red-200 rounded-xl p-3">
-          Student Name (English) ضروری ہے۔
+          Please fill all required fields: Admission No, Application No, Roll No, Name (English), Age, Gender, Class for Admission, Father/Mother Name, Phone No, and Address.
         </div>
       )}
       {sp.error === "age" && (
@@ -151,9 +161,9 @@ export default async function NewStudent({ searchParams }: { searchParams?: Prom
           </div>
           <div className="grid md:grid-cols-4 gap-4">
             <div><label className="text-sm text-gray-700">Session / تعلیمی سیشن</label><input value={session.name} disabled className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2.5 bg-gray-50"/></div>
-            <div><label className="text-sm text-gray-700">Roll No / رول نمبر</label><input name="rollNo" className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-emerald-200" placeholder="e.g. 1"/></div>
-            <div><label className="text-sm text-gray-700">Application No / درخواست نمبر</label><input name="applicationNo" placeholder="e.g. APP-001" className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-emerald-200"/></div>
-            <div><label className="text-sm text-gray-700">Admission No / داخلہ نمبر</label><input name="admissionNo" placeholder="Leave empty / خالی چھوڑیں" className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-emerald-200"/></div>
+            <div><label className="text-sm text-gray-700">Roll No / رول نمبر</label><input name="rollNo" required className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-emerald-200" placeholder="e.g. 1"/></div>
+            <div><label className="text-sm text-gray-700">Application No / درخواست نمبر</label><input name="applicationNo" required placeholder="e.g. APP-001" className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-emerald-200"/></div>
+            <div><label className="text-sm text-gray-700">Admission No / داخلہ نمبر</label><input name="admissionNo" required placeholder="Admission No" className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-emerald-200"/></div>
           </div>
           <div className="mt-4 flex items-start gap-3 p-3 rounded-xl border border-amber-200 bg-amber-50/60">
             <input id="feeExempt" name="feeExempt" type="checkbox" className="mt-1 h-4 w-4" />
@@ -174,14 +184,21 @@ export default async function NewStudent({ searchParams }: { searchParams?: Prom
             <div><label className="text-sm text-gray-700">Student Name (Urdu) / طالب/طالبہ کا نام (اردو)</label><input name="nameUr" placeholder="طالب/طالبہ کا نام" className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2.5 font-urdu focus:outline-none focus:ring-2 focus:ring-emerald-200"/></div>
             <div>
               <label className="text-sm text-gray-700">Age / عمر</label>
-              <input name="age" list="prev-ages" className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2.5" placeholder="e.g. 8 years"/>
+              <input name="age" required list="prev-ages" className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2.5" placeholder="e.g. 8 years"/>
               <datalist id="prev-ages">{ageOpts.map((v) => <option key={v} value={v} />)}</datalist>
             </div>
             <div><label className="text-sm text-gray-700">Date of Birth / تاریخ پیدائش</label><DateInputDMY name="dob" className="mt-1" inputClassName="border border-gray-200 rounded-lg px-3 py-2.5" /></div>
-            <div><label className="text-sm text-gray-700">Gender / جنس</label><select name="gender" className="mt-1 block w-full h-[46px] border border-gray-200 rounded-lg px-3 bg-white focus:outline-none focus:ring-2 focus:ring-emerald-200"><option value="">Select</option><option value="Male">Male / لڑکا</option><option value="Female">Female / لڑکی</option></select></div>
+            <div>
+              <label className="text-sm text-gray-700">Gender / جنس</label>
+              <select name="gender" required defaultValue="" className="mt-1 block w-full border border-gray-200 rounded-lg px-3 py-2.5 bg-white focus:outline-none focus:ring-2 focus:ring-emerald-200">
+                <option value="" disabled>Select Gender</option>
+                <option value="Male">Male / لڑکا</option>
+                <option value="Female">Female / لڑکی</option>
+              </select>
+            </div>
             <div>
               <label className="text-sm text-gray-700">Class for Admission / کس جماعت میں داخلہ چاہیے</label>
-              <input name="admissionClass" list="prev-classes" className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2.5" placeholder="e.g. Nazra / Class 1"/>
+              <input name="admissionClass" required list="prev-classes" className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2.5" placeholder="e.g. Nazra / Class 1"/>
               <datalist id="prev-classes">{classOpts.map((v) => <option key={v} value={v} />)}</datalist>
             </div>
           </div>
@@ -195,18 +212,18 @@ export default async function NewStudent({ searchParams }: { searchParams?: Prom
           <div className="grid md:grid-cols-2 gap-4">
             <div className="md:col-span-2">
               <label className="text-sm text-gray-700">Father / Mother Name / والد یا والدہ کا نام</label>
-              <input name="fatherName" list="prev-parents" className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2.5" placeholder="Father / Mother Name" />
+              <input name="fatherName" required list="prev-parents" className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2.5" placeholder="Father / Mother Name" />
               <datalist id="prev-parents">{parentOpts.map((v) => <option key={v} value={v} />)}</datalist>
               <input type="hidden" name="motherName" value="" />
             </div>
             <div>
               <label className="text-sm text-gray-700">Phone No / فون نمبر</label>
-              <input name="phone" list="prev-phones" placeholder="e.g. 03XXXXXXXXX" className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2.5"/>
+              <input name="phone" required list="prev-phones" placeholder="e.g. 03XXXXXXXXX" className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2.5"/>
               <datalist id="prev-phones">{phoneOpts.map((v) => <option key={v} value={v} />)}</datalist>
             </div>
             <div className="md:col-span-2">
               <label className="text-sm text-gray-700">Address / پتہ</label>
-              <input name="address" list="prev-addresses" placeholder="Full address" className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2.5"/>
+              <input name="address" required list="prev-addresses" placeholder="Full address" className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2.5"/>
               <datalist id="prev-addresses">{addressOpts.map((v) => <option key={v} value={v} />)}</datalist>
             </div>
             <input type="hidden" name="guardianName" value="" />
