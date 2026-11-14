@@ -25,13 +25,27 @@ async function createStudent(formData: FormData) {
   const nameEn = String(formData.get("nameEn") || "").trim();
   if (!nameEn) redirect("/students/new?error=required");
   const dob = parseDateInput(formData.get("dob"));
+  const enteredAgeText = String(formData.get("age") || "").trim();
+  if (dob && enteredAgeText) {
+    const enteredMatch = enteredAgeText.match(/\d+/);
+    if (enteredMatch) {
+      const enteredYears = Number(enteredMatch[0]);
+      const now = new Date();
+      let dobYears = now.getFullYear() - dob.getFullYear();
+      const m = now.getMonth() - dob.getMonth();
+      if (m < 0 || (m === 0 && now.getDate() < dob.getDate())) dobYears--;
+      if (dobYears >= 0 && dobYears <= 130 && enteredYears !== dobYears) {
+        redirect("/students/new?error=age");
+      }
+    }
+  }
   const computedAge = (() => {
-    if (!dob) return String(formData.get("age") || "").trim() || null;
+    if (!dob) return enteredAgeText || null;
     const now = new Date();
     let years = now.getFullYear() - dob.getFullYear();
     const m = now.getMonth() - dob.getMonth();
     if (m < 0 || (m === 0 && now.getDate() < dob.getDate())) years--;
-    return (years >= 0 && years <= 130) ? `${years} years` : (String(formData.get("age") || "").trim() || null);
+    return (years >= 0 && years <= 130) ? `${years} years` : (enteredAgeText || null);
   })();
   try {
     const student = await prisma.student.create({
@@ -102,6 +116,11 @@ export default async function NewStudent({ searchParams }: { searchParams?: Prom
       {sp.error === "required" && (
         <div className="text-sm text-red-700 bg-red-50 border border-red-200 rounded-xl p-3">
           Student Name (English) ضروری ہے۔
+        </div>
+      )}
+      {sp.error === "age" && (
+        <div className="text-sm text-red-700 bg-red-50 border border-red-200 rounded-xl p-3">
+          درج کی گئی عمر تاریخِ پیدائش کے مطابق نہیں ہے۔ براہِ کرم درست عمر یا درست تاریخِ پیدائش درج کریں۔
         </div>
       )}
       {sp.error === "save" && (

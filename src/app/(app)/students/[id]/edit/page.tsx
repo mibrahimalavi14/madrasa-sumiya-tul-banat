@@ -15,13 +15,27 @@ async function updateStudent(formData: FormData) {
   const rollNoInput = String(formData.get("rollNo") || "").trim() || null;
   const feeExempt = formData.get("feeExempt") === "on";
   const dob = parseDateInput(formData.get("dob"));
+  const enteredAgeText = String(formData.get("age")||"").trim();
+  if (dob && enteredAgeText) {
+    const enteredMatch = enteredAgeText.match(/\d+/);
+    if (enteredMatch) {
+      const enteredYears = Number(enteredMatch[0]);
+      const now = new Date();
+      let dobYears = now.getFullYear() - dob.getFullYear();
+      const m = now.getMonth() - dob.getMonth();
+      if (m < 0 || (m === 0 && now.getDate() < dob.getDate())) dobYears--;
+      if (dobYears >= 0 && dobYears <= 130 && enteredYears !== dobYears) {
+        redirect(`/students/${id}/edit?error=age`);
+      }
+    }
+  }
   const computedAge = (() => {
-    if (!dob) return String(formData.get("age")||"").trim() || null;
+    if (!dob) return enteredAgeText || null;
     const now = new Date();
     let years = now.getFullYear() - dob.getFullYear();
     const m = now.getMonth() - dob.getMonth();
     if (m < 0 || (m === 0 && now.getDate() < dob.getDate())) years--;
-    return (years >= 0 && years <= 130) ? `${years} years` : (String(formData.get("age")||"").trim() || null);
+    return (years >= 0 && years <= 130) ? `${years} years` : (enteredAgeText || null);
   })();
   await prisma.student.update({ where: { id }, data: {
     applicationNo: String(formData.get("applicationNo")||"") || null,
@@ -91,6 +105,11 @@ export default async function EditStudent({ params, searchParams }: { params: Pr
       {sp.error === "roll" && (
         <div className="text-sm text-red-700 bg-red-50 border border-red-200 rounded-xl p-3">
           یہ Roll No پہلے سے استعمال میں ہے۔ ہر طالب علم کا Roll No اس سیشن میں منفرد ہونا چاہیے۔
+        </div>
+      )}
+      {sp.error === "age" && (
+        <div className="text-sm text-red-700 bg-red-50 border border-red-200 rounded-xl p-3">
+          درج کی گئی عمر تاریخِ پیدائش کے مطابق نہیں ہے۔ براہِ کرم درست عمر یا درست تاریخِ پیدائش درج کریں۔
         </div>
       )}
       <form action={updateStudent} className="space-y-4">
