@@ -42,7 +42,7 @@ async function saveStudentFee(formData: FormData) {
   revalidatePath("/fees");
 }
 
-export default async function FeesPage({ searchParams }: { searchParams: Promise<{ month?: string; year?: string }> }) {
+export default async function FeesPage({ searchParams }: { searchParams: Promise<{ month?: string; year?: string; q?: string }> }) {
   const user = await getAuthUser();
   const session = await getCurrentSession();
   const lang = await getLang();
@@ -63,11 +63,17 @@ export default async function FeesPage({ searchParams }: { searchParams: Promise
   const sp = await searchParams;
   const now = new Date();
   const month = Number(sp.month || (now.getMonth()+1)); const year = Number(sp.year || now.getFullYear());
+  const q = sp.q?.trim() || "";
+  const studentFilter = q ? { OR: [
+    { admissionNo: { contains: q, mode: "insensitive" as const } },
+    { nameEn: { contains: q, mode: "insensitive" as const } },
+    { nameUr: { contains: q, mode: "insensitive" as const } },
+  ] } : {};
   const [defaultAmountSettingSession, defaultAmountSettingGlobal, enrollsAll, fees] = await Promise.all([
     prisma.setting.findFirst({ where: { key: "monthlyFee", sessionId: session.id }, select: { value: true } }),
     prisma.setting.findFirst({ where: { key: "monthlyFee", sessionId: null }, select: { value: true } }),
     prisma.studentEnrollment.findMany({
-      where: { sessionId: session.id },
+      where: { sessionId: session.id, ...(q ? { student: studentFilter } : {}) },
       select: { id: true, studentId: true, monthlyFee: true, feeExempt: true, student: { select: { id: true, admissionNo: true, nameEn: true } } },
       orderBy: { student: { nameEn: "asc" } },
     }),
@@ -81,8 +87,11 @@ export default async function FeesPage({ searchParams }: { searchParams: Promise
   const map = new Map(fees.map(f=>[f.studentId,f]));
   return (
     <div className="space-y-4">
-      <h1 className="text-2xl font-bold text-emerald-900">{tr.fees}</h1>
-      <form className="bg-white rounded-xl shadow p-4 flex gap-5 items-center no-print flex-wrap border border-emerald-100/80">
+      <div className="flex items-center justify-between gap-3 flex-wrap">
+        <h1 className="text-2xl font-bold text-emerald-900">{tr.fees}</h1>
+        <div className="text-sm text-gray-600">{lang === "ur" ? `کل: ${enrolls.length}` : `Total: ${enrolls.length}`}</div>
+      </div>
+      <form className="bg-white rounded-xl shadow p-4 flex gap-4 items-end no-print flex-wrap border border-emerald-100/80">
         <div className="flex items-center gap-3">
           <label className="text-sm font-medium">{tr.month}</label>
           <input name="month" type="number" min={1} max={12} defaultValue={month} className="border border-emerald-200/80 rounded-lg px-3 py-2 w-24"/>
@@ -91,8 +100,13 @@ export default async function FeesPage({ searchParams }: { searchParams: Promise
           <label className="text-sm font-medium">{tr.year}</label>
           <input name="year" type="number" defaultValue={year} className="border border-emerald-200/80 rounded-lg px-3 py-2 w-28"/>
         </div>
+        <div className="flex flex-col gap-1">
+          <label className="text-sm font-medium">{lang === "ur" ? "تلاش" : "Search"}</label>
+          <input name="q" defaultValue={q} placeholder={lang === "ur" ? "داخلہ نمبر / نام" : "Admission No / Name"} className="border border-emerald-200/80 rounded-lg px-3 py-2 w-56"/>
+        </div>
         <button className="bg-gray-800 hover:bg-gray-900 text-white px-4 py-2 rounded-lg">{tr.load}</button>
-        <span className="text-xs text-gray-600">{tr.feesNote} {lang === "ur" ? "ہر بچے کی ماہانہ فیس الگ سے سیٹ کی جا سکتی ہے۔" : "You can set a different monthly fee for each student."}</span>
+        {q && <a href={`/fees?month=${month}&year=${year}`} className="text-sm text-emerald-700 underline pb-2">{lang === "ur" ? "صاف کریں" : "Clear"}</a>}
+        <span className="text-xs text-gray-600 w-full">{tr.feesNote} {lang === "ur" ? "ہر بچے کی ماہانہ فیس الگ سے سیٹ کی جا سکتی ہے۔" : "You can set a different monthly fee for each student."}</span>
       </form>
       <div className="bg-white rounded-2xl shadow-sm overflow-auto border border-emerald-100/80">
         <table className="w-full text-sm"><thead><tr><th className="p-3 text-left">{tr.admission}</th><th className="p-3 text-left">{tr.name}</th><th className="p-3 text-left">{lang === "ur" ? "طالب علم کی ماہانہ فیس" : "Student Monthly Fee"}</th><th className="p-3 text-left">{tr.amount}</th><th className="p-3 text-center">{tr.paid}</th><th className="p-3 text-left">{tr.paidDate}</th><th className="p-3 text-center">{tr.status}</th><th className="p-3 text-center">{tr.action}</th></tr></thead>

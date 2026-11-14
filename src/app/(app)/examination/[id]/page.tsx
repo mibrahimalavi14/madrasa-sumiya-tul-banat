@@ -8,9 +8,20 @@ import { notFound, redirect } from "next/navigation";
 export default async function ExamDetail({ params }: { params: Promise<{ id: string }> }) {
   const user = await getAuthUser(); if (user?.role !== "ADMIN") redirect("/dashboard");
   const { id } = await params;
-  const exam = await prisma.exam.findUnique({ where: { id }, include: { session: true, students: { include: { student: true } }, papers: { orderBy: [{ type: "asc" }, { paperCode: "asc" }] } } });
+  const exam = await prisma.exam.findUnique({
+    where: { id },
+    select: {
+      id: true, name: true, subject: true, examDate: true, sessionId: true, stage: true, stageLabel: true, monthLabel: true, hasWritten: true, hasOral: true,
+      session: { select: { name: true } },
+      students: { select: { studentId: true } },
+      papers: { select: { id: true, type: true, paperCode: true, title: true }, orderBy: [{ type: "asc" }, { paperCode: "asc" }] },
+    },
+  });
   if (!exam) notFound();
-  const enrollmentsRaw = await prisma.studentEnrollment.findMany({ where: { sessionId: exam.sessionId }, include: { student: true } });
+  const enrollmentsRaw = await prisma.studentEnrollment.findMany({
+    where: { sessionId: exam.sessionId },
+    select: { id: true, studentId: true, rollNo: true, student: { select: { admissionNo: true, nameEn: true } } },
+  });
   const enrollments = [...enrollmentsRaw].sort((a, b) => {
     const na = parseInt((a.student.admissionNo || "").replace(/\D/g, "")) || 0;
     const nb = parseInt((b.student.admissionNo || "").replace(/\D/g, "")) || 0;
@@ -24,16 +35,16 @@ export default async function ExamDetail({ params }: { params: Promise<{ id: str
     <div className="space-y-6">
       <div className="flex items-center justify-between flex-wrap gap-2">
         <div>
-          <h1 className="text-2xl font-bold text-emerald-900">{exam.name}{(exam as any).stage ? ` (${(exam as any).stage===4?40:20}%)` : ""}</h1>
-          {(exam as any).stageLabel && <p className="text-sm text-gray-600 mt-0.5 font-urdu" dir="rtl">{(exam as any).monthLabel ? `${(exam as any).monthLabel} — ` : ""}{(exam as any).stageLabel} {(exam as any).stage ? `(Annual Weight: ${(exam as any).stage===4?40:20}%)` : ""}</p>}
+          <h1 className="text-2xl font-bold text-emerald-900">{exam.name}{exam.stage ? ` (${exam.stage===4?40:20}%)` : ""}</h1>
+          {exam.stageLabel && <p className="text-sm text-gray-600 mt-0.5 font-urdu" dir="rtl">{exam.monthLabel ? `${exam.monthLabel} — ` : ""}{exam.stageLabel}{exam.stage ? ` (Annual Weight: ${exam.stage===4?40:20}%)` : ""}</p>}
         </div>
         <Link href="/examination" className="text-emerald-700 underline">← Back</Link>
       </div>
       <div className="bg-white rounded-xl shadow p-4 text-sm grid md:grid-cols-4 gap-2">
         <div><b>Session:</b> {exam.session.name}</div>
-        <div><b>Subject:</b> {exam.subject}</div>
+        <div><b>Subject:</b> {exam.subject || "-"}</div>
         <div><b>Date:</b> {formatDateDMY(exam.examDate)}</div>
-        <div><b>Type:</b> {(exam as any).hasWritten !== false ? "Written" : ""}{(exam as any).hasWritten !== false && (exam as any).hasOral !== false ? " + " : ""}{(exam as any).hasOral !== false ? "Oral" : ""} {(exam as any).stage ? `| Annual Weight: ${(exam as any).stage===4?40:20}%` : ""}</div>
+        <div><b>Type:</b> {exam.hasWritten !== false ? "Written" : ""}{exam.hasWritten !== false && exam.hasOral !== false ? " + " : ""}{exam.hasOral !== false ? "Oral" : ""} {exam.stage ? `| Annual Weight: ${exam.stage===4?40:20}%` : ""}</div>
       </div>
 
       <div className="bg-white rounded-xl shadow p-4">

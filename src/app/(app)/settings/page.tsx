@@ -48,8 +48,8 @@ export default async function SettingsPage() {
 
   const [feeSetting, students, parents, sessionsCount, totalStudents, examsCount, resultsCount, certsCount, usersCount] = await Promise.all([
     prisma.setting.findFirst({ where: { key: "monthlyFee", sessionId: session?.id || null } }),
-    session ? prisma.studentEnrollment.findMany({ where: { sessionId: session.id }, include: { student: true } }) : Promise.resolve([]),
-    prisma.user.findMany({ where: { role: "PARENT" }, include: { parentStudent: true } }),
+    session ? prisma.studentEnrollment.findMany({ where: { sessionId: session.id }, select: { studentId: true, student: { select: { admissionNo: true, nameEn: true } } }, orderBy: { student: { admissionNo: "asc" } } }) : Promise.resolve([] as any[]),
+    prisma.user.findMany({ where: { role: "PARENT" }, select: { id: true, username: true, name: true, parentStudent: { select: { admissionNo: true, nameEn: true } } } }),
     prisma.session.count(),
     prisma.student.count(),
     session ? prisma.exam.count({ where: { sessionId: session.id } }) : Promise.resolve(0),

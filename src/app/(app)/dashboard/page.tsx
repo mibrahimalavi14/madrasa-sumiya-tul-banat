@@ -40,15 +40,16 @@ export default async function Dashboard() {
   const m = now.getMonth() + 1;
   const y = now.getFullYear();
 
-  let students = 0, examsCount = 0, examsConducted = 0, feeGroups: any[] = [], resultsCount = 0, certsCount = 0;
+  let students = 0, activeStudents = 0, examsCount = 0, examsConducted = 0, feeGroups: any[] = [], resultsCount = 0, certsCount = 0;
   let recentEnrolls: any[] = [], recentExams: any[] = [], recentResults: any[] = [];
   let monthAgg: any = { _count: { _all: 0 } }, monthPaidAgg: any = { _count: { _all: 0 }, _sum: { amount: 0 } };
 
   if (session) {
     const sid = session.id;
     // Batched queries to avoid connection-pool exhaustion on serverless/pgbouncer
-    [students, examsCount, examsConducted, resultsCount, certsCount] = await Promise.all([
+    [students, activeStudents, examsCount, examsConducted, resultsCount, certsCount] = await Promise.all([
       prisma.studentEnrollment.count({ where: { sessionId: sid } }),
+      prisma.studentEnrollment.count({ where: { sessionId: sid, student: { status: "ACTIVE" } } }),
       prisma.exam.count({ where: { sessionId: sid } }),
       prisma.exam.count({ where: { sessionId: sid, results: { some: {} } } }),
       prisma.result.count({ where: { exam: { sessionId: sid } } }),
@@ -91,6 +92,7 @@ export default async function Dashboard() {
   const cards = [
     [tr.activeSession, session ? session.name : tr.none, ur ? "موجودہ تعلیمی سال" : "Current academic year"],
     [tr.enrolledStudents, String(students), ur ? "موجودہ سیشن میں" : "In current session"],
+    [ur ? "فعال طلبہ" : "Active Students", String(activeStudents), ur ? "جن کا اسٹیٹس فعال ہے" : "Students with ACTIVE status"],
     [ur ? "امتحانی مراحل (شیڈول)" : "Exam Stages (Schedule)", String(examsCount), ur ? "سیشن کے شیڈول شدہ/موجود مراحل" : "Scheduled/existing stages in session"],
     [ur ? "لیے گئے امتحانات" : "Exams Conducted", String(examsConducted), ur ? "جن کے نتائج محفوظ ہیں (اس سیشن میں)" : "Exams with saved results (in this session)"],
     [ur ? "نتائج (محفوظ)" : "Results (Saved)", String(resultsCount), ur ? "محفوظ شدہ نتائج" : "Saved result entries"],

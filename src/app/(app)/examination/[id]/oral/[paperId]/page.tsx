@@ -19,13 +19,13 @@ async function saveOralMark(formData: FormData) {
   // auto-generate/update result for this student in this exam (oral component; if written exists combine)
   const exam = await prisma.exam.findUnique({ where: { id: examId } });
   if (exam) {
-    const oralMarks = await prisma.oralMark.findMany({ where: { examId, studentId } });
+    const oralMarks = await prisma.oralMark.findMany({ where: { examId, studentId }, select: { obtained: true, total: true } });
     const oralObt = oralMarks.reduce((a,m)=>a+m.obtained,0);
     const oralTot = oralMarks.reduce((a,m)=>a+m.total,0) || 100;
-    const existing = await prisma.result.findUnique({ where: { examId_studentId: { examId, studentId } } });
+    const existing = await prisma.result.findUnique({ where: { examId_studentId: { examId, studentId } }, select: { writtenObtained: true, writtenTotal: true } });
     const writtenObt = existing?.writtenObtained ?? 0;
     const writtenTot = existing?.writtenTotal ?? 0;
-    const hasWritten = (existing?.writtenTotal ?? 0) > 0;
+    const hasWritten = writtenTot > 0;
     const totalObt = (hasWritten ? writtenObt : 0) + oralObt;
     const totalMarks = (hasWritten ? writtenTot : 0) + oralTot;
     const pct = totalMarks > 0 ? (totalObt / totalMarks) * 100 : 0;
@@ -35,10 +35,15 @@ async function saveOralMark(formData: FormData) {
       update: { oralObtained: oralObt, oralTotal: oralTot, totalObtained: totalObt, totalMarks, percentage: pct, grade: g.grade, status: g.status },
       create: { examId, studentId, oralObtained: oralObt, oralTotal: oralTot, totalObtained: totalObt, totalMarks, percentage: pct, grade: g.grade, status: g.status },
     });
-    // recalc positions for exam (top 3, >=70%)
-    const results = await prisma.result.findMany({ where: { examId } });
+    // recalc positions for exam (top 3, >=70%) - update only changed
+    const results = await prisma.result.findMany({ where: { examId }, select: { id: true, percentage: true, position: true } });
     const posMap = calculatePositions(results.map(r=>({id:r.id, percentage:r.percentage})));
-    for (const r of results) await prisma.result.update({ where: { id: r.id }, data: { position: posMap.get(r.id) ?? null } });
+    const updates = results
+      .map(r => ({ id: r.id, position: posMap.get(r.id) ?? null }))
+      .filter(u => (results.find(r => r.id === u.id)?.position ?? null) !== u.position);
+    if (updates.length) {
+      await prisma.$transaction(updates.map(u => prisma.result.update({ where: { id: u.id }, data: { position: u.position } })));
+    }
   }
   revalidatePath(`/examination/${examId}/oral/${paperId}`); revalidatePath(`/results`);
 }

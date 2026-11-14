@@ -35,7 +35,7 @@ async function saveWritten(formData: FormData) {
   revalidatePath("/results");
 }
 
-export default async function ResultsPage({ searchParams }: { searchParams: Promise<{ examId?: string; view?: string }> }) {
+export default async function ResultsPage({ searchParams }: { searchParams: Promise<{ examId?: string; view?: string; q?: string }> }) {
   const user = await getAuthUser();
   const session = await getCurrentSession();
   const lang = await getLang();
@@ -58,6 +58,7 @@ export default async function ResultsPage({ searchParams }: { searchParams: Prom
   const examDisplayName = (e: any) => (ur && e?.stage && examNameUr[Number(e.stage)]) || e?.name || "-";
   const view = sp.view === "annual" ? "annual" : "exam";
 
+  const q = sp.q?.trim() || "";
   if (view === "annual") {
     const stageWeight: Record<number, number> = { 1: 20, 2: 20, 3: 20, 4: 40 };
     const annualExams = exams.filter(e => {
@@ -103,8 +104,10 @@ export default async function ResultsPage({ searchParams }: { searchParams: Prom
       return { id: v.student.id, student: v.student, rollNo: rollMap.get(v.student.id) || null, totalObtained: obtained, totalMarks: total, percentage: pct, grade: g.grade, status: g.status, stagePct: v.stagePct };
     });
     const posMap = calculatePositions(annual.map(a=>({id:a.id, percentage:a.percentage})));
-    const annualWithPos = annual.map(a => ({ ...a, position: posMap.get(a.id) ?? null })).sort((a,b)=> (a.position ?? 999) - (b.position ?? 999) || (b.percentage - a.percentage));
-    const holders = annualWithPos.filter(a => a.position != null);
+    const annualWithPosAll = annual.map(a => ({ ...a, position: posMap.get(a.id) ?? null })).sort((a,b)=> (a.position ?? 999) - (b.position ?? 999) || (b.percentage - a.percentage));
+    const holders = annualWithPosAll.filter(a => a.position != null);
+    const ql = q.toLowerCase();
+    const annualWithPos = q ? annualWithPosAll.filter(a => [a.student?.nameEn, a.rollNo].some(v => (v || "").toLowerCase().includes(ql))) : annualWithPosAll;
     return (
       <div className="space-y-5">
         <div className="flex items-center justify-between flex-wrap gap-2">
@@ -137,7 +140,15 @@ export default async function ResultsPage({ searchParams }: { searchParams: Prom
           )}
         </div>
         <div className="bg-white rounded-2xl shadow-sm border border-emerald-100 p-5 overflow-auto">
-          <h2 className="font-semibold mb-3">{ur ? "سالانہ مجموعی نتیجہ - تمام طلبہ" : "Annual Combined Result - All Students"}</h2>
+          <div className="flex items-center justify-between gap-3 flex-wrap mb-3">
+            <h2 className="font-semibold">{ur ? "سالانہ مجموعی نتیجہ - تمام طلبہ" : "Annual Combined Result - All Students"}</h2>
+            <form className="flex items-center gap-2">
+              <input type="hidden" name="view" value="annual" />
+              <input name="q" defaultValue={q} placeholder={ur ? "نام / رول نمبر تلاش کریں" : "Search name / roll no"} className="border rounded-lg px-3 py-1.5 text-sm" />
+              <button className="text-sm bg-gray-800 text-white px-3 py-1.5 rounded-lg">{ur ? "تلاش" : "Search"}</button>
+              {q && <Link href="/results?view=annual" className="text-sm text-emerald-700 underline">{ur ? "صاف کریں" : "Clear"}</Link>}
+            </form>
+          </div>
           <table className="w-full text-sm"><thead className="bg-emerald-50"><tr><th className="p-2">{ur ? "پوزیشن" : "Position"}</th><th className="p-2">{ur ? "رول نمبر" : "Roll No"}</th><th className="p-2">{ur ? "طالب علم کا نام" : "Student Name"}</th><th className="p-2">{ur ? "امتحان 1" : "Exam 1"}</th><th className="p-2">{ur ? "امتحان 2" : "Exam 2"}</th><th className="p-2">{ur ? "امتحان 3" : "Exam 3"}</th><th className="p-2">{ur ? "امتحان 4" : "Exam 4"}</th><th className="p-2">{ur ? "حاصل کردہ نمبر" : "Obtained Marks"}</th><th className="p-2">{ur ? "کل نمبر" : "Total Marks"}</th><th className="p-2">{ur ? "فیصد" : "Percentage"}</th><th className="p-2">{ur ? "گریڈ" : "Grade"}</th><th className="p-2">{ur ? "حیثیت" : "Status"}</th><th className="p-2">{ur ? "رزلٹ کارڈ" : "Result Card"}</th></tr></thead>
           <tbody>
             {annualWithPos.map(a => (
