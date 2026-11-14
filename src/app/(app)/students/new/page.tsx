@@ -152,7 +152,7 @@ export default async function NewStudent({ searchParams }: { searchParams?: Prom
           <div className="grid md:grid-cols-4 gap-4">
             <div><label className="text-sm text-gray-700">Session / تعلیمی سیشن</label><input value={session.name} disabled className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2.5 bg-gray-50"/></div>
             <div><label className="text-sm text-gray-700">Roll No / رول نمبر</label><input name="rollNo" className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-emerald-200" placeholder="e.g. 1"/></div>
-            <div><label className="text-sm text-gray-700">Application No / درخواست نمبر</label><input name="applicationNo" className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-emerald-200"/></div>
+            <div><label className="text-sm text-gray-700">Application No / درخواست نمبر</label><input name="applicationNo" placeholder="e.g. APP-001" className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-emerald-200"/></div>
             <div><label className="text-sm text-gray-700">Admission No / داخلہ نمبر</label><input name="admissionNo" placeholder="Leave empty for auto / خالی چھوڑیں تو خود بنے گا" className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-emerald-200"/></div>
           </div>
           <div className="mt-4 flex items-start gap-3 p-3 rounded-xl border border-amber-200 bg-amber-50/60">
@@ -170,8 +170,8 @@ export default async function NewStudent({ searchParams }: { searchParams?: Prom
             <h2 className="font-semibold text-emerald-900">Student Information / طالب/طالبہ کی معلومات</h2>
           </div>
           <div className="grid md:grid-cols-2 gap-4">
-            <div><label className="text-sm text-gray-700">Student Name (English) / طالب/طالبہ کا نام (انگریزی)</label><input name="nameEn" required className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-emerald-200"/></div>
-            <div><label className="text-sm text-gray-700">Student Name (Urdu) / طالب/طالبہ کا نام (اردو)</label><input name="nameUr" className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2.5 font-urdu focus:outline-none focus:ring-2 focus:ring-emerald-200"/></div>
+            <div><label className="text-sm text-gray-700">Student Name (English) / طالب/طالبہ کا نام (انگریزی)</label><input name="nameEn" required placeholder="Student name in English" className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-emerald-200"/></div>
+            <div><label className="text-sm text-gray-700">Student Name (Urdu) / طالب/طالبہ کا نام (اردو)</label><input name="nameUr" placeholder="طالب/طالبہ کا نام" className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2.5 font-urdu focus:outline-none focus:ring-2 focus:ring-emerald-200"/></div>
             <div>
               <label className="text-sm text-gray-700">Age / عمر</label>
               <input name="age" list="prev-ages" className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2.5" placeholder="e.g. 8 years"/>
@@ -201,12 +201,12 @@ export default async function NewStudent({ searchParams }: { searchParams?: Prom
             </div>
             <div>
               <label className="text-sm text-gray-700">Phone No / فون نمبر</label>
-              <input name="phone" list="prev-phones" className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2.5"/>
+              <input name="phone" list="prev-phones" placeholder="e.g. 03XXXXXXXXX" className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2.5"/>
               <datalist id="prev-phones">{phoneOpts.map((v) => <option key={v} value={v} />)}</datalist>
             </div>
             <div className="md:col-span-2">
               <label className="text-sm text-gray-700">Address / پتہ</label>
-              <input name="address" list="prev-addresses" className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2.5"/>
+              <input name="address" list="prev-addresses" placeholder="Full address" className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2.5"/>
               <datalist id="prev-addresses">{addressOpts.map((v) => <option key={v} value={v} />)}</datalist>
             </div>
             <input type="hidden" name="guardianName" value="" />
@@ -220,7 +220,7 @@ export default async function NewStudent({ searchParams }: { searchParams?: Prom
           </div>
           <div>
             <label className="text-sm text-gray-700">Previous School/Madrasa / سابقہ مدرسہ/سکول</label>
-            <input name="previousSchool" list="prev-schools" className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2.5"/>
+            <input name="previousSchool" list="prev-schools" placeholder="Previous school or madrasa" className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2.5"/>
             <datalist id="prev-schools">{schoolOpts.map((v) => <option key={v} value={v} />)}</datalist>
           </div>
         </div>

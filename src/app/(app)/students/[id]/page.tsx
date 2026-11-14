@@ -88,8 +88,8 @@ export default async function StudentProfile({ params }: { params: Promise<{ id:
           ) : (
             <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-5">
               <h2 className="font-semibold text-gray-800 mb-1">Siblings</h2>
-              <p className="text-sm text-gray-500">Koi sibling add nahi hai.</p>
-              {isAdmin && <p className="text-xs text-gray-400 mt-2">Add karne ke liye Edit Student box use karein.</p>}
+              <p className="text-sm text-gray-500">No siblings added.</p>
+              {isAdmin && <p className="text-xs text-gray-400 mt-2">To add siblings, use the Edit Student page.</p>}
             </div>
           )}
         </div>
@@ -97,9 +97,9 @@ export default async function StudentProfile({ params }: { params: Promise<{ id:
 
       <div className="bg-white rounded-2xl shadow-sm border border-emerald-100 p-5">
         <h2 className="font-semibold mb-2">Session Enrollments & Roll No</h2>
-        <p className="text-xs text-gray-500 mb-2">"Roll Locked" کا مطلب: اگر رول نمبر لاک ہو تو تبدیل نہیں کیا جا سکتا؛ "Not Locked" کا مطلب رول نمبر ابھی تبدیل/درج کیا جا سکتا ہے۔</p>
+        <p className="text-xs text-gray-500 mb-2">"Roll Locked" means the roll number cannot be changed for this session once set. "Not Locked" means the roll number can still be set or changed.</p>
         <table className="w-full text-sm"><thead className="bg-gray-50"><tr><th className="p-2 text-center">Session</th><th className="p-2 text-center">Roll No</th><th className="p-2 text-center">Roll Status</th></tr></thead>
-        <tbody>{student.enrollments.map(e=>(<tr key={e.id} className="border-t"><td className="p-2 text-center">{e.session.name}</td><td className="p-2 text-center">{e.rollNo || "-"}</td><td className="p-2 text-center">{e.rollLocked ? <span className="text-amber-700 font-medium">Locked / مقفل</span> : <span className="text-emerald-700 font-medium">Not Locked / غیر مقفل</span>}</td></tr>))}</tbody></table>
+        <tbody>{student.enrollments.map(e=>(<tr key={e.id} className="border-t"><td className="p-2 text-center">{e.session.name}</td><td className="p-2 text-center">{e.rollNo || "-"}</td><td className="p-2 text-center">{e.rollLocked ? <span className="text-amber-700 font-medium">Locked</span> : <span className="text-emerald-700 font-medium">Not Locked</span>}</td></tr>))}</tbody></table>
       </div>
       <div className="bg-white rounded-2xl shadow-sm border border-emerald-100 p-5">
         <h2 className="font-semibold mb-2">Results</h2>
