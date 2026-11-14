@@ -159,7 +159,7 @@ export default async function NewStudent({ searchParams }: { searchParams?: Prom
             <input id="feeExempt" name="feeExempt" type="checkbox" className="mt-1 h-4 w-4" />
             <label htmlFor="feeExempt" className="text-sm text-gray-800">
               <span className="font-medium">Fee Exempt / فیس معاف</span>
-              <span className="block text-xs text-gray-600 mt-0.5">اس طالب علم سے فیس وصول نہیں کی جاتی (داخلہ/ریکارڈ برقرار رہے گا)۔</span>
+              <span className="block text-xs text-gray-600 mt-0.5">No fee will be collected from this student (admission/record will remain).</span>
             </label>
           </div>
         </div>
