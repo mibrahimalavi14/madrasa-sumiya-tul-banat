@@ -6,6 +6,7 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { formatAdmissionNo, formatRegNo, parseDateInput } from "@/lib/utils";
 import DateInputDMY from "@/components/DateInputDMY";
+import ScrollToTopOnError from "@/components/ScrollToTopOnError";
 
 async function createStudent(formData: FormData) {
   "use server";
@@ -98,6 +99,7 @@ export default async function NewStudent({ searchParams }: { searchParams?: Prom
   const count = await prisma.student.count();
   return (
     <div className="max-w-5xl space-y-4">
+      <ScrollToTopOnError active={!!sp.error} />
       <Link href="/students" className="inline-flex items-center gap-2 text-sm text-emerald-800 hover:text-emerald-900 font-medium">← Back / واپس</Link>
       <div className="bg-gradient-to-r from-emerald-800 to-emerald-700 text-white rounded-2xl p-5 shadow-sm">
         <h1 className="text-2xl font-bold">Student Admission / طالب/طالبہ کا داخلہ</h1>

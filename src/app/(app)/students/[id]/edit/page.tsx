@@ -6,6 +6,7 @@ import { notFound, redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { parseDateInput, toDateInputDMY } from "@/lib/utils";
 import DateInputDMY from "@/components/DateInputDMY";
+import ScrollToTopOnError from "@/components/ScrollToTopOnError";
 
 async function updateStudent(formData: FormData) {
   "use server";
@@ -97,6 +98,7 @@ export default async function EditStudent({ params, searchParams }: { params: Pr
   const currentSibs = new Set([...student.siblingsA.map(s=>s.studentBId), ...student.siblingsB.map(s=>s.studentAId)]);
   return (
     <div className="max-w-5xl space-y-4">
+      <ScrollToTopOnError active={!!sp.error} />
       <Link href={`/students/${student.id}`} className="inline-flex items-center gap-2 text-sm text-emerald-800 hover:text-emerald-900 font-medium">← Back</Link>
       <div className="bg-gradient-to-r from-emerald-800 to-emerald-700 text-white rounded-2xl p-5 shadow-sm">
         <h1 className="text-2xl font-bold">Edit Student</h1>
