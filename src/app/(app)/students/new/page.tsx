@@ -65,7 +65,7 @@ async function createStudent(formData: FormData) {
         address: String(formData.get("address") || "") || null,
         phone: String(formData.get("phone") || "") || null,
         previousSchool: String(formData.get("previousSchool") || "") || null,
-        status: "ACTIVE",
+        status: "REGISTERED",
       }
     });
     try {
