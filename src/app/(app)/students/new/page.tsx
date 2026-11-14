@@ -162,8 +162,8 @@ export default async function NewStudent({ searchParams }: { searchParams?: Prom
           <div className="grid md:grid-cols-4 gap-4">
             <div><label className="text-sm text-gray-700">Session / تعلیمی سیشن</label><input value={session.name} disabled className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2.5 bg-gray-50"/></div>
             <div><label className="text-sm text-gray-700">Roll No / رول نمبر</label><input name="rollNo" required className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-emerald-200" placeholder="e.g. 1"/></div>
-            <div><label className="text-sm text-gray-700">Application No / درخواست نمبر</label><input name="applicationNo" required placeholder="e.g. APP-001" className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-emerald-200"/></div>
-            <div><label className="text-sm text-gray-700">Admission No / داخلہ نمبر</label><input name="admissionNo" required placeholder="Enter Admission No" className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-emerald-200"/></div>
+            <div><label className="text-sm text-gray-700">Application No / درخواست نمبر</label><input name="applicationNo" required placeholder="e.g. MSB-01" className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-emerald-200"/></div>
+            <div><label className="text-sm text-gray-700">Admission No / داخلہ نمبر</label><input name="admissionNo" required placeholder="e.g. MSB-01" className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-emerald-200"/></div>
           </div>
           <div className="mt-4 flex items-start gap-3 p-3 rounded-xl border border-amber-200 bg-amber-50/60">
             <input id="feeExempt" name="feeExempt" type="checkbox" className="mt-1 h-4 w-4" />
@@ -181,7 +181,7 @@ export default async function NewStudent({ searchParams }: { searchParams?: Prom
           </div>
           <div className="grid md:grid-cols-2 gap-4">
             <div><label className="text-sm text-gray-700">Student Name (English) / طالب/طالبہ کا نام (انگریزی)</label><input name="nameEn" required placeholder="Student name in English" className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-emerald-200"/></div>
-            <div><label className="text-sm text-gray-700">Student Name (Urdu) / طالب/طالبہ کا نام (اردو)</label><input name="nameUr" placeholder="طالب/طالبہ کا نام" className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2.5 font-urdu focus:outline-none focus:ring-2 focus:ring-emerald-200"/></div>
+            <div><label className="text-sm text-gray-700">Student Name (Urdu) / طالب/طالبہ کا نام (اردو)</label><input name="nameUr" placeholder="طالب یا طالبہ کا نام اردو میں" className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2.5 font-urdu focus:outline-none focus:ring-2 focus:ring-emerald-200"/></div>
             <div>
               <label className="text-sm text-gray-700">Age / عمر</label>
               <input name="age" required list="prev-ages" className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2.5" placeholder="e.g. 8 years"/>
@@ -190,8 +190,8 @@ export default async function NewStudent({ searchParams }: { searchParams?: Prom
             <div><label className="text-sm text-gray-700">Date of Birth / تاریخ پیدائش</label><DateInputDMY name="dob" className="mt-1" inputClassName="border border-gray-200 rounded-lg px-3 py-2.5" /></div>
             <div>
               <label className="text-sm text-gray-700">Gender / جنس</label>
-              <select name="gender" required defaultValue="" className="mt-1 block w-full border border-gray-200 rounded-lg px-3 py-2.5 bg-white focus:outline-none focus:ring-2 focus:ring-emerald-200">
-                <option value="" disabled>Select Gender</option>
+              <select name="gender" required defaultValue="" className="mt-1 block w-full h-[42px] border border-gray-200 rounded-lg px-3 bg-white focus:outline-none focus:ring-2 focus:ring-emerald-200">
+                <option value="" disabled>Gender</option>
                 <option value="Male">Male / لڑکا</option>
                 <option value="Female">Female / لڑکی</option>
               </select>
