@@ -81,10 +81,10 @@ export default async function NewStudent({ searchParams }: { searchParams?: Prom
   const count = await prisma.student.count();
   return (
     <div className="max-w-5xl space-y-4">
-      <Link href="/students" className="inline-flex items-center gap-2 text-sm text-emerald-800 hover:text-emerald-900 font-medium">ΓåÉ Back / ┘ê╪º┘╛╪│</Link>
+      <Link href="/students" className="inline-flex items-center gap-2 text-sm text-emerald-800 hover:text-emerald-900 font-medium">← Back / واپس</Link>
       <div className="bg-gradient-to-r from-emerald-800 to-emerald-700 text-white rounded-2xl p-5 shadow-sm">
-        <h1 className="text-2xl font-bold">Student Admission / ╪╖╪º┘ä╪¿/╪╖╪º┘ä╪¿█ü ┌⌐╪º ╪»╪º╪«┘ä█ü</h1>
-        <p className="text-sm text-emerald-50 mt-1">Session: <b>{session.name}</b> ΓÇö admission form ke mutabiq maloomat darj karein.</p>
+        <h1 className="text-2xl font-bold">Student Admission / طالب/طالبہ کا داخلہ</h1>
+        <p className="text-sm text-emerald-50 mt-1">Session: <b>{session.name}</b> — داخلہ فارم کے مطابق معلومات درج کریں۔</p>
       </div>
       {sp.error === "roll" && (
         <div className="text-sm text-red-700 bg-red-50 border border-red-200 rounded-xl p-3">
