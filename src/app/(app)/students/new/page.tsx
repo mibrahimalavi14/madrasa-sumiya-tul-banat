@@ -95,8 +95,21 @@ export default async function NewStudent({ searchParams }: { searchParams?: Prom
   const user = await getAuthUser(); if (user?.role !== "ADMIN") redirect("/dashboard");
   const session = await getCurrentSession(); if (!session) return <p>Create an active session first.</p>;
   const sp = (await searchParams) || {};
-  const all = await prisma.student.findMany({ orderBy: { nameEn: "asc" } });
-  const count = await prisma.student.count();
+  const [all, count, prev] = await Promise.all([
+    prisma.student.findMany({ select: { id: true, admissionNo: true, nameEn: true }, orderBy: { nameEn: "asc" } }),
+    prisma.student.count(),
+    prisma.student.findMany({
+      select: { admissionClass: true, previousSchool: true, fatherName: true, motherName: true, phone: true, address: true },
+      orderBy: { createdAt: "desc" },
+      take: 300,
+    }),
+  ]);
+  const uniq = (vals: (string | null | undefined)[]) => Array.from(new Set(vals.map(v => (v || "").trim()).filter(Boolean))).slice(0, 50);
+  const classOpts = uniq(prev.map(p => p.admissionClass));
+  const schoolOpts = uniq(prev.map(p => p.previousSchool));
+  const parentOpts = uniq(prev.flatMap(p => [p.fatherName, p.motherName]));
+  const phoneOpts = uniq(prev.map(p => p.phone));
+  const addressOpts = uniq(prev.map(p => p.address));
   return (
     <div className="max-w-5xl space-y-4">
       <ScrollToTopOnError active={!!sp.error} />
@@ -162,33 +175,45 @@ export default async function NewStudent({ searchParams }: { searchParams?: Prom
             <div><label className="text-sm text-gray-700">Age / عمر</label><input name="age" className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2.5" placeholder="e.g. 8 years"/></div>
             <div><label className="text-sm text-gray-700">Date of Birth / تاریخ پیدائش</label><DateInputDMY name="dob" className="mt-1" inputClassName="border border-gray-200 rounded-lg px-3 py-2.5" /></div>
             <div><label className="text-sm text-gray-700">Gender / جنس</label><select name="gender" className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2.5 bg-white"><option value="">Select</option><option value="Male">Male / لڑکا</option><option value="Female">Female / لڑکی</option></select></div>
-            <div><label className="text-sm text-gray-700">Class for Admission / کس جماعت میں داخلہ چاہیے</label><input name="admissionClass" className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2.5" placeholder="e.g. Nazra / Class 1"/></div>
           </div>
-        </div>
-
-        <div className="bg-white rounded-2xl shadow-sm border border-emerald-100 p-5">
-          <div className="flex items-center gap-2 mb-3">
-            <span className="h-7 w-7 rounded-full bg-emerald-100 text-emerald-800 text-sm font-bold grid place-items-center">3</span>
-            <h2 className="font-semibold text-emerald-900">Parents Information / والدین کی معلومات</h2>
-          </div>
-          <div className="grid md:grid-cols-2 gap-4">
-            <div className="md:col-span-2">
-              <label className="text-sm text-gray-700">Father / Mother Name / والد یا والدہ کا نام</label>
-              <input name="fatherName" className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2.5" placeholder="Father / Mother Name" />
-              <input type="hidden" name="motherName" value="" />
+          <details className="mt-4 border border-emerald-100 rounded-xl p-3 bg-emerald-50/30">
+            <summary className="cursor-pointer list-none flex items-center justify-between">
+              <div>
+                <div className="font-medium text-emerald-900">مزید تفصیلات (پرانے اندراج سے انتخاب) / More Details</div>
+                <p className="text-xs text-gray-600 mt-0.5">کلاس، والد/والدہ، فون، پتہ، سابقہ تعلیم — پرانی entries میں سے منتخب کریں یا نیا لکھیں</p>
+              </div>
+              <span className="text-sm bg-white text-emerald-800 border border-emerald-200 px-3 py-1 rounded-lg">کھولیں</span>
+            </summary>
+            <div className="mt-3 grid md:grid-cols-2 gap-4">
+              <div>
+                <label className="text-sm text-gray-700">Class for Admission / کس جماعت میں داخلہ چاہیے</label>
+                <input name="admissionClass" list="prev-classes" className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2.5" placeholder="e.g. Nazra / Class 1" />
+                <datalist id="prev-classes">{classOpts.map((v) => <option key={v} value={v} />)}</datalist>
+              </div>
+              <div>
+                <label className="text-sm text-gray-700">Father / Mother Name / والد یا والدہ کا نام</label>
+                <input name="fatherName" list="prev-parents" className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2.5" placeholder="Father / Mother Name" />
+                <datalist id="prev-parents">{parentOpts.map((v) => <option key={v} value={v} />)}</datalist>
+                <input type="hidden" name="motherName" value="" />
+              </div>
+              <div>
+                <label className="text-sm text-gray-700">Phone No / فون نمبر</label>
+                <input name="phone" list="prev-phones" className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2.5" />
+                <datalist id="prev-phones">{phoneOpts.map((v) => <option key={v} value={v} />)}</datalist>
+              </div>
+              <div>
+                <label className="text-sm text-gray-700">Previous School/Madrasa / سابقہ مدرسہ/سکول</label>
+                <input name="previousSchool" list="prev-schools" className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2.5" />
+                <datalist id="prev-schools">{schoolOpts.map((v) => <option key={v} value={v} />)}</datalist>
+              </div>
+              <div className="md:col-span-2">
+                <label className="text-sm text-gray-700">Address / پتہ</label>
+                <input name="address" list="prev-addresses" className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2.5" />
+                <datalist id="prev-addresses">{addressOpts.map((v) => <option key={v} value={v} />)}</datalist>
+              </div>
+              <input type="hidden" name="guardianName" value="" />
             </div>
-            <div><label className="text-sm text-gray-700">Phone No / فون نمبر</label><input name="phone" className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2.5"/></div>
-            <div className="md:col-span-2"><label className="text-sm text-gray-700">Address / پتہ</label><input name="address" className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2.5"/></div>
-            <input type="hidden" name="guardianName" value="" />
-          </div>
-        </div>
-
-        <div className="bg-white rounded-2xl shadow-sm border border-emerald-100 p-5">
-          <div className="flex items-center gap-2 mb-3">
-            <span className="h-7 w-7 rounded-full bg-emerald-100 text-emerald-800 text-sm font-bold grid place-items-center">4</span>
-            <h2 className="font-semibold text-emerald-900">Previous Education / سابقہ تعلیم</h2>
-          </div>
-          <div><label className="text-sm text-gray-700">Previous School/Madrasa / سابقہ مدرسہ/سکول</label><input name="previousSchool" className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2.5"/></div>
+          </details>
         </div>
 
         <details className="bg-white rounded-2xl shadow-sm border border-emerald-100 p-5 group">
