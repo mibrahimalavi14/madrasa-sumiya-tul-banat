@@ -72,11 +72,11 @@ export default async function StudentsPage({ searchParams }: { searchParams: Pro
                 <td className="p-3">{[e.student.fatherName, e.student.motherName].filter(Boolean).join(" / ") || "-"}</td>
                 <td className="p-3">{e.student.admissionClass || "-"}</td>
                 <td className="p-3 text-center">{e.rollNo || "-"}</td>
-                <td className="p-3">
-                  <div className="flex flex-wrap gap-2">
-                    <Link className="px-3 py-1.5 rounded-lg border border-emerald-200 bg-emerald-50 text-emerald-800 font-medium hover:bg-emerald-100" href={`/students/${e.student.id}`}>{tr.profile}</Link>
-                    <Link className="px-3 py-1.5 rounded-lg border border-blue-200 bg-blue-50 text-blue-800 font-medium hover:bg-blue-100" href={`/students/${e.student.id}/edit`}>{tr.edit}</Link>
-                    <Link className="px-3 py-1.5 rounded-lg border border-amber-200 bg-amber-50 text-amber-800 font-medium hover:bg-amber-100" href={`/students/${e.student.id}/admission-form`}>{tr.print}</Link>
+                <td className="p-3 whitespace-nowrap">
+                  <div className="inline-flex flex-nowrap items-center gap-2">
+                    <Link className="inline-flex px-3 py-1.5 rounded-lg border border-emerald-200 bg-emerald-50 text-emerald-800 font-medium hover:bg-emerald-100" href={`/students/${e.student.id}`}>{tr.profile}</Link>
+                    <Link className="inline-flex px-3 py-1.5 rounded-lg border border-blue-200 bg-blue-50 text-blue-800 font-medium hover:bg-blue-100" href={`/students/${e.student.id}/edit`}>{tr.edit}</Link>
+                    <Link className="inline-flex px-3 py-1.5 rounded-lg border border-amber-200 bg-amber-50 text-amber-800 font-medium hover:bg-amber-100" href={`/students/${e.student.id}/admission-form`}>{tr.print}</Link>
                   </div>
                 </td>
               </tr>

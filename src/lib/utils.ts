@@ -23,6 +23,24 @@ export function formatDateDMY(date?: Date | string | null) {
   return `${day}/${month}/${year}`;
 }
 
+export function calculateAge(dob?: string | Date | null, asOf: Date = new Date()) {
+  if (!dob) return null;
+  const d = typeof dob === "string" ? new Date(dob) : dob;
+  if (Number.isNaN(d.getTime())) return null;
+  let years = asOf.getFullYear() - d.getFullYear();
+  const m = asOf.getMonth() - d.getMonth();
+  if (m < 0 || (m === 0 && asOf.getDate() < d.getDate())) years--;
+  if (years < 0 || years > 130) return null;
+  return years;
+}
+
+export function formatAge(dob?: string | Date | null, fallback?: string | null) {
+  const years = calculateAge(dob);
+  if (years != null) return `${years} years`;
+  const fb = String(fallback || "").trim();
+  return fb || "-";
+}
+
 export function toDateInputDMY(date?: Date | string | null) {
   if (!date) return "";
   const d = typeof date === "string" ? new Date(date) : date;

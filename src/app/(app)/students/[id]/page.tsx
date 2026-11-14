@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { getAuthUser } from "@/lib/auth";
-import { formatDateDMY } from "@/lib/utils";
+import { formatDateDMY, formatAge } from "@/lib/utils";
 import { notFound, redirect } from "next/navigation";
 
 export default async function StudentProfile({ params }: { params: Promise<{ id: string }> }) {
@@ -61,7 +61,7 @@ export default async function StudentProfile({ params }: { params: Promise<{ id:
             <Info label="Class for Admission" value={student.admissionClass} />
             <Info label="Name (English)" value={student.nameEn} />
             <Info label="Name (Urdu)" value={student.nameUr ? <span className="font-urdu">{student.nameUr}</span> : "-"} />
-            <Info label="Age" value={student.age} />
+            <Info label="Age (auto from DOB)" value={formatAge(student.dob, student.age)} />
             <Info label="Date of Birth" value={formatDateDMY(student.dob)} />
             <Info label="Gender" value={student.gender} />
             <Info label="Status" value={student.status} />
@@ -97,8 +97,9 @@ export default async function StudentProfile({ params }: { params: Promise<{ id:
 
       <div className="bg-white rounded-2xl shadow-sm border border-emerald-100 p-5">
         <h2 className="font-semibold mb-2">Session Enrollments & Roll No</h2>
-        <table className="w-full text-sm"><thead className="bg-gray-50"><tr><th className="p-2 text-center">Session</th><th className="p-2 text-center">Roll No</th><th className="p-2 text-center">Locked</th></tr></thead>
-        <tbody>{student.enrollments.map(e=>(<tr key={e.id} className="border-t"><td className="p-2 text-center">{e.session.name}</td><td className="p-2 text-center">{e.rollNo || "-"}</td><td className="p-2 text-center">{e.rollLocked?"Yes":"No"}</td></tr>))}</tbody></table>
+        <p className="text-xs text-gray-500 mb-2">"Roll Locked" کا مطلب: اگر رول نمبر لاک ہو تو تبدیل نہیں کیا جا سکتا؛ "Not Locked" کا مطلب رول نمبر ابھی تبدیل/درج کیا جا سکتا ہے۔</p>
+        <table className="w-full text-sm"><thead className="bg-gray-50"><tr><th className="p-2 text-center">Session</th><th className="p-2 text-center">Roll No</th><th className="p-2 text-center">Roll Status</th></tr></thead>
+        <tbody>{student.enrollments.map(e=>(<tr key={e.id} className="border-t"><td className="p-2 text-center">{e.session.name}</td><td className="p-2 text-center">{e.rollNo || "-"}</td><td className="p-2 text-center">{e.rollLocked ? <span className="text-amber-700 font-medium">Locked / مقفل</span> : <span className="text-emerald-700 font-medium">Not Locked / غیر مقفل</span>}</td></tr>))}</tbody></table>
       </div>
       <div className="bg-white rounded-2xl shadow-sm border border-emerald-100 p-5">
         <h2 className="font-semibold mb-2">Results</h2>

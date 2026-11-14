@@ -24,6 +24,15 @@ async function createStudent(formData: FormData) {
   }
   const nameEn = String(formData.get("nameEn")||"").trim();
   if (!nameEn) redirect("/students/new?error=required");
+  const dob = parseDateInput(formData.get("dob"));
+  const computedAge = (() => {
+    if (!dob) return String(formData.get("age")||"").trim() || null;
+    const now = new Date();
+    let years = now.getFullYear() - dob.getFullYear();
+    const m = now.getMonth() - dob.getMonth();
+    if (m < 0 || (m === 0 && now.getDate() < dob.getDate())) years--;
+    return (years >= 0 && years <= 130) ? `${years} years` : (String(formData.get("age")||"").trim() || null);
+  })();
   try {
     const student = await prisma.student.create({
       data: {
@@ -35,9 +44,9 @@ async function createStudent(formData: FormData) {
         motherName: String(formData.get("motherName")||"") || null,
         guardianName: String(formData.get("guardianName")||"") || null,
         gender: String(formData.get("gender")||"") || null,
-        age: String(formData.get("age")||"") || null,
+        age: computedAge,
         admissionClass: String(formData.get("admissionClass")||"") || null,
-        dob: parseDateInput(formData.get("dob")),
+        dob,
         address: String(formData.get("address")||"") || null,
         phone: String(formData.get("phone")||"") || null,
         previousSchool: String(formData.get("previousSchool")||"") || null,
@@ -92,7 +101,7 @@ export default async function NewStudent({ searchParams }: { searchParams?: Prom
             <div><label className="text-sm text-gray-700">Session / ╪¬╪╣┘ä█î┘à█î ╪│█î╪┤┘å</label><input value={session.name} disabled className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2.5 bg-gray-50"/></div>
             <div><label className="text-sm text-gray-700">Roll No / ╪▒┘ê┘ä ┘å┘à╪¿╪▒</label><input name="rollNo" className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-emerald-200" placeholder="e.g. 1"/></div>
             <div><label className="text-sm text-gray-700">Application No / ╪»╪▒╪«┘ê╪º╪│╪¬ ┘å┘à╪¿╪▒</label><input name="applicationNo" className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-emerald-200"/></div>
-            <div><label className="text-sm text-gray-700">Admission No / ╪»╪º╪«┘ä█ü ┘å┘à╪¿╪▒</label><input name="admissionNo" defaultValue={formatAdmissionNo(count+1)} className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-emerald-200"/></div>
+            <div><label className="text-sm text-gray-700">Admission No / ╪»╪º╪«┘ä█ü ┘å┘à╪¿╪▒</label><input name="admissionNo" placeholder="Leave empty for auto / خالی چھوڑیں تو خود بنے گا" className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-emerald-200"/></div>
           </div>
           <div className="mt-4 flex items-start gap-3 p-3 rounded-xl border border-amber-200 bg-amber-50/60">
             <input id="feeExempt" name="feeExempt" type="checkbox" className="mt-1 h-4 w-4" />

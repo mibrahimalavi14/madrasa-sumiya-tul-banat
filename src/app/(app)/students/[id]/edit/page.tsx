@@ -14,15 +14,24 @@ async function updateStudent(formData: FormData) {
   const sessionId = String(formData.get("sessionId") || "");
   const rollNo = String(formData.get("rollNo") || "").trim() || null;
   const feeExempt = formData.get("feeExempt") === "on";
+  const dob = parseDateInput(formData.get("dob"));
+  const computedAge = (() => {
+    if (!dob) return String(formData.get("age")||"").trim() || null;
+    const now = new Date();
+    let years = now.getFullYear() - dob.getFullYear();
+    const m = now.getMonth() - dob.getMonth();
+    if (m < 0 || (m === 0 && now.getDate() < dob.getDate())) years--;
+    return (years >= 0 && years <= 130) ? `${years} years` : (String(formData.get("age")||"").trim() || null);
+  })();
   await prisma.student.update({ where: { id }, data: {
     applicationNo: String(formData.get("applicationNo")||"") || null,
     nameEn: String(formData.get("nameEn")||""), nameUr: String(formData.get("nameUr")||"") || null,
     fatherName: String(formData.get("fatherName")||"") || null, motherName: String(formData.get("motherName")||"") || null,
     guardianName: String(formData.get("guardianName")||"") || null,
     gender: String(formData.get("gender")||"") || null,
-    age: String(formData.get("age")||"") || null,
+    age: computedAge,
     admissionClass: String(formData.get("admissionClass")||"") || null,
-    dob: parseDateInput(formData.get("dob")),
+    dob,
     address: String(formData.get("address")||"") || null,
     phone: String(formData.get("phone")||"") || null,
     previousSchool: String(formData.get("previousSchool")||"") || null,
