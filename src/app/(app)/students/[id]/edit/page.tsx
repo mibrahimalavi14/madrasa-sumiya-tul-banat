@@ -41,7 +41,8 @@ async function updateStudent(formData: FormData) {
   await prisma.student.update({ where: { id }, data: {
     applicationNo: String(formData.get("applicationNo")||"") || null,
     nameEn: String(formData.get("nameEn")||""), nameUr: String(formData.get("nameUr")||"") || null,
-    fatherName: String(formData.get("fatherName")||"") || null, motherName: String(formData.get("motherName")||"") || null,
+    fatherName: (() => { const v = String(formData.get("fatherMotherName")||formData.get("fatherName")||"").trim(); if (!v) return null; const parts = v.split(/\s*\/\s*|\s+-\s+/); return (parts[0]||"").trim() || null; })(),
+    motherName: (() => { const v = String(formData.get("fatherMotherName")||formData.get("fatherName")||"").trim(); if (!v) return null; const parts = v.split(/\s*\/\s*|\s+-\s+/); return (parts.slice(1).join(" / ")||"").trim() || null; })(),
     guardianName: String(formData.get("guardianName")||"") || null,
     gender: String(formData.get("gender")||"") || null,
     age: computedAge,
@@ -133,7 +134,7 @@ export default async function EditStudent({ params, searchParams }: { params: Pr
 
             </div>
             <div><label className="text-sm text-gray-700">Application No</label><input name="applicationNo" defaultValue={student.applicationNo||""} className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2.5"/></div>
-            <div><label className="text-sm text-gray-700">Status</label><select name="status" defaultValue={student.status} className="mt-1 block w-full border border-gray-200 rounded-lg px-3 py-2.5 bg-white focus:outline-none focus:ring-2 focus:ring-emerald-200"><option value="REGISTERED">REGISTERED</option><option value="ACTIVE">ACTIVE</option><option value="LEFT">LEFT</option></select></div>
+            <div><label className="text-sm text-gray-700">Status</label><select name="status" defaultValue={student.status} className="mt-1 block w-full h-[42px] border border-gray-200 rounded-lg px-3 bg-white focus:outline-none focus:ring-2 focus:ring-emerald-200"><option value="REGISTERED">REGISTERED</option><option value="ACTIVE">ACTIVE</option><option value="LEFT">LEFT</option></select></div>
           </div>
           <div className="mt-4 flex items-start gap-3 p-3 rounded-xl border border-amber-200 bg-amber-50/60">
             <input id="feeExempt" name="feeExempt" type="checkbox" defaultChecked={!!(enrollment as any)?.feeExempt} className="mt-1 h-4 w-4" />
@@ -159,8 +160,10 @@ export default async function EditStudent({ params, searchParams }: { params: Pr
         <div className="bg-white rounded-2xl shadow-sm border border-emerald-100 p-5">
           <div className="flex items-center gap-2 mb-3"><span className="h-7 w-7 rounded-full bg-emerald-100 text-emerald-800 text-sm font-bold grid place-items-center">3</span><h2 className="font-semibold text-emerald-900">Parents Information</h2></div>
           <div className="grid md:grid-cols-2 gap-4">
-            <div><label className="text-sm text-gray-700">Father Name</label><input name="fatherName" defaultValue={student.fatherName||""} placeholder="Father Name" className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2.5"/></div>
-            <div><label className="text-sm text-gray-700">Mother Name</label><input name="motherName" defaultValue={student.motherName||""} placeholder="Mother Name" className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2.5"/></div>
+            <div className="md:col-span-2">
+              <label className="text-sm text-gray-700">Father / Mother Name</label>
+              <input name="fatherMotherName" defaultValue={[student.fatherName, student.motherName].filter(Boolean).join(" / ")} placeholder="Father Name / Mother Name" className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2.5"/>
+            </div>
             <div><label className="text-sm text-gray-700">Phone No</label><input name="phone" defaultValue={student.phone||""} className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2.5"/></div>
             <div className="md:col-span-2"><label className="text-sm text-gray-700">Address</label><input name="address" defaultValue={student.address||""} className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2.5"/></div>
             <input type="hidden" name="guardianName" value={student.guardianName||""} />
