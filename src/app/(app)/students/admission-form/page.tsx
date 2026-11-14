@@ -1,8 +1,13 @@
 import Link from "next/link";
+import { getAuthUser } from "@/lib/auth";
 import { getCurrentSession } from "@/lib/session";
+import { redirect } from "next/navigation";
 import PrintButton from "@/components/PrintButton";
 
 export default async function BlankAdmissionForm() {
+  const user = await getAuthUser();
+  if (!user) redirect("/login");
+  if (user.role !== "ADMIN") redirect("/dashboard");
   const session = await getCurrentSession();
   const F = ({ label, labelUr, wide = false }: { label: string; labelUr: string; wide?: boolean }) => (
     <div className={wide ? "md:col-span-2" : ""}>

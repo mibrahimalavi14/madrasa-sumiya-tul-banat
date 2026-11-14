@@ -133,11 +133,15 @@ export default async function Dashboard() {
               {session && <div className="mt-3 inline-flex items-center gap-2 bg-white/15 border border-white/20 rounded-full px-3 py-1 text-sm">{tr.activeSession}: <b>{session.name}</b> ({session.status})</div>}
             </div>
           </div>
-          <div className="bg-white/10 border border-white/20 rounded-2xl p-4 min-w-[220px]">
+                    <div className="bg-white/10 border border-white/20 rounded-2xl p-4 min-w-[240px]">
             <div className="text-xs text-emerald-100 uppercase tracking-wider">{ur ? "اس ماہ کی فیس" : "This Month Fees"}</div>
             <div className="text-lg font-bold mt-1">{m}/{y}</div>
             <div className="text-sm mt-1">{ur ? "ادا شدہ" : "Paid"}: <b>{monthPaid}</b> / {monthTotal || 0}</div>
             <div className="text-sm">{ur ? "وصولی" : "Collected"}: <b>Rs {monthCollected}</b></div>
+            <div className="mt-3 h-2.5 bg-white/20 rounded-full overflow-hidden">
+              <div className="h-full bg-amber-300 rounded-full" style={{ width: `${monthTotal ? Math.round((monthPaid / monthTotal) * 100) : 0}%` }} />
+            </div>
+            <div className="text-xs text-emerald-100 mt-1">{monthTotal ? Math.round((monthPaid / monthTotal) * 100) : 0}% {ur ? "ادائیگی" : "paid"}</div>
           </div>
         </div>
       </div>

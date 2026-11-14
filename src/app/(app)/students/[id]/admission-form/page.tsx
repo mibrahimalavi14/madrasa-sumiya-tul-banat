@@ -1,12 +1,16 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
+import { getAuthUser } from "@/lib/auth";
 import { getCurrentSession } from "@/lib/session";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import PrintButton from "@/components/PrintButton";
 import { formatDateDMY } from "@/lib/utils";
 
 export default async function AdmissionFormPrint({ params }: { params: Promise<{ id: string }> }) {
+  const user = await getAuthUser();
+  if (!user) redirect("/login");
   const { id } = await params;
+  if (user.role === "PARENT" && user.parentStudentId !== id) redirect("/dashboard");
   const student = await prisma.student.findUnique({ where: { id }, include: { enrollments: { include: { session: true }, orderBy: { createdAt: "desc" }, take: 1 } } });
   const current = await getCurrentSession();
   if (!student) notFound();
