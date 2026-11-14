@@ -190,7 +190,7 @@ export default async function NewStudent({ searchParams }: { searchParams?: Prom
             <div><label className="text-sm text-gray-700">Date of Birth / تاریخ پیدائش</label><DateInputDMY name="dob" className="mt-1" inputClassName="border border-gray-200 rounded-lg px-3 py-2.5" /></div>
             <div>
               <label className="text-sm text-gray-700">Gender / جنس</label>
-              <select name="gender" required defaultValue="" className="mt-1 block w-full h-[42px] border border-gray-200 rounded-lg px-3 py-1 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-200">
+              <select name="gender" required defaultValue="" className="mt-1 block w-full h-[42px] border border-gray-200 rounded-lg px-3 py-0 leading-[40px] bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-200">
                 <option value="" disabled>Gender</option>
                 <option value="Male">Male / لڑکا</option>
                 <option value="Female">Female / لڑکی</option>
