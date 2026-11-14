@@ -27,7 +27,7 @@ export default async function BlankAdmissionForm() {
           <div className="mt-0.5 inline-block bg-emerald-900 text-white px-3 py-0.5 rounded text-[10px] font-semibold">Admission Form / <span className="font-urdu">داخلہ فارم</span></div>
         </div>
 
-        <Sec title="Office Use" titleUr="دفتری استعمال (دفتر کی طرف سے پُر کیا جائے گا)">
+        <Sec title="Office Use" titleUr="دفتری استعمال (دفتر کی طرف سے پُر کیا جائے)">
           <div className="grid grid-cols-1 gap-x-3 gap-y-0.5">
             <F label="Session" labelUr="تعلیمی سیشن" />
             <F label="Application No" labelUr="درخواست نمبر" />
@@ -75,18 +75,18 @@ export default async function BlankAdmissionForm() {
         <div className="mt-2 grid grid-cols-3 gap-6 text-[9.5px] text-center">
           <div><div className="border-t border-black pt-0.5 mt-4">Checked By / <span className="font-urdu">جانچ کنندہ</span></div></div>
           <div><div className="border-t border-black pt-0.5 mt-4">Office Incharge / <span className="font-urdu">دفتر انچارج</span></div></div>
-          <div><div className="border-t border-black pt-0.5 mt-4">Principal / <span className="font-urdu">مہتمم/مہتممہ</span></div></div>
+          <div><div className="border-t border-black pt-0.5 mt-4">Principal / <span className="font-urdu">مہتممہ/مہتمم</span></div></div>
         </div>
 
         <div className="mt-1.5 border border-emerald-300 bg-emerald-50/60 rounded p-1.5">
           <div className="text-[10px] font-semibold text-emerald-900 mb-0.5 text-right font-urdu" dir="rtl">اہم قواعد و ضوابط:</div>
           <div className="font-urdu text-[10px] leading-[1.25] text-right" dir="rtl">
-            <div>۱۔ طالب/طالبہ وقت پر مدرسہ آئیں اور باقاعدگی سے حاضری یقینی بنائیں۔</div>
+            <div>۱۔ طالب/طالبہ وقت پر مدرسہ تشریف لائیں اور باقاعدگی سے حاضری یقینی بنائیں۔</div>
             <div>۲۔ اساتذہ اور بزرگوں کا ادب و احترام کیا جائے اور نظم و ضبط برقرار رکھا جائے۔</div>
-            <div>۳۔ ماہانہ فیس وقت پر جمع کرائیں اور چھٹی کے لیے پہلے سے بتائیں۔</div>
-            <div>۴۔ مدرسہ کی ملکیت اور مطالعہ کے ماحول کا خیال رکھا جائے، ممنوعہ اشیاء لانا منع ہے۔</div>
-            <div>۵۔ لباس و طرزِ گفتگو شائستہ ہو اور دی گئی ہدایات پر عمل کیا جائے۔</div>
-            <div>۶۔ والدین/سرپرست طالب/طالبہ کی تعلیم و حاضری کے بارے میں رابطے میں رہیں۔</div>
+            <div>۳۔ ماہانہ فیس وقت پر جمع کرائیں اور تاخیر کی صورت میں پہلے سے اطلاع دیں۔</div>
+            <div>۴۔ مدرسہ کی ملکیت اور وسائل کا خیال رکھا جائے، کسی چیز کو نقصان نہ پہنچایا جائے۔</div>
+            <div>۵۔ لباس و ظاہری حالت شائستہ ہو اور دی گئی ہدایات پر عمل کیا جائے۔</div>
+            <div>۶۔ والدین/سرپرست طالب/طالبہ کی تعلیمی و حاضری کے بارے میں رابطے میں رہیں۔</div>
             <div>۷۔ کسی بھی شکایت یا مسئلے کی صورت میں ادارے سے مناسب طریقے سے رابطہ کریں۔</div>
           </div>
         </div>
