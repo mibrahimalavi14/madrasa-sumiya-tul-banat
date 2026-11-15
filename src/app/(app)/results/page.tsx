@@ -10,6 +10,7 @@ import { gradeFromPercentage, calculatePositions } from "@/lib/grading";
 async function saveWritten(formData: FormData) {
   "use server";
   const user = await getAuthUser(); if (user?.role !== "ADMIN") throw new Error("UNAUTHORIZED");
+  const session = await getCurrentSession(); if (!session || session.status !== "ACTIVE") throw new Error("SESSION_NOT_ACTIVE");
   const examId = String(formData.get("examId")); const studentId = String(formData.get("studentId"));
   const writtenObtained = Number(formData.get("writtenObtained")||0); const writtenTotal = Number(formData.get("writtenTotal")||0);
   const existing = await prisma.result.findUnique({ where: { examId_studentId: { examId, studentId } } });

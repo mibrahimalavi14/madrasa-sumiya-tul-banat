@@ -1,6 +1,9 @@
 import { cache } from "react";
+import { cookies } from "next/headers";
 import { revalidateTag, unstable_cache } from "next/cache";
 import prisma from "./prisma";
+
+export const VIEW_SESSION_COOKIE = "msb_view_session";
 
 function endOfDay(d: Date) {
   const x = new Date(d);
@@ -30,6 +33,17 @@ const getCurrentSessionCached = unstable_cache(
 );
 
 export const getCurrentSession = cache(async () => {
+  try {
+    const jar = await cookies();
+    const viewId = jar.get(VIEW_SESSION_COOKIE)?.value;
+    if (viewId) {
+      const view = await prisma.session.findUnique({ where: { id: viewId } });
+      if (view) return view as any;
+    }
+  } catch {
+    // cookies() may be unavailable in some contexts; fall back to system current session
+  }
+
   const s = await getCurrentSessionCached();
   if (s && isSessionExpiredByDate(s)) {
     // Avoid write on read path for speed; mutations/pages run autoExpireSessionsIfNeeded() to persist.
@@ -44,3 +58,11 @@ export async function requireCurrentSession() {
   if (s.status !== "ACTIVE") throw new Error("SESSION_NOT_ACTIVE");
   return s;
 }
+
+export async function requireActiveSessionForMutation() {
+  const s = await getCurrentSession();
+  if (!s) throw new Error("NO_SESSION");
+  if (s.status !== "ACTIVE") throw new Error("SESSION_NOT_ACTIVE");
+  return s;
+}
+

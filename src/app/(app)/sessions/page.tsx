@@ -3,9 +3,10 @@ import { getAuthUser } from "@/lib/auth";
 import { getLang } from "@/lib/lang";
 import { t } from "@/lib/i18n";
 import { formatDateDMY, parseDateInput } from "@/lib/utils";
-import { autoExpireSessionsIfNeeded } from "@/lib/session";
+import { autoExpireSessionsIfNeeded, VIEW_SESSION_COOKIE } from "@/lib/session";
 import { redirect } from "next/navigation";
 import { revalidatePath, revalidateTag } from "next/cache";
+import { cookies } from "next/headers";
 import DateInputDMY from "@/components/DateInputDMY";
 
 async function createSessionAction(formData: FormData) {
@@ -52,8 +53,31 @@ async function setCurrentAction(formData: FormData) {
     await tx.session.updateMany({ data: { isCurrent: false } });
     await tx.session.update({ where: { id }, data: { isCurrent: true } });
   });
+  const jar = await cookies();
+  jar.set(VIEW_SESSION_COOKIE, "", { path: "/", maxAge: 0 });
   revalidateTag("current-session", { expire: 0 });
   revalidatePath("/sessions"); revalidatePath("/dashboard");
+}
+
+async function viewSessionAction(formData: FormData) {
+  "use server";
+  const user = await getAuthUser(); if (user?.role !== "ADMIN") throw new Error("UNAUTHORIZED");
+  const id = String(formData.get("id"));
+  const session = await prisma.session.findUnique({ where: { id }, select: { id: true } });
+  if (!session) redirect("/sessions");
+  const jar = await cookies();
+  jar.set(VIEW_SESSION_COOKIE, id, { path: "/", httpOnly: true, sameSite: "lax" });
+  revalidatePath("/"); revalidatePath("/dashboard"); revalidatePath("/students"); revalidatePath("/sessions");
+  redirect("/dashboard");
+}
+
+async function exitViewSessionAction() {
+  "use server";
+  const user = await getAuthUser(); if (user?.role !== "ADMIN") throw new Error("UNAUTHORIZED");
+  const jar = await cookies();
+  jar.set(VIEW_SESSION_COOKIE, "", { path: "/", maxAge: 0 });
+  revalidatePath("/"); revalidatePath("/dashboard"); revalidatePath("/sessions");
+  redirect("/sessions");
 }
 async function carryStudentsAction(formData: FormData) {
   "use server";
@@ -61,6 +85,8 @@ async function carryStudentsAction(formData: FormData) {
   const fromId = String(formData.get("fromId"));
   const toId = String(formData.get("toId"));
   if (!fromId || !toId || fromId===toId) return;
+  const target = await prisma.session.findUnique({ where: { id: toId }, select: { status: true } });
+  if (!target || target.status !== "ACTIVE") redirect("/sessions?error=carrytarget");
   const enrolls = await prisma.studentEnrollment.findMany({ where: { sessionId: fromId } });
   for (const e of enrolls) {
     await prisma.studentEnrollment.upsert({
@@ -79,6 +105,8 @@ export default async function SessionsPage({ searchParams }: { searchParams: Pro
   const tr = t[lang];
   const sp = await searchParams;
   await autoExpireSessionsIfNeeded({ revalidate: true });
+  const jar = await cookies();
+  const viewSessionId = jar.get(VIEW_SESSION_COOKIE)?.value || "";
   const sessions = await prisma.session.findMany({
     select: { id: true, name: true, status: true, isCurrent: true, startDate: true, endDate: true },
     orderBy: { createdAt: "desc" },
@@ -95,6 +123,8 @@ export default async function SessionsPage({ searchParams }: { searchParams: Pro
     ? (lang === "ur" ? "ختم شدہ (Expired) سیشن کو current نہیں بنایا جا سکتا۔" : "An expired session cannot be set as current.")
     : sp.error === "activeexists"
     ? (lang === "ur" ? "ایک فعال سیشن موجود ہے۔ نیا سیشن سال ختم/expire ہونے کے بعد ہی بنایا جا سکتا ہے۔" : "An active session already exists. You can create the next session only after the current year/session ends.")
+    : sp.error === "carrytarget"
+    ? (lang === "ur" ? "طلبہ صرف فعال (ACTIVE) سیشن میں منتقل کیے جا سکتے ہیں۔" : "Students can only be carried into an ACTIVE session.")
     : "";
   return (
     <div>
@@ -172,9 +202,25 @@ export default async function SessionsPage({ searchParams }: { searchParams: Pro
                         </form>
                       )
                     ) : (
-                      <span className="inline-flex items-center justify-center min-w-[120px] px-3 py-2 rounded-lg text-sm font-medium border border-amber-200 bg-amber-50 text-amber-800">
-                        {lang === "ur" ? "خودکار طور پر ختم" : "Auto Expired"}
-                      </span>
+                      <>
+                        {viewSessionId === s.id ? (
+                          <form action={exitViewSessionAction}>
+                            <button className="inline-flex items-center justify-center min-w-[140px] px-3 py-2 rounded-lg text-sm font-medium border border-emerald-300 bg-emerald-100 text-emerald-900 hover:bg-emerald-200 transition">
+                              {lang === "ur" ? "ویو موڈ سے باہر نکلیں" : "Exit View Mode"}
+                            </button>
+                          </form>
+                        ) : (
+                          <form action={viewSessionAction}>
+                            <input type="hidden" name="id" value={s.id}/>
+                            <button className="inline-flex items-center justify-center min-w-[140px] px-3 py-2 rounded-lg text-sm font-medium border border-emerald-200 bg-emerald-50 text-emerald-800 hover:bg-emerald-100 transition">
+                              {lang === "ur" ? "دیکھیں (ریڈ اونلی)" : "View (Read-only)"}
+                            </button>
+                          </form>
+                        )}
+                        <span className="inline-flex items-center justify-center px-3 py-2 rounded-lg text-xs font-medium border border-amber-200 bg-amber-50 text-amber-800">
+                          {lang === "ur" ? "خودکار ختم" : "Auto Expired"}
+                        </span>
+                      </>
                     )}
                   </div>
                 </td>

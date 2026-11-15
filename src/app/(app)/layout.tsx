@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { cookies } from "next/headers";
 import { getAuthUser, destroySession } from "@/lib/auth";
-import { getCurrentSession } from "@/lib/session";
+import { getCurrentSession, VIEW_SESSION_COOKIE } from "@/lib/session";
 import { getLang } from "@/lib/lang";
 import { t } from "@/lib/i18n";
 import Logo from "@/components/Logo";
@@ -14,11 +15,21 @@ async function logout() {
   redirect("/login");
 }
 
+async function exitSessionViewMode() {
+  "use server";
+  const jar = await cookies();
+  jar.set(VIEW_SESSION_COOKIE, "", { path: "/", maxAge: 0 });
+  redirect("/sessions");
+}
+
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const [user, current, lang] = await Promise.all([getAuthUser(), getCurrentSession(), getLang()]);
   if (!user) redirect("/login");
   const tr = t[lang];
   const isAdmin = user.role === "ADMIN";
+  const jar = await cookies();
+  const viewSessionId = isAdmin ? (jar.get(VIEW_SESSION_COOKIE)?.value || "") : "";
+  const isReadOnlyView = !!(isAdmin && viewSessionId && current && current.id === viewSessionId && current.status !== "ACTIVE");
   const sections = isAdmin
     ? [
         {
@@ -106,6 +117,19 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         {!current && isAdmin && (
           <div className="mb-5 bg-amber-50 border border-amber-300 text-amber-900 p-4 rounded-xl shadow-sm">
             <b>{tr.noActiveSessionWarn}</b> {tr.createSelectSession} <Link className="underline font-semibold" href="/sessions">{tr.sessions}</Link> {tr.beforeEnteringData}
+          </div>
+        )}
+        {isReadOnlyView && (
+          <div className="mb-5 bg-blue-50 border border-blue-300 text-blue-900 p-4 rounded-xl shadow-sm flex items-center justify-between gap-3 flex-wrap">
+            <div>
+              <b>{lang === "ur" ? "ریڈ اونلی ویو:" : "Read-only view:"}</b>{" "}
+              {lang === "ur"
+                ? `آپ ختم شدہ سیشن "${current?.name}" کا ڈیٹا دیکھ رہے ہیں۔ اس موڈ میں کوئی تبدیلی محفوظ نہیں ہوگی۔`
+                : `You are viewing expired session "${current?.name}". Changes are disabled in this mode.`}
+            </div>
+            <form action={exitSessionViewMode}>
+              <button className="bg-blue-700 hover:bg-blue-800 text-white px-4 py-2 rounded-lg text-sm font-medium">{lang === "ur" ? "ویو موڈ ختم کریں" : "Exit View Mode"}</button>
+            </form>
           </div>
         )}
         {children}

@@ -44,6 +44,7 @@ async function createExam(formData: FormData) {
 async function selectStudentsForExam(formData: FormData) {
   "use server";
   const user = await getAuthUser(); if (user?.role !== "ADMIN") throw new Error("UNAUTHORIZED");
+  const session = await getCurrentSession(); if (!session || session.status !== "ACTIVE") throw new Error("SESSION_NOT_ACTIVE");
   const examId = String(formData.get("examId"));
   const ids = formData.getAll("studentIds").map(String);
   await prisma.examStudent.deleteMany({ where: { examId } });
@@ -65,7 +66,7 @@ export default async function ExaminationPage() {
   });
   const have = new Set(existingStages.map(e => e.stage));
   const missing = STAGES.filter(s => !have.has(s.stage));
-  if (missing.length) {
+  if (missing.length && session.status === "ACTIVE") {
     await prisma.$transaction(async (tx) => {
       for (const preset of missing) {
         const exam = await tx.exam.create({ data: {

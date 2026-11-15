@@ -54,6 +54,10 @@ async function updateStudent(formData: FormData) {
     status: String(formData.get("status")||"ACTIVE"),
   }});
   if (sessionId) {
+    const targetSession = await prisma.session.findUnique({ where: { id: sessionId }, select: { status: true } });
+    if (!targetSession || targetSession.status !== "ACTIVE") {
+      redirect(`/students/${id}/edit?error=session`);
+    }
     const existing = await prisma.studentEnrollment.findUnique({
       where: { studentId_sessionId: { studentId: id, sessionId } },
       select: { rollNo: true, rollLocked: true }
@@ -113,6 +117,11 @@ export default async function EditStudent({ params, searchParams }: { params: Pr
       {sp.error === "age" && (
         <div className="text-sm text-red-700 bg-red-50 border border-red-200 rounded-xl p-3">
           درج کی گئی عمر تاریخِ پیدائش کے مطابق نہیں ہے۔ براہِ کرم درست عمر یا درست تاریخِ پیدائش درج کریں۔
+        </div>
+      )}
+      {sp.error === "session" && (
+        <div className="text-sm text-red-700 bg-red-50 border border-red-200 rounded-xl p-3">
+          This session is not active. Enrollment/roll/fee-exempt changes are disabled for expired sessions (read-only view).
         </div>
       )}
       <form action={updateStudent} className="space-y-4">

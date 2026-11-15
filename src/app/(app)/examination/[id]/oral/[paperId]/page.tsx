@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { getAuthUser } from "@/lib/auth";
+import { getCurrentSession } from "@/lib/session";
 import { notFound, redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import Link from "next/link";
@@ -8,6 +9,7 @@ import { gradeFromPercentage, calculatePositions } from "@/lib/grading";
 async function saveOralMark(formData: FormData) {
   "use server";
   const user = await getAuthUser(); if (user?.role !== "ADMIN") throw new Error("UNAUTHORIZED");
+  const session = await getCurrentSession(); if (!session || session.status !== "ACTIVE") throw new Error("SESSION_NOT_ACTIVE");
   const examId = String(formData.get("examId")); const paperId = String(formData.get("paperId")); const studentId = String(formData.get("studentId"));
   const obtained = Number(formData.get("obtained")||0); const total = Number(formData.get("total")||100);
   const remarks = String(formData.get("remarks")||"") || null;

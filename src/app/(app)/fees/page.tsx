@@ -11,7 +11,7 @@ import DateInputDMY from "@/components/DateInputDMY";
 async function upsertFee(formData: FormData) {
   "use server";
   const user = await getAuthUser(); if (user?.role !== "ADMIN") throw new Error("UNAUTHORIZED");
-  const session = await getCurrentSession(); if (!session) throw new Error("NO_SESSION");
+  const session = await getCurrentSession(); if (!session || session.status !== "ACTIVE") throw new Error("SESSION_NOT_ACTIVE");
   const studentId = String(formData.get("studentId"));
   const month = Number(formData.get("month")); const year = Number(formData.get("year"));
   const amount = Number(formData.get("amount")||0);
