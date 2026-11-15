@@ -11,7 +11,7 @@ export default async function BlankAdmissionForm() {
   const session = await getCurrentSession();
   const F = ({ label, labelUr, wide = false }: { label: string; labelUr: string; wide?: boolean }) => (
     <div className={wide ? "md:col-span-2" : ""}>
-      <div className="text-[9.5px] leading-tight text-gray-700 mb-0 whitespace-nowrap overflow-hidden">{label} / <span className="font-urdu">{labelUr}</span></div>
+      <div className="text-[9.5px] leading-snug text-gray-700 mb-0.5 pt-0.5 whitespace-nowrap overflow-visible">{label} / <span className="font-urdu inline-block leading-snug">{labelUr}</span></div>
       <div className="border-b border-gray-600 h-5"></div>
     </div>
   );
@@ -26,10 +26,10 @@ export default async function BlankAdmissionForm() {
       <style>{`@media print{ @page{ size:A4; margin:6mm } .print-fit{font-size:10px; line-height:1.15} }`}</style>
       <div className="no-print mb-3 flex items-center gap-3 flex-wrap"><Link href="/students" className="text-sm text-emerald-800 hover:text-emerald-900 font-medium">← Back / واپس</Link><PrintButton label="Print Blank Form / خالی فارم پرنٹ کریں" /></div>
       <div className="border border-emerald-900 p-2 print:p-1.5 print-fit">
-        <div className="text-center border-b border-emerald-900 pb-0.5 mb-1">
+        <div className="text-center border-b border-emerald-900 pb-2 mb-1">
           <div className="text-lg print:text-base font-extrabold text-emerald-900 leading-tight">Madrasa Sumiya-tul-Banat</div>
           <div className="text-sm font-urdu text-emerald-800 leading-tight">مدرسہ سمیّة البنات</div>
-          <div className="mt-0.5 inline-block bg-emerald-900 text-white px-3 py-0.5 rounded text-[10px] font-semibold">Admission Form / <span className="font-urdu">داخلہ فارم</span></div>
+          <div className="mt-0.5 mb-0.5 inline-block bg-emerald-900 text-white px-3 py-0.5 rounded text-[10px] font-semibold">Admission Form / <span className="font-urdu">داخلہ فارم</span></div>
         </div>
 
         <Sec title="Office Use" titleUr="دفتری استعمال (دفتر کی طرف سے پُر کیا جائے)">
