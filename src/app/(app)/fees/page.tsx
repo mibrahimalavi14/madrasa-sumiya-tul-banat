@@ -31,7 +31,7 @@ async function upsertFee(formData: FormData) {
 async function saveStudentFee(formData: FormData) {
   "use server";
   const user = await getAuthUser(); if (user?.role !== "ADMIN") throw new Error("UNAUTHORIZED");
-  const session = await getCurrentSession(); if (!session) throw new Error("NO_SESSION");
+  const session = await getCurrentSession(); if (!session || session.status !== "ACTIVE") throw new Error("SESSION_NOT_ACTIVE");
   const studentId = String(formData.get("studentId"));
   const raw = String(formData.get("studentMonthlyFee") ?? "").trim();
   const monthlyFee = raw === "" ? null : Number(raw);
@@ -62,29 +62,81 @@ export default async function FeesPage({ searchParams }: { searchParams: Promise
   if (!session) return <p>{lang==="ur" ? "براہ کرم پہلے فعال سیشن بنائیں/منتخب کریں۔" : "Create/select active session first."}</p>;
   const sp = await searchParams;
   const now = new Date();
-  const month = Number(sp.month || (now.getMonth()+1)); const year = Number(sp.year || now.getFullYear());
   const q = sp.q?.trim() || "";
+
+  // Session-bound month/year options (only months/years within this session)
+  const sStart = session.startDate ? new Date(session.startDate) : null;
+  const sEnd = session.endDate ? new Date(session.endDate) : null;
+  const inSessionPeriod = (y: number, m: number) => {
+    if (!sStart || !sEnd) return true;
+    const startIdx = sStart.getFullYear() * 12 + sStart.getMonth();
+    const endIdx = sEnd.getFullYear() * 12 + sEnd.getMonth();
+    const curIdx = y * 12 + (m - 1);
+    return curIdx >= startIdx && curIdx <= endIdx;
+  };
+  const yearSet = new Set<number>();
+  if (sStart && sEnd) {
+    for (let y = sStart.getFullYear(); y <= sEnd.getFullYear(); y++) yearSet.add(y);
+  } else {
+    yearSet.add(now.getFullYear());
+  }
+  const yearOptions = [...yearSet].sort((a,b)=>a-b);
+
+  let year = Number(sp.year || "");
+  if (!Number.isFinite(year) || !yearOptions.includes(year)) {
+    const nowY = now.getFullYear();
+    year = yearOptions.includes(nowY) ? nowY : yearOptions[0];
+  }
+  let month = Number(sp.month || "");
+  if (!Number.isFinite(month) || month < 1 || month > 12 || !inSessionPeriod(year, month)) {
+    // default to session start month/year if available, else first valid in selected year
+    if (sStart && inSessionPeriod(sStart.getFullYear(), sStart.getMonth() + 1)) {
+      // but keep selected year if it has valid months? prefer session start
+      const prefY = sStart.getFullYear();
+      const prefM = sStart.getMonth() + 1;
+      if (year === prefY) month = prefM;
+      else {
+        // find first valid month in selected year
+        const found = Array.from({ length: 12 }, (_, i) => i + 1).find(m => inSessionPeriod(year, m));
+        if (found) month = found;
+        else { year = prefY; month = prefM; }
+      }
+    } else {
+      const found = Array.from({ length: 12 }, (_, i) => i + 1).find(m => inSessionPeriod(year, m));
+      month = found || (now.getMonth() + 1);
+    }
+  }
+  const monthOptions = Array.from({ length: 12 }, (_, i) => i + 1).filter(m => inSessionPeriod(year, m));
+
+  const isInSessionRange = inSessionPeriod(year, month);
   const studentFilter = q ? { OR: [
     { admissionNo: { contains: q, mode: "insensitive" as const } },
     { nameEn: { contains: q, mode: "insensitive" as const } },
     { nameUr: { contains: q, mode: "insensitive" as const } },
   ] } : {};
-  const [defaultAmountSettingSession, defaultAmountSettingGlobal, enrollsAll, fees] = await Promise.all([
+
+  const [defaultAmountSettingSession, defaultAmountSettingGlobal, enrollsAllRaw, fees] = await Promise.all([
     prisma.setting.findFirst({ where: { key: "monthlyFee", sessionId: session.id }, select: { value: true } }),
     prisma.setting.findFirst({ where: { key: "monthlyFee", sessionId: null }, select: { value: true } }),
-    prisma.studentEnrollment.findMany({
+    isInSessionRange ? prisma.studentEnrollment.findMany({
       where: { sessionId: session.id, ...(q ? { student: studentFilter } : {}) },
       select: { id: true, studentId: true, monthlyFee: true, feeExempt: true, student: { select: { id: true, admissionNo: true, nameEn: true } } },
-      orderBy: { student: { nameEn: "asc" } },
-    }),
-    prisma.feePayment.findMany({
+    }) : Promise.resolve([] as any[]),
+    isInSessionRange ? prisma.feePayment.findMany({
       where: { sessionId: session.id, month, year },
       select: { studentId: true, amount: true, isPaid: true, isLate: true, paidAt: true },
-    }),
+    }) : Promise.resolve([] as any[]),
   ]);
   const defaultAmount = Number((defaultAmountSettingSession || defaultAmountSettingGlobal)?.value || 0);
-  const enrolls = enrollsAll.filter((en: any) => !(en as any).feeExempt);
-  const map = new Map(fees.map(f=>[f.studentId,f]));
+  const enrolls = [...enrollsAllRaw]
+    .filter((en: any) => !(en as any).feeExempt)
+    .sort((a: any, b: any) => {
+      const na = parseInt(String(a.student?.admissionNo || "").replace(/\D/g, ""), 10) || 0;
+      const nb = parseInt(String(b.student?.admissionNo || "").replace(/\D/g, ""), 10) || 0;
+      if (na !== nb) return na - nb;
+      return String(a.student?.admissionNo || "").localeCompare(String(b.student?.admissionNo || ""));
+    });
+  const map = new Map(fees.map((f: any)=>[f.studentId,f]));
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between gap-3 flex-wrap">
@@ -94,18 +146,20 @@ export default async function FeesPage({ searchParams }: { searchParams: Promise
       <form className="bg-white rounded-xl shadow p-4 flex gap-4 items-end no-print flex-wrap border border-emerald-100/80">
         <div className="flex items-center gap-3">
           <label className="text-sm font-medium">{tr.month}</label>
-          <input name="month" type="number" min={1} max={12} defaultValue={month} className="border border-emerald-200/80 rounded-lg px-3 py-2 w-24"/>
+          <select name="month" defaultValue={String(month)} className="border border-emerald-200/80 rounded-lg px-3 py-2 w-28 bg-white">
+            {monthOptions.map(m => <option key={m} value={m}>{m}</option>)}
+          </select>
         </div>
-        <div className="flex items-center gap-3">
-          <label className="text-sm font-medium">{tr.year}</label>
-          <input name="year" type="number" defaultValue={year} className="border border-emerald-200/80 rounded-lg px-3 py-2 w-28"/>
+        <div className="flex items-center">
+          <select name="year" defaultValue={String(year)} className="border border-emerald-200/80 rounded-lg px-3 py-2 w-28 bg-white" aria-label={tr.year}>
+            {yearOptions.map(y => <option key={y} value={y}>{y}</option>)}
+          </select>
         </div>
-        <div className="flex flex-col gap-1">
-          <label className="text-sm font-medium">{lang === "ur" ? "تلاش" : "Search"}</label>
-          <input name="q" defaultValue={q} placeholder={lang === "ur" ? "داخلہ نمبر / نام" : "Admission No / Name"} className="border border-emerald-200/80 rounded-lg px-3 py-2 w-56"/>
+        <div className="flex items-center">
+          <input name="q" defaultValue={q} placeholder={lang === "ur" ? "داخلہ نمبر / نام تلاش کریں" : "Search Admission No / Name"} className="border border-emerald-200/80 rounded-lg px-3 py-2 w-64"/>
         </div>
         <button className="bg-gray-800 hover:bg-gray-900 text-white px-4 py-2 rounded-lg">{tr.load}</button>
-        {q && <a href={`/fees?month=${month}&year=${year}`} className="text-sm text-emerald-700 underline pb-2">{lang === "ur" ? "صاف کریں" : "Clear"}</a>}
+        {q && <a href={`/fees?month=${month}&year=${year}`} className="text-sm text-emerald-700 underline">{lang === "ur" ? "صاف کریں" : "Clear"}</a>}
         <span className="text-xs text-gray-600 w-full">{tr.feesNote} {lang === "ur" ? "ہر بچے کی ماہانہ فیس الگ سے سیٹ کی جا سکتی ہے۔" : "You can set a different monthly fee for each student."}</span>
       </form>
       <div className="bg-white rounded-2xl shadow-sm overflow-auto border border-emerald-100/80">
