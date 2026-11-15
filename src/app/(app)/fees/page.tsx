@@ -152,12 +152,12 @@ export default async function FeesPage({ searchParams }: { searchParams: Promise
         </div>
         <div className="flex items-center gap-2">
           <label className="text-sm font-medium">{tr.year}</label>
-          <select name="year" defaultValue={String(year)} className="border-x border-b border-emerald-200/80 border-t-0 rounded-md px-2 py-1.5 w-20 text-sm h-9 bg-white">
+          <select name="year" defaultValue={String(year)} className="border border-emerald-200/80 rounded-md px-2 py-1.5 w-20 text-sm h-9 bg-white">
             {yearOptions.map(y => <option key={y} value={y}>{y}</option>)}
           </select>
         </div>
         <div className="flex items-center">
-          <input name="q" defaultValue={q} placeholder={lang === "ur" ? "داخلہ نمبر / نام تلاش کریں" : "Search Admission No / Name"} className="border-x border-b border-emerald-200/80 border-t-0 rounded-md px-3 py-1.5 w-64 text-sm h-9"/>
+          <input name="q" defaultValue={q} placeholder={lang === "ur" ? "داخلہ نمبر / نام تلاش کریں" : "Search Admission No / Name"} className="border border-emerald-200/80 rounded-md px-3 py-1.5 w-64 text-sm h-9"/>
         </div>
         <button className="bg-gray-800 hover:bg-gray-900 text-white px-4 py-2 rounded-lg">{tr.load}</button>
         {q && <a href={`/fees?month=${month}&year=${year}`} className="text-sm text-emerald-700 underline">{lang === "ur" ? "صاف کریں" : "Clear"}</a>}
