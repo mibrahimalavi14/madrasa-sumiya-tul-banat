@@ -150,13 +150,13 @@ export default async function FeesPage({ searchParams }: { searchParams: Promise
             {monthOptions.map(m => <option key={m} value={m}>{m}</option>)}
           </select>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 !border-t-0 !mt-0 !pt-0">
           <label className="text-sm font-medium">{tr.year}</label>
           <select name="year" defaultValue={String(year)} className="border border-emerald-200/80 rounded-md px-2 py-1.5 w-20 text-sm h-9 bg-white">
             {yearOptions.map(y => <option key={y} value={y}>{y}</option>)}
           </select>
         </div>
-        <div className="flex items-center">
+        <div className="flex items-center !border-t-0 !mt-0 !pt-0">
           <input name="q" defaultValue={q} placeholder={lang === "ur" ? "داخلہ نمبر / نام تلاش کریں" : "Search Admission No / Name"} className="border border-emerald-200/80 rounded-md px-3 py-1.5 w-64 text-sm h-9"/>
         </div>
         <button className="bg-gray-800 hover:bg-gray-900 text-white px-4 py-2 rounded-lg">{tr.load}</button>
