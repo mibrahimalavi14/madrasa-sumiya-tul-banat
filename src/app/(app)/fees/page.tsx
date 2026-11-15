@@ -144,19 +144,20 @@ export default async function FeesPage({ searchParams }: { searchParams: Promise
         <div className="text-sm text-gray-600">{lang === "ur" ? `کل: ${enrolls.length}` : `Total: ${enrolls.length}`}</div>
       </div>
       <form className="bg-white rounded-xl shadow p-4 flex gap-4 items-end no-print flex-wrap border border-emerald-100/80">
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
           <label className="text-sm font-medium">{tr.month}</label>
-          <select name="month" defaultValue={String(month)} className="border border-emerald-200/80 rounded-lg px-3 py-2 w-28 bg-white">
+          <select name="month" defaultValue={String(month)} className="border border-emerald-200/80 rounded-lg px-2.5 py-2 w-20 bg-white">
             {monthOptions.map(m => <option key={m} value={m}>{m}</option>)}
           </select>
         </div>
-        <div className="flex items-center">
-          <select name="year" defaultValue={String(year)} className="border border-emerald-200/80 rounded-lg px-3 py-2 w-28 bg-white" aria-label={tr.year}>
+        <div className="flex items-center gap-2">
+          <label className="text-sm font-medium">{tr.year}</label>
+          <select name="year" defaultValue={String(year)} className="border border-emerald-200/80 border-t-0 rounded-lg px-2.5 py-2 w-24 bg-white">
             {yearOptions.map(y => <option key={y} value={y}>{y}</option>)}
           </select>
         </div>
         <div className="flex items-center">
-          <input name="q" defaultValue={q} placeholder={lang === "ur" ? "داخلہ نمبر / نام تلاش کریں" : "Search Admission No / Name"} className="border border-emerald-200/80 rounded-lg px-3 py-2 w-64"/>
+          <input name="q" defaultValue={q} placeholder={lang === "ur" ? "داخلہ نمبر / نام تلاش کریں" : "Search Admission No / Name"} className="border border-emerald-200/80 border-t-0 rounded-lg px-3 py-2 w-64"/>
         </div>
         <button className="bg-gray-800 hover:bg-gray-900 text-white px-4 py-2 rounded-lg">{tr.load}</button>
         {q && <a href={`/fees?month=${month}&year=${year}`} className="text-sm text-emerald-700 underline">{lang === "ur" ? "صاف کریں" : "Clear"}</a>}
