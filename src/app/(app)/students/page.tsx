@@ -88,10 +88,11 @@ export default async function StudentsPage({ searchParams }: { searchParams: Pro
       </form>
       <div className="bg-white rounded-2xl shadow-sm border border-emerald-100 overflow-auto">
         <table className="w-full text-sm">
-          <thead className="bg-emerald-50 text-emerald-900"><tr><th className="p-3 text-left">{tr.admissionNo}</th><th className="p-3 text-left">{tr.applicationNo}</th><th className="p-3 text-left">{tr.name}</th><th className="p-3 text-left">{tr.fatherMother}</th><th className="p-3 text-left">{tr.class}</th><th className="p-3 text-center">{tr.rollNo}</th><th className="p-3 text-left">{tr.actions}</th></tr></thead>
+          <thead className="bg-emerald-50 text-emerald-900"><tr><th className="p-3 text-center w-14">{lang === "ur" ? "نمبر شمار" : "S.No"}</th><th className="p-3 text-left">{tr.admissionNo}</th><th className="p-3 text-left">{tr.applicationNo}</th><th className="p-3 text-left">{tr.name}</th><th className="p-3 text-left">{tr.fatherMother}</th><th className="p-3 text-left">{tr.class}</th><th className="p-3 text-center">{tr.rollNo}</th><th className="p-3 text-left">{tr.actions}</th></tr></thead>
           <tbody>
-            {pageEnrollments.map(e => (
+            {pageEnrollments.map((e, i) => (
               <tr key={e.id} className="border-t hover:bg-gray-50/70">
+                <td className="p-3 text-center text-gray-600 font-medium">{(safePage - 1) * pageSize + i + 1}</td>
                 <td className="p-3 font-semibold text-gray-900">{e.student.admissionNo}</td>
                 <td className="p-3">{e.student.applicationNo || "-"}</td>
                 <td className="p-3">{e.student.nameEn} {e.student.nameUr && <span className="font-urdu text-gray-700">/ {e.student.nameUr}</span>}</td>
@@ -107,7 +108,7 @@ export default async function StudentsPage({ searchParams }: { searchParams: Pro
                 </td>
               </tr>
             ))}
-            {pageEnrollments.length===0 && <tr><td colSpan={7} className="p-6 text-center text-gray-500">{tr.noStudents}</td></tr>}
+            {pageEnrollments.length===0 && <tr><td colSpan={8} className="p-6 text-center text-gray-500">{tr.noStudents}</td></tr>}
           </tbody>
         </table>
       </div>
