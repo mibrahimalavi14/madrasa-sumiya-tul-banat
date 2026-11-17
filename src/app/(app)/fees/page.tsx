@@ -170,6 +170,8 @@ export default async function FeesPage({ searchParams }: { searchParams: Promise
         {q && <a href={`/fees?month=${month}&year=${year}`} className="text-sm text-emerald-700 underline">{lang === "ur" ? "صاف کریں" : "Clear"}</a>}
         <div className="flex items-center gap-2 flex-wrap ml-auto">
           <a href={`/fees/report?month=${month}&year=${year}`} className="bg-emerald-700 hover:bg-emerald-800 text-white px-4 py-2 rounded-lg text-sm font-medium">{lang === "ur" ? "ماہانہ رپورٹ" : "Monthly Report"}</a>
+          <a href="/fees/session-report" className="bg-teal-700 hover:bg-teal-800 text-white px-4 py-2 rounded-lg text-sm font-medium">{lang === "ur" ? "سیشن رپورٹ" : "Session Report"}</a>
+          <a href="/fees/arrears" className="bg-red-700 hover:bg-red-800 text-white px-4 py-2 rounded-lg text-sm font-medium">{lang === "ur" ? "بقایا جات" : "Arrears"}</a>
           <a href={`/fees/defaulters?month=${month}&year=${year}`} className="bg-amber-600 hover:bg-amber-700 text-white px-4 py-2 rounded-lg text-sm font-medium">{lang === "ur" ? "باقی فیس کی فہرست" : "Defaulters List"}</a>
         </div>
         <span className="text-xs text-gray-600 w-full">{tr.feesNote} {lang === "ur" ? "ہر بچے کی ماہانہ فیس الگ سے سیٹ کی جا سکتی ہے۔" : "You can set a different monthly fee for each student."}</span>
