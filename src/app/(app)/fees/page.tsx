@@ -124,7 +124,7 @@ export default async function FeesPage({ searchParams }: { searchParams: Promise
     }) : Promise.resolve([] as any[]),
     isInSessionRange ? prisma.feePayment.findMany({
       where: { sessionId: session.id, month, year },
-      select: { studentId: true, amount: true, isPaid: true, isLate: true, paidAt: true },
+      select: { id: true, studentId: true, amount: true, isPaid: true, isLate: true, paidAt: true },
     }) : Promise.resolve([] as any[]),
   ]);
   const defaultAmount = Number((defaultAmountSettingSession || defaultAmountSettingGlobal)?.value || 0);
@@ -168,6 +168,10 @@ export default async function FeesPage({ searchParams }: { searchParams: Promise
         </div>
         <button className="bg-gray-800 hover:bg-gray-900 text-white px-4 py-2 rounded-lg">{tr.load}</button>
         {q && <a href={`/fees?month=${month}&year=${year}`} className="text-sm text-emerald-700 underline">{lang === "ur" ? "صاف کریں" : "Clear"}</a>}
+        <div className="flex items-center gap-2 flex-wrap ml-auto">
+          <a href={`/fees/report?month=${month}&year=${year}`} className="bg-emerald-700 hover:bg-emerald-800 text-white px-4 py-2 rounded-lg text-sm font-medium">{lang === "ur" ? "ماہانہ رپورٹ" : "Monthly Report"}</a>
+          <a href={`/fees/defaulters?month=${month}&year=${year}`} className="bg-amber-600 hover:bg-amber-700 text-white px-4 py-2 rounded-lg text-sm font-medium">{lang === "ur" ? "باقی فیس کی فہرست" : "Defaulters List"}</a>
+        </div>
         <span className="text-xs text-gray-600 w-full">{tr.feesNote} {lang === "ur" ? "ہر بچے کی ماہانہ فیس الگ سے سیٹ کی جا سکتی ہے۔" : "You can set a different monthly fee for each student."}</span>
       </form>
       <div className="bg-white rounded-2xl shadow-sm overflow-auto border border-emerald-100/80">
@@ -240,7 +244,7 @@ export default async function FeesPage({ searchParams }: { searchParams: Promise
             <span>{lang === "ur" ? `کل رقم: Rs ${paidTotalAmount}` : `Total Amount: Rs ${paidTotalAmount}`}</span>
           </div>
         </div>
-        <table className="w-full text-sm"><thead><tr><th className="p-3 text-left">{tr.admission}</th><th className="p-3 text-left">{tr.name}</th><th className="p-3 text-left">{lang === "ur" ? "جمع شدہ رقم" : "Amount Deposited"}</th><th className="p-3 text-left">{tr.paidDate}</th><th className="p-3 text-center">{tr.status}</th></tr></thead>
+        <table className="w-full text-sm"><thead><tr><th className="p-3 text-left">{tr.admission}</th><th className="p-3 text-left">{tr.name}</th><th className="p-3 text-left">{lang === "ur" ? "جمع شدہ رقم" : "Amount Deposited"}</th><th className="p-3 text-left">{tr.paidDate}</th><th className="p-3 text-center">{tr.status}</th><th className="p-3 text-center">{lang === "ur" ? "رسید" : "Receipt"}</th></tr></thead>
         <tbody>
           {paidEnrolls.map(en => { 
             const f = map.get(en.studentId) as any; 
@@ -254,10 +258,13 @@ export default async function FeesPage({ searchParams }: { searchParams: Promise
                 <td className="p-3 text-center">
                   <span className={`inline-flex px-2.5 py-1 rounded-full text-xs font-semibold ${f?.isLate ? "bg-amber-100 text-amber-800" : "bg-emerald-100 text-emerald-800"}`}>{status} ✓ <span className="ml-1 opacity-80">{lang === "ur" ? "(مقفل)" : "(Locked)"}</span></span>
                 </td>
+                <td className="p-3 text-center">
+                  {f?.id ? <a href={`/fees/receipt/${f.id}`} className="inline-flex px-3 py-1.5 rounded-lg border border-emerald-200 bg-white text-emerald-800 font-medium hover:bg-emerald-50">{lang === "ur" ? "رسید" : "Receipt"}</a> : "-"}
+                </td>
               </tr>
             );
           })}
-          {paidEnrolls.length===0 && <tr><td colSpan={5} className="p-4 text-center text-gray-500">{lang==="ur" ? "ابھی اس مہینے کسی نے فیس جمع نہیں کروائی۔" : "No fees deposited yet for this month."}</td></tr>}
+          {paidEnrolls.length===0 && <tr><td colSpan={6} className="p-4 text-center text-gray-500">{lang==="ur" ? "ابھی اس مہینے کسی نے فیس جمع نہیں کروائی۔" : "No fees deposited yet for this month."}</td></tr>}
         </tbody></table>
       </div>
     </div>
