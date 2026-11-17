@@ -6,6 +6,7 @@ import { t } from "@/lib/i18n";
 import { formatDateDMY, parseDateInput, toDateInputDMY } from "@/lib/utils";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
+import Link from "next/link";
 import DateInputDMY from "@/components/DateInputDMY";
 
 async function upsertFee(formData: FormData) {
@@ -195,16 +196,16 @@ export default async function FeesPage({ searchParams }: { searchParams: Promise
         <div className="flex items-center !border-t-0 !mt-0 !pt-0">
           <input name="q" defaultValue={q} placeholder={lang === "ur" ? "داخلہ نمبر / نام تلاش کریں" : "Search Admission No / Name"} className="border border-emerald-200/80 rounded-md px-3 py-1.5 w-64 text-sm h-9"/>
         </div>
-        <button className="bg-gray-800 hover:bg-gray-900 text-white px-4 py-2 rounded-lg">{tr.load}</button>
-        {q && <a href={`/fees?month=${month}&year=${year}`} className="text-sm text-emerald-700 underline">{lang === "ur" ? "صاف کریں" : "Clear"}</a>}
-        <div className="flex items-center gap-2 flex-wrap ml-auto">
-          <a href={`/fees/report?month=${month}&year=${year}`} className="bg-emerald-700 hover:bg-emerald-800 text-white px-4 py-2 rounded-lg text-sm font-medium">{lang === "ur" ? "ماہانہ رپورٹ" : "Monthly Report"}</a>
-          <a href="/fees/session-report" className="bg-teal-700 hover:bg-teal-800 text-white px-4 py-2 rounded-lg text-sm font-medium">{lang === "ur" ? "سیشن رپورٹ" : "Session Report"}</a>
-          <a href="/fees/arrears" className="bg-red-700 hover:bg-red-800 text-white px-4 py-2 rounded-lg text-sm font-medium">{lang === "ur" ? "بقایا جات" : "Arrears"}</a>
-          <a href={`/fees/defaulters?month=${month}&year=${year}`} className="bg-amber-600 hover:bg-amber-700 text-white px-4 py-2 rounded-lg text-sm font-medium">{lang === "ur" ? "باقی فیس کی فہرست" : "Defaulters List"}</a>
-        </div>
+        <button type="submit" className="bg-gray-800 hover:bg-gray-900 text-white px-4 py-2 rounded-lg">{tr.load}</button>
+        {q && <Link href={`/fees?month=${month}&year=${year}`} className="text-sm text-emerald-700 underline">{lang === "ur" ? "صاف کریں" : "Clear"}</Link>}
         <span className="text-xs text-gray-600 w-full">{tr.feesNote} {lang === "ur" ? "ہر بچے کی ماہانہ فیس الگ سے سیٹ کی جا سکتی ہے۔" : "You can set a different monthly fee for each student."}</span>
       </form>
+      <div className="no-print flex items-center gap-2 flex-wrap">
+        <Link href={`/fees/report?month=${month}&year=${year}`} className="bg-emerald-700 hover:bg-emerald-800 text-white px-4 py-2 rounded-lg text-sm font-medium">{lang === "ur" ? "ماہانہ رپورٹ" : "Monthly Report"}</Link>
+        <Link href="/fees/session-report" className="bg-teal-700 hover:bg-teal-800 text-white px-4 py-2 rounded-lg text-sm font-medium">{lang === "ur" ? "سیشن رپورٹ" : "Session Report"}</Link>
+        <Link href="/fees/arrears" className="bg-red-700 hover:bg-red-800 text-white px-4 py-2 rounded-lg text-sm font-medium">{lang === "ur" ? "بقایا جات" : "Arrears"}</Link>
+        <Link href={`/fees/defaulters?month=${month}&year=${year}`} className="bg-amber-600 hover:bg-amber-700 text-white px-4 py-2 rounded-lg text-sm font-medium">{lang === "ur" ? "باقی فیس کی فہرست" : "Defaulters List"}</Link>
+      </div>
       <div className="bg-white rounded-2xl shadow-sm overflow-auto border border-emerald-100/80">
         <div className="px-4 py-3 border-b border-emerald-100 bg-emerald-50/40 flex items-center justify-between gap-3 flex-wrap">
           <h2 className="font-semibold text-emerald-900">{lang === "ur" ? "باقی / جزوی فیس (اس مہینے)" : "Pending / Partial Fees (This Month)"}</h2>
@@ -293,7 +294,7 @@ export default async function FeesPage({ searchParams }: { searchParams: Promise
                   <span className={`inline-flex px-2.5 py-1 rounded-full text-xs font-semibold ${f?.isLate ? "bg-amber-100 text-amber-800" : "bg-emerald-100 text-emerald-800"}`}>{status} ✓ <span className="ml-1 opacity-80">{lang === "ur" ? "(مقفل)" : "(Locked)"}</span></span>
                 </td>
                 <td className="p-3 text-center">
-                  {f?.id ? <a href={`/fees/receipt/${f.id}`} className="inline-flex px-3 py-1.5 rounded-lg border border-emerald-200 bg-white text-emerald-800 font-medium hover:bg-emerald-50">{lang === "ur" ? "رسید" : "Receipt"}</a> : "-"}
+                  {f?.id ? <Link href={`/fees/receipt/${f.id}`} className="inline-flex px-3 py-1.5 rounded-lg border border-emerald-200 bg-white text-emerald-800 font-medium hover:bg-emerald-50">{lang === "ur" ? "رسید" : "Receipt"}</Link> : "-"}
                 </td>
               </tr>
             );
