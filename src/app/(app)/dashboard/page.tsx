@@ -37,15 +37,17 @@ export default async function Dashboard() {
   }
 
   const now = new Date();
-  let m = now.getMonth() + 1;
-  let y = now.getFullYear();
+  const actualM = now.getMonth() + 1;
+  const actualY = now.getFullYear();
+  let m = actualM;
+  let y = actualY;
 
   let students = 0, activeStudents = 0, examsCount = 0, examsConducted = 0, feeGroups: any[] = [], resultsCount = 0, certsCount = 0;
   let recentEnrolls: any[] = [], recentExams: any[] = [], recentResults: any[] = [];
   let monthAgg: any = { _count: { _all: 0 } }, monthPaidAgg: any = { _count: { _all: 0 }, _sum: { amount: 0 } };
 
   if (session) {
-    // Clamp dashboard "This Month Fees" to session period (fees start from session start)
+    // Clamp dashboard fee summary month to session period (fees start from session start)
     const sStart = session.startDate ? new Date(session.startDate) : null;
     const sEnd = session.endDate ? new Date(session.endDate) : null;
     if (sStart && sEnd) {
@@ -101,6 +103,14 @@ export default async function Dashboard() {
   const monthCollected = (monthPaidAgg as any)._sum.amount || 0;
   const pendingExams = Math.max(0, examsCount - examsConducted);
 
+  const actualIdx = actualY * 12 + (actualM - 1);
+  const shownIdx = y * 12 + (m - 1);
+  const feesMonthLabel = shownIdx === actualIdx
+    ? (ur ? "اس ماہ کی فیس" : "This Month Fees")
+    : shownIdx < actualIdx
+      ? (ur ? "پچھلے مہینے کی فیس" : "Last Month Fees")
+      : (ur ? "اگلے مہینے کی فیس" : "Next Month Fees");
+
   const cards = [
     [tr.activeSession, session ? session.name : tr.none, ur ? "موجودہ تعلیمی سال" : "Current academic year"],
     [tr.enrolledStudents, String(students), ur ? "موجودہ سیشن میں" : "In current session"],
@@ -145,7 +155,7 @@ export default async function Dashboard() {
             </div>
           </div>
                     <div className="bg-white/10 border border-white/20 rounded-2xl p-4 min-w-[240px]">
-            <div className="text-xs text-emerald-100 uppercase tracking-wider">{ur ? "اس ماہ کی فیس" : "This Month Fees"}</div>
+            <div className="text-xs text-emerald-100 uppercase tracking-wider">{feesMonthLabel}</div>
             <div className="text-lg font-bold mt-1">{m}/{y}</div>
             <div className="text-sm mt-1">{ur ? "ادا شدہ" : "Paid"}: <b>{monthPaid}</b> / {monthTotal || 0}</div>
             <div className="text-sm">{ur ? "وصولی" : "Collected"}: <b>Rs {monthCollected}</b></div>
