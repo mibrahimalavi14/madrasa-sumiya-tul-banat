@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { getAuthUser } from "@/lib/auth";
 import { notFound, redirect } from "next/navigation";
 import Logo from "@/components/Logo";
+import PrintButton from "@/components/PrintButton";
 import { formatDateDMY } from "@/lib/utils";
 
 export default async function CertPrint({ params }: { params: Promise<{ id: string }> }) {
@@ -23,7 +24,7 @@ export default async function CertPrint({ params }: { params: Promise<{ id: stri
     <div className="bg-white p-6 max-w-4xl mx-auto print-area">
       <style>{`@media print { @page { size: A4; margin: 10mm; } .no-print { display: none !important; } }`}</style>
       <div className="no-print mb-4 flex gap-2">
-        <a href="javascript:window.print()" className="bg-emerald-800 text-white px-4 py-2 rounded">Print</a>
+        <PrintButton label="Print / پرنٹ کریں" className="bg-emerald-800 text-white px-4 py-2 rounded" />
       </div>
       <div className="border-8 border-double border-emerald-900 p-8 md:p-10 text-center relative bg-[radial-gradient(circle_at_top,rgba(16,185,129,0.06),transparent_45%)]">
         <div className="absolute inset-3 border border-emerald-200 pointer-events-none rounded-sm" />
@@ -50,16 +51,11 @@ export default async function CertPrint({ params }: { params: Promise<{ id: stri
               <div className="border border-emerald-100 rounded-lg p-3 bg-white/80"><div className="text-xs text-gray-500">Session / Type</div><div className="font-semibold text-emerald-900">{cert.session.name} — {isAnnual ? "Annual" : "Nazra Completion"}</div></div>
             </div>
             <div className="border border-emerald-100 rounded-lg p-3 bg-white/90 text-center">
-              <div className="text-xs text-gray-500 mb-2">Verification QR</div>
-              {/* External QR image for quick scan/verification; serial remains the source of truth */}
-              <img
-                src={`https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${encodeURIComponent(`MSB Certificate ${cert.serialNo || cert.id} | ${cert.student.admissionNo} | ${cert.session.name} | ${cert.type}`)}`}
-                alt="Certificate verification QR"
-                width={120}
-                height={120}
-                className="mx-auto border border-emerald-100 rounded"
-              />
-              <div className="text-[10px] text-gray-500 mt-2 max-w-[140px] mx-auto">Scan to view encoded certificate details (requires internet)</div>
+              <div className="text-xs text-gray-500 mb-2">Verification Details</div>
+              <div className="text-[11px] font-semibold text-emerald-900 break-all leading-relaxed">{cert.serialNo || cert.id}</div>
+              <div className="text-[10px] text-gray-600 mt-2">Student: {cert.student.admissionNo}</div>
+              <div className="text-[10px] text-gray-600">Session: {cert.session.name}</div>
+              <div className="text-[10px] text-gray-500 mt-2 max-w-[160px] mx-auto">Use Serial/Verification No for offline verification.</div>
             </div>
           </div>
 

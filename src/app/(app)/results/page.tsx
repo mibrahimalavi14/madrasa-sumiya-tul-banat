@@ -113,7 +113,7 @@ export default async function ResultsPage({ searchParams }: { searchParams: Prom
       <div className="space-y-5">
         <div className="flex items-center justify-between flex-wrap gap-2">
           <h1 className="text-2xl font-bold text-emerald-900">{ur ? "سالانہ مجموعی نتیجہ" : "Annual Results"}</h1>
-          <div className="flex gap-2"><Link href="/results" className="text-sm border px-3 py-1.5 rounded-lg">{ur ? "امتحان وار نتائج" : "Exam-wise Results"}</Link><Link href="/examination" className="text-sm border px-3 py-1.5 rounded-lg">{ur ? "امتحانات" : "Exams"}</Link></div>
+          <div className="flex gap-2 flex-wrap"><Link href="/results" className="text-sm border px-3 py-1.5 rounded-lg">{ur ? "امتحان وار نتائج" : "Exam-wise Results"}</Link><a href="/api/export/results" className="text-sm bg-gray-700 hover:bg-gray-800 text-white px-3 py-1.5 rounded-lg">{ur ? "CSV ایکسپورٹ" : "Export CSV"}</a><Link href="/examination" className="text-sm border px-3 py-1.5 rounded-lg">{ur ? "امتحانات" : "Exams"}</Link></div>
         </div>
         <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4 text-sm text-emerald-900 space-y-1">
           <div className="font-semibold">{ur ? "سالانہ مجموعی نتیجہ" : "Annual Combined Result"}</div>
@@ -177,7 +177,10 @@ export default async function ResultsPage({ searchParams }: { searchParams: Prom
     <div className="space-y-4">
       <div className="flex items-center justify-between flex-wrap gap-2">
         <h1 className="text-2xl font-bold text-emerald-900">{ur ? "نتائج (محفوظ شدہ)" : "Results (All Saved)"}</h1>
-        <Link href="/results?view=annual" className="text-sm bg-amber-50 text-amber-800 border border-amber-200 px-3 py-1.5 rounded-lg">{ur ? "سالانہ مجموعی نتیجہ / پوزیشن ہولڈرز" : "Annual Combined Result / Position Holders"}</Link>
+        <div className="flex gap-2 flex-wrap">
+          <Link href="/results?view=annual" className="text-sm bg-amber-50 text-amber-800 border border-amber-200 px-3 py-1.5 rounded-lg">{ur ? "سالانہ مجموعی نتیجہ / پوزیشن ہولڈرز" : "Annual Combined Result / Position Holders"}</Link>
+          <a href="/api/export/results" className="text-sm bg-gray-700 hover:bg-gray-800 text-white px-3 py-1.5 rounded-lg">{ur ? "CSV ایکسپورٹ" : "Export CSV"}</a>
+        </div>
       </div>
       <form className="bg-white rounded-xl shadow-sm border border-emerald-100 p-4 flex gap-3 items-end flex-wrap">
         <div className="flex flex-col gap-1.5">

@@ -115,6 +115,10 @@ export default async function Dashboard() {
       ? (ur ? "پچھلے مہینے کی فیس" : "Last Month Fees")
       : (ur ? "اگلے مہینے کی فیس" : "Next Month Fees");
 
+  const sessionEnd = session?.endDate ? new Date(session.endDate) : null;
+  const daysToSessionEnd = sessionEnd ? Math.ceil((sessionEnd.getTime() - Date.now()) / (1000 * 60 * 60 * 24)) : null;
+  const sessionEndingSoon = daysToSessionEnd != null && daysToSessionEnd >= 0 && daysToSessionEnd <= 30;
+
   const cards = [
     [tr.activeSession, session ? session.name : tr.none, ur ? "موجودہ تعلیمی سال" : "Current academic year"],
     [tr.enrolledStudents, String(students), ur ? "موجودہ سیشن میں" : "In current session"],
@@ -146,6 +150,19 @@ export default async function Dashboard() {
 
   return (
     <div className="space-y-6">
+      {(sessionEndingSoon || pendingExams > 0 || (monthTotal - monthPaid) > 0) && (
+        <div className="grid md:grid-cols-3 gap-3 no-print">
+          {sessionEndingSoon && (
+            <div className="bg-amber-50 border border-amber-300 text-amber-900 rounded-xl p-4 text-sm"><b>{ur ? "تنبیہ:" : "Alert:"}</b> {ur ? `سیشن ${daysToSessionEnd} دن میں ختم ہو رہا ہے۔` : `Session ends in ${daysToSessionEnd} day(s).`}</div>
+          )}
+          {pendingExams > 0 && (
+            <div className="bg-blue-50 border border-blue-300 text-blue-900 rounded-xl p-4 text-sm"><b>{ur ? "یاددہانی:" : "Reminder:"}</b> {ur ? `${pendingExams} امتحانی مرحلہ/مراحل کے نتائج باقی ہیں۔` : `${pendingExams} exam stage(s) have pending results.`}</div>
+          )}
+          {(monthTotal - monthPaid) > 0 && (
+            <div className="bg-red-50 border border-red-300 text-red-900 rounded-xl p-4 text-sm"><b>{ur ? "فیس:" : "Fees:"}</b> {ur ? `${monthTotal - monthPaid} طلبہ کی اس مہینے کی فیس باقی ہے۔` : `${monthTotal - monthPaid} student(s) have pending fees for this month.`}</div>
+          )}
+        </div>
+      )}
       <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-emerald-900 via-emerald-800 to-amber-700 text-white p-6 md:p-8 shadow-xl">
         <div className="absolute right-0 top-0 h-full w-1/2 opacity-20 bg-[radial-gradient(circle_at_30%_20%,white,transparent_40%)]" />
         <div className="relative flex flex-col md:flex-row md:items-center md:justify-between gap-4">
