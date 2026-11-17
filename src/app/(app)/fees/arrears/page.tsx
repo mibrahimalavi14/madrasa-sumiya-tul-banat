@@ -37,7 +37,7 @@ export default async function FeesArrearsPage() {
     }),
     prisma.feePayment.findMany({
       where: { sessionId: session.id },
-      select: { studentId: true, month: true, year: true, amount: true, isPaid: true },
+      select: { studentId: true, month: true, year: true, amount: true, paidAmount: true, isPaid: true },
     }),
   ]);
   const defaultAmount = Number((defaultAmountSettingSession || defaultAmountSettingGlobal)?.value || 0);
@@ -55,16 +55,20 @@ export default async function FeesArrearsPage() {
   const monthName = (m: number) => ["", "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"][m] || String(m);
 
   const rows = enrolls.map((en: any) => {
-    const items: { month: number; year: number; due: number }[] = [];
+    const items: { month: number; year: number; due: number; paid: number; balance: number; partial: boolean }[] = [];
     for (const m of months) {
       const f = feeMap.get(`${en.studentId}:${m.year}:${m.month}`);
-      if (f?.isPaid) continue;
       const studentFee = en.monthlyFee;
       const effectiveDefault = studentFee != null ? Number(studentFee) : defaultAmount;
-      const due = f ? Number(f.amount || 0) : effectiveDefault;
-      items.push({ month: m.month, year: m.year, due });
+      const dueAmt = f ? Number(f.amount || 0) : effectiveDefault;
+      let paidAmt = f ? Number(f.paidAmount ?? 0) : 0;
+      if (f?.isPaid && paidAmt <= 0) paidAmt = Number(f.amount || 0);
+      const fullyPaid = !!f?.isPaid || (dueAmt > 0 && paidAmt >= dueAmt);
+      if (fullyPaid) continue;
+      const balance = Math.max(0, dueAmt - paidAmt);
+      items.push({ month: m.month, year: m.year, due: dueAmt, paid: paidAmt, balance, partial: paidAmt > 0 && balance > 0 });
     }
-    const total = items.reduce((s, i) => s + i.due, 0);
+    const total = items.reduce((s, i) => s + i.balance, 0);
     return { en, items, total };
   }).filter(r => r.items.length > 0);
 
@@ -103,13 +107,15 @@ export default async function FeesArrearsPage() {
                 <div className="text-sm font-semibold text-red-700">{ur ? "کل بقایا" : "Total Arrears"}: Rs {total}</div>
               </div>
               <table className="w-full text-sm">
-                <thead><tr className="border-t"><th className="p-2 text-left">{ur ? "مہینہ" : "Month"}</th><th className="p-2 text-right">{ur ? "واجب رقم" : "Due Amount"}</th><th className="p-2 text-center">{ur ? "حیثیت" : "Status"}</th></tr></thead>
+                <thead><tr className="border-t"><th className="p-2 text-left">{ur ? "مہینہ" : "Month"}</th><th className="p-2 text-right">{ur ? "واجب" : "Due"}</th><th className="p-2 text-right">{ur ? "ادا شدہ" : "Paid"}</th><th className="p-2 text-right">{ur ? "بقایا" : "Balance"}</th><th className="p-2 text-center">{ur ? "حیثیت" : "Status"}</th></tr></thead>
                 <tbody>
                   {items.map((it: any) => (
                     <tr key={`${it.year}-${it.month}`} className="border-t">
                       <td className="p-2">{monthName(it.month)} {it.year} ({it.month}/{it.year})</td>
-                      <td className="p-2 text-right font-medium">Rs {it.due}</td>
-                      <td className="p-2 text-center"><span className="inline-flex px-2 py-0.5 rounded-full text-xs font-semibold bg-red-100 text-red-800">{ur ? "باقی" : "Unpaid"}</span></td>
+                      <td className="p-2 text-right">Rs {it.due}</td>
+                      <td className="p-2 text-right">Rs {it.paid}</td>
+                      <td className="p-2 text-right font-medium">Rs {it.balance}</td>
+                      <td className="p-2 text-center"><span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-semibold ${it.partial ? "bg-amber-100 text-amber-800" : "bg-red-100 text-red-800"}`}>{it.partial ? (ur ? "جزوی" : "Partial") : (ur ? "باقی" : "Unpaid")}</span></td>
                     </tr>
                   ))}
                 </tbody>

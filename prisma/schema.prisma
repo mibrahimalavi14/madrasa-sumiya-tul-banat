@@ -242,8 +242,9 @@ model FeePayment {
   student     Student  @relation(fields: [studentId], references: [id])
   month       Int      // 1-12
   year        Int
-  amount      Float
-  isPaid      Boolean  @default(false)
+  amount      Float    // due/fee amount for the month
+  paidAmount  Float    @default(0) // total amount paid so far (supports partial payments)
+  isPaid      Boolean  @default(false) // fully paid
   paidAt      DateTime?
   isLate      Boolean  @default(false)
   note        String?

@@ -14,18 +14,35 @@ async function upsertFee(formData: FormData) {
   const session = await getCurrentSession(); if (!session || session.status !== "ACTIVE") throw new Error("SESSION_NOT_ACTIVE");
   const studentId = String(formData.get("studentId"));
   const month = Number(formData.get("month")); const year = Number(formData.get("year"));
-  const amount = Number(formData.get("amount")||0);
+
+  // New model: amount = due/fee amount for month, paidAmount = total received so far (supports partial)
+  const dueRaw = formData.get("dueAmount") ?? formData.get("amount");
+  const dueAmount = Math.max(0, Number(dueRaw || 0));
+  let paidAmount = Math.max(0, Number(formData.get("paidAmount") ?? 0));
+  const receiveNow = Math.max(0, Number(formData.get("receiveNow") ?? 0));
+  if (receiveNow > 0) paidAmount = Math.max(paidAmount, Number(formData.get("existingPaidAmount") || 0) + receiveNow);
+  // Backward compat: old "markPaid" checkbox means fully paid
   const markPaid = formData.get("markPaid") === "on";
+  if (markPaid && paidAmount <= 0) paidAmount = dueAmount;
+  if (paidAmount > dueAmount && dueAmount > 0 && markPaid) paidAmount = dueAmount; // cap if marked fully paid via checkbox intent
+  // Allow over/advance within record as fully settled
+  const isPaid = dueAmount > 0 ? paidAmount >= dueAmount : paidAmount > 0;
+
   const paidAtParsed = parseDateInput(formData.get("paidAt"));
-  const paidAt = paidAtParsed ? paidAtParsed : (markPaid ? new Date() : null);
+  const paidAt = paidAtParsed ? paidAtParsed : (paidAmount > 0 ? new Date() : null);
   let isLate = false;
   if (paidAt) isLate = paidAt.getDate() > 7;
+
   await prisma.feePayment.upsert({
     where: { sessionId_studentId_month_year: { sessionId: session.id, studentId, month, year } },
-    update: { amount, isPaid: markPaid, paidAt: markPaid ? paidAt : null, isLate: markPaid ? isLate : false },
-    create: { sessionId: session.id, studentId, month, year, amount, isPaid: markPaid, paidAt: markPaid ? paidAt : null, isLate: markPaid ? isLate : false },
+    update: { amount: dueAmount, paidAmount, isPaid, paidAt: paidAmount > 0 ? paidAt : null, isLate: isPaid ? isLate : false },
+    create: { sessionId: session.id, studentId, month, year, amount: dueAmount, paidAmount, isPaid, paidAt: paidAmount > 0 ? paidAt : null, isLate: isPaid ? isLate : false },
   });
   revalidatePath("/fees");
+  revalidatePath("/fees/report");
+  revalidatePath("/fees/defaulters");
+  revalidatePath("/fees/session-report");
+  revalidatePath("/fees/arrears");
 }
 
 async function saveStudentFee(formData: FormData) {
@@ -124,7 +141,7 @@ export default async function FeesPage({ searchParams }: { searchParams: Promise
     }) : Promise.resolve([] as any[]),
     isInSessionRange ? prisma.feePayment.findMany({
       where: { sessionId: session.id, month, year },
-      select: { id: true, studentId: true, amount: true, isPaid: true, isLate: true, paidAt: true },
+      select: { id: true, studentId: true, amount: true, paidAmount: true, isPaid: true, isLate: true, paidAt: true },
     }) : Promise.resolve([] as any[]),
   ]);
   const defaultAmount = Number((defaultAmountSettingSession || defaultAmountSettingGlobal)?.value || 0);
@@ -137,9 +154,21 @@ export default async function FeesPage({ searchParams }: { searchParams: Promise
       return String(a.student?.admissionNo || "").localeCompare(String(b.student?.admissionNo || ""));
     });
   const map = new Map(fees.map((f: any)=>[f.studentId,f]));
-  const paidEnrolls = enrolls.filter((en: any) => (map.get(en.studentId) as any)?.isPaid);
-  const unpaidEnrolls = enrolls.filter((en: any) => !(map.get(en.studentId) as any)?.isPaid);
-  const paidTotalAmount = paidEnrolls.reduce((sum: number, en: any) => sum + Number((map.get(en.studentId) as any)?.amount || 0), 0);
+  const getAmounts = (f: any, en: any) => {
+    const due = f ? Number(f.amount || 0) : (Number((en as any).monthlyFee ?? defaultAmount) || 0);
+    let paid = f ? Number(f.paidAmount ?? 0) : 0;
+    if (f?.isPaid && paid <= 0) paid = Number(f.amount || 0); // compat old records
+    return { due, paid, balance: Math.max(0, due - paid) };
+  };
+  const isFullyPaid = (en: any) => {
+    const f = map.get(en.studentId) as any;
+    if (!f) return false;
+    const { due, paid } = getAmounts(f, en);
+    return !!f.isPaid || (due > 0 && paid >= due);
+  };
+  const paidEnrolls = enrolls.filter((en: any) => isFullyPaid(en));
+  const unpaidEnrolls = enrolls.filter((en: any) => !isFullyPaid(en));
+  const paidTotalAmount = paidEnrolls.reduce((sum: number, en: any) => sum + getAmounts(map.get(en.studentId) as any, en).paid, 0);
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between gap-3 flex-wrap">
@@ -178,27 +207,28 @@ export default async function FeesPage({ searchParams }: { searchParams: Promise
       </form>
       <div className="bg-white rounded-2xl shadow-sm overflow-auto border border-emerald-100/80">
         <div className="px-4 py-3 border-b border-emerald-100 bg-emerald-50/40 flex items-center justify-between gap-3 flex-wrap">
-          <h2 className="font-semibold text-emerald-900">{lang === "ur" ? "باقی فیس (اس مہینے)" : "Pending Fees (This Month)"}</h2>
+          <h2 className="font-semibold text-emerald-900">{lang === "ur" ? "باقی / جزوی فیس (اس مہینے)" : "Pending / Partial Fees (This Month)"}</h2>
           <span className="text-sm text-gray-600">{lang === "ur" ? `تعداد: ${unpaidEnrolls.length}` : `Count: ${unpaidEnrolls.length}`}</span>
         </div>
-        <table className="w-full text-sm"><thead><tr><th className="p-3 text-left">{tr.admission}</th><th className="p-3 text-left">{tr.name}</th><th className="p-3 text-left">{lang === "ur" ? "طالب علم کی ماہانہ فیس" : "Student Monthly Fee"}</th><th className="p-3 text-left">{tr.amount}</th><th className="p-3 text-center">{tr.paid}</th><th className="p-3 text-left">{tr.paidDate}</th><th className="p-3 text-center">{tr.status}</th><th className="p-3 text-center">{tr.action}</th></tr></thead>
+        <table className="w-full text-sm"><thead><tr><th className="p-3 text-left">{tr.admission}</th><th className="p-3 text-left">{tr.name}</th><th className="p-3 text-left">{lang === "ur" ? "ماہانہ فیس (سیٹ)" : "Monthly Fee (Set)"}</th><th className="p-3 text-left">{lang === "ur" ? "واجب (Due)" : "Due"}</th><th className="p-3 text-left">{lang === "ur" ? "ادا شدہ (کل)" : "Paid (Total)"}</th><th className="p-3 text-left">{lang === "ur" ? "باقی" : "Balance"}</th><th className="p-3 text-left">{tr.paidDate}</th><th className="p-3 text-center">{tr.status}</th><th className="p-3 text-center">{tr.action}</th></tr></thead>
         <tbody>
           {unpaidEnrolls.map(en => { 
-            const f = map.get(en.studentId); 
-            const exempt = !!(en as any).feeExempt;
+            const f = map.get(en.studentId) as any; 
             const studentFee = (en as any).monthlyFee;
-            const effectiveDefault = exempt ? 0 : (studentFee != null ? Number(studentFee) : defaultAmount);
-            const status = tr.unpaid; 
+            const { due, paid, balance } = getAmounts(f, en);
+            const isPartial = paid > 0 && balance > 0;
+            const status = isPartial ? (lang === "ur" ? "جزوی" : "Partial") : tr.unpaid; 
             const formId = `fee-${en.studentId}`;
             const sFormId = `sfee-${en.studentId}`;
             return (
-              <tr key={en.id} className="align-middle">
+              <tr key={en.id} className={`align-middle ${isPartial ? "bg-amber-50/30" : ""}`}>
                 <td className="p-3">
                   {en.student.admissionNo}
                   <form id={formId} action={upsertFee}>
                     <input type="hidden" name="studentId" value={en.studentId}/>
                     <input type="hidden" name="month" value={month}/>
                     <input type="hidden" name="year" value={year}/>
+                    <input type="hidden" name="existingPaidAmount" value={paid}/>
                   </form>
                   <form id={sFormId} action={saveStudentFee}>
                     <input type="hidden" name="studentId" value={en.studentId}/>
@@ -206,27 +236,27 @@ export default async function FeesPage({ searchParams }: { searchParams: Promise
                 </td>
                 <td className="p-3 font-medium">
                   <div>{en.student.nameEn}</div>
+                  {isPartial && <div className="text-[11px] text-amber-700 mt-0.5">{lang === "ur" ? "جزوی ادائیگی موصول" : "Partial payment received"}</div>}
                 </td>
                 <td className="p-3">
                   <div className="flex items-center gap-2">
-                    <input form={sFormId} name="studentMonthlyFee" type="number" step="1" defaultValue={studentFee ?? ""} placeholder={String(defaultAmount)} className="border border-emerald-200/80 rounded-lg px-3 py-2 w-28" />
+                    <input form={sFormId} name="studentMonthlyFee" type="number" step="1" defaultValue={studentFee ?? ""} placeholder={String(defaultAmount)} className="border border-emerald-200/80 rounded-lg px-3 py-2 w-24" />
                     <button form={sFormId} className="bg-gray-700 hover:bg-gray-800 text-white px-3 py-2 rounded-lg text-xs">{lang === "ur" ? "سیٹ" : "Set"}</button>
                   </div>
-                  <div className="text-[11px] text-gray-500 mt-1">{lang === "ur" ? "خالی = ڈیفالٹ فیس" : "Empty = default fee"}</div>
                 </td>
                 <td className="p-3">
-                  <input form={formId} name="amount" type="number" step="1" defaultValue={f?.amount ?? effectiveDefault} className="border border-emerald-200/80 rounded-lg px-3 py-2 w-28" />
+                  <input form={formId} name="dueAmount" type="number" step="1" defaultValue={due} className="border border-emerald-200/80 rounded-lg px-3 py-2 w-24" />
                 </td>
-                <td className="p-3 text-center">
-                  <label className="inline-flex items-center gap-2 text-sm justify-center">
-                    <input form={formId} type="checkbox" name="markPaid" defaultChecked={false}/> {tr.paid}
-                  </label>
+                <td className="p-3">
+                  <input form={formId} name="paidAmount" type="number" step="1" defaultValue={paid} className="border border-emerald-200/80 rounded-lg px-3 py-2 w-24" />
+                  <div className="text-[11px] text-gray-500 mt-1">{lang === "ur" ? "کل موصولہ" : "Total received"}</div>
                 </td>
+                <td className="p-3 font-semibold text-amber-700">Rs {balance}</td>
                 <td className="p-3">
                   <DateInputDMY form={formId} name="paidAt" defaultValue={toDateInputDMY(f?.paidAt)} inputClassName="border border-emerald-200/80 rounded-lg px-3 py-2" />
                 </td>
                 <td className="p-3 text-center">
-                  <span className="inline-flex px-2.5 py-1 rounded-full text-xs font-semibold bg-red-100 text-red-800">{status}</span>
+                  <span className={`inline-flex px-2.5 py-1 rounded-full text-xs font-semibold ${isPartial ? "bg-amber-100 text-amber-800" : "bg-red-100 text-red-800"}`}>{status}</span>
                 </td>
                 <td className="p-3 text-center">
                   <button form={formId} className="bg-emerald-800 hover:bg-emerald-900 text-white px-4 py-2 rounded-lg">{tr.save}</button>
@@ -234,28 +264,30 @@ export default async function FeesPage({ searchParams }: { searchParams: Promise
               </tr>
             );
           })}
-          {unpaidEnrolls.length===0 && <tr><td colSpan={8} className="p-4 text-center text-gray-500">{lang==="ur" ? "اس مہینے کوئی فیس باقی نہیں۔" : "No pending fees for this month."}</td></tr>}
+          {unpaidEnrolls.length===0 && <tr><td colSpan={9} className="p-4 text-center text-gray-500">{lang==="ur" ? "اس مہینے کوئی فیس باقی نہیں۔" : "No pending fees for this month."}</td></tr>}
         </tbody></table>
       </div>
 
       <div className="bg-white rounded-2xl shadow-sm overflow-auto border border-emerald-100/80">
         <div className="px-4 py-3 border-b border-emerald-100 bg-emerald-50/40 flex items-center justify-between gap-3 flex-wrap">
-          <h2 className="font-semibold text-emerald-900">{lang === "ur" ? "جمع شدہ فیس (اس مہینے)" : "Deposited Fees (This Month)"}</h2>
+          <h2 className="font-semibold text-emerald-900">{lang === "ur" ? "مکمل جمع شدہ فیس (اس مہینے)" : "Fully Deposited Fees (This Month)"}</h2>
           <div className="text-sm text-gray-600 flex gap-3 flex-wrap">
             <span>{lang === "ur" ? `تعداد: ${paidEnrolls.length}` : `Count: ${paidEnrolls.length}`}</span>
             <span>{lang === "ur" ? `کل رقم: Rs ${paidTotalAmount}` : `Total Amount: Rs ${paidTotalAmount}`}</span>
           </div>
         </div>
-        <table className="w-full text-sm"><thead><tr><th className="p-3 text-left">{tr.admission}</th><th className="p-3 text-left">{tr.name}</th><th className="p-3 text-left">{lang === "ur" ? "جمع شدہ رقم" : "Amount Deposited"}</th><th className="p-3 text-left">{tr.paidDate}</th><th className="p-3 text-center">{tr.status}</th><th className="p-3 text-center">{lang === "ur" ? "رسید" : "Receipt"}</th></tr></thead>
+        <table className="w-full text-sm"><thead><tr><th className="p-3 text-left">{tr.admission}</th><th className="p-3 text-left">{tr.name}</th><th className="p-3 text-left">{lang === "ur" ? "واجب" : "Due"}</th><th className="p-3 text-left">{lang === "ur" ? "جمع شدہ" : "Deposited"}</th><th className="p-3 text-left">{tr.paidDate}</th><th className="p-3 text-center">{tr.status}</th><th className="p-3 text-center">{lang === "ur" ? "رسید" : "Receipt"}</th></tr></thead>
         <tbody>
           {paidEnrolls.map(en => { 
             const f = map.get(en.studentId) as any; 
+            const { due, paid } = getAmounts(f, en);
             const status = f?.isLate ? tr.late : tr.paid; 
             return (
               <tr key={en.id} className="align-middle bg-emerald-50/20">
                 <td className="p-3">{en.student.admissionNo}</td>
                 <td className="p-3 font-medium">{en.student.nameEn}</td>
-                <td className="p-3 font-semibold">Rs {f?.amount ?? 0}</td>
+                <td className="p-3">Rs {due}</td>
+                <td className="p-3 font-semibold">Rs {paid}</td>
                 <td className="p-3">{formatDateDMY(f?.paidAt) || "-"}</td>
                 <td className="p-3 text-center">
                   <span className={`inline-flex px-2.5 py-1 rounded-full text-xs font-semibold ${f?.isLate ? "bg-amber-100 text-amber-800" : "bg-emerald-100 text-emerald-800"}`}>{status} ✓ <span className="ml-1 opacity-80">{lang === "ur" ? "(مقفل)" : "(Locked)"}</span></span>
@@ -266,7 +298,7 @@ export default async function FeesPage({ searchParams }: { searchParams: Promise
               </tr>
             );
           })}
-          {paidEnrolls.length===0 && <tr><td colSpan={6} className="p-4 text-center text-gray-500">{lang==="ur" ? "ابھی اس مہینے کسی نے فیس جمع نہیں کروائی۔" : "No fees deposited yet for this month."}</td></tr>}
+          {paidEnrolls.length===0 && <tr><td colSpan={7} className="p-4 text-center text-gray-500">{lang==="ur" ? "ابھی اس مہینے کسی نے مکمل فیس جمع نہیں کروائی۔" : "No fully deposited fees yet for this month."}</td></tr>}
         </tbody></table>
       </div>
     </div>
@@ -276,6 +308,6 @@ export default async function FeesPage({ searchParams }: { searchParams: Promise
 function FeeTableRead({ fees, tr, exempt = false, lang = "en" }: { fees: any[]; tr: any; exempt?: boolean; lang?: "en" | "ur" }) {
   return <div className="bg-white rounded-2xl shadow-sm border border-emerald-100/80 overflow-auto">
     {exempt && <div className="px-4 pt-4"><span className="inline-flex px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-100 text-amber-800">{lang === "ur" ? "فیس معاف" : "Fee Exempt"}</span></div>}
-    <table className="w-full text-sm"><thead><tr><th className="p-3">{tr.month}/{tr.year}</th><th className="p-3">{tr.amount}</th><th className="p-3">{tr.status}</th><th className="p-3">{tr.paidDate}</th></tr></thead><tbody>{fees.map(f=>(<tr key={f.id}><td className="p-3 text-center">{f.month}/{f.year}</td><td className="p-3 text-center">Rs {f.amount}</td><td className="p-3 text-center">{exempt ? (lang === "ur" ? "فیس معاف" : "Exempt") : (f.isPaid?(f.isLate?tr.late:`${tr.paid} ✓`):tr.unpaid)}</td><td className="p-3 text-center">{formatDateDMY(f.paidAt)}</td></tr>))}{fees.length===0 && <tr><td colSpan={4} className="p-4 text-center text-gray-500">{tr.noFeeRecords}</td></tr>}</tbody></table>
+    <table className="w-full text-sm"><thead><tr><th className="p-3">{tr.month}/{tr.year}</th><th className="p-3">{lang === "ur" ? "واجب" : "Due"}</th><th className="p-3">{lang === "ur" ? "ادا شدہ" : "Paid"}</th><th className="p-3">{tr.status}</th><th className="p-3">{tr.paidDate}</th></tr></thead><tbody>{fees.map((f: any)=>{ const paidAmt = Number(f.paidAmount ?? 0) > 0 ? Number(f.paidAmount ?? 0) : (f.isPaid ? Number(f.amount||0) : 0); const dueAmt = Number(f.amount||0); const balance = Math.max(0, dueAmt - paidAmt); const full = f.isPaid || (dueAmt>0 && paidAmt>=dueAmt); const partial = paidAmt>0 && paidAmt<dueAmt; const status = exempt ? (lang === "ur" ? "فیس معاف" : "Exempt") : (full ? (f.isLate?tr.late:`${tr.paid} ✓`) : (partial ? (lang === "ur" ? "جزوی" : "Partial") : tr.unpaid)); return (<tr key={f.id}><td className="p-3 text-center">{f.month}/{f.year}</td><td className="p-3 text-center">Rs {dueAmt}</td><td className="p-3 text-center">Rs {paidAmt}{balance>0 ? <div className="text-[11px] text-amber-700">{lang === "ur" ? `باقی Rs ${balance}` : `Bal Rs ${balance}`}</div> : null}</td><td className="p-3 text-center">{status}</td><td className="p-3 text-center">{formatDateDMY(f.paidAt)}</td></tr>); })}{fees.length===0 && <tr><td colSpan={5} className="p-4 text-center text-gray-500">{tr.noFeeRecords}</td></tr>}</tbody></table>
   </div>;
 }

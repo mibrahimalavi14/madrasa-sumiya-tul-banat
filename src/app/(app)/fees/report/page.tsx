@@ -61,7 +61,7 @@ export default async function FeesReportPage({ searchParams }: { searchParams: P
     }) : Promise.resolve([] as any[]),
     valid ? prisma.feePayment.findMany({
       where: { sessionId: session.id, month, year },
-      select: { id: true, studentId: true, amount: true, isPaid: true, isLate: true, paidAt: true },
+      select: { id: true, studentId: true, amount: true, paidAmount: true, isPaid: true, isLate: true, paidAt: true },
     }) : Promise.resolve([] as any[]),
   ]);
   const defaultAmount = Number((defaultAmountSettingSession || defaultAmountSettingGlobal)?.value || 0);
@@ -79,16 +79,20 @@ export default async function FeesReportPage({ searchParams }: { searchParams: P
     const f = map.get(en.studentId) as any;
     const studentFee = (en as any).monthlyFee;
     const effectiveDefault = studentFee != null ? Number(studentFee) : defaultAmount;
-    const due = f ? Number(f.amount || 0) : effectiveDefault;
-    const paid = !!f?.isPaid;
-    const late = !!(paid && f?.isLate);
-    return { en, f, due, paid, late, paidAmount: paid ? Number(f?.amount || 0) : 0 };
+    const dueAmt = f ? Number(f.amount || 0) : effectiveDefault;
+    let paidAmt = f ? Number(f.paidAmount ?? 0) : 0;
+    if (f?.isPaid && paidAmt <= 0) paidAmt = Number(f.amount || 0); // compat
+    const fullyPaid = !!f?.isPaid || (dueAmt > 0 && paidAmt >= dueAmt);
+    const partial = paidAmt > 0 && paidAmt < dueAmt;
+    const balance = Math.max(0, dueAmt - paidAmt);
+    const late = !!(fullyPaid && f?.isLate);
+    return { en, f, dueAmt, paidAmt, balance, paid: fullyPaid, partial, late };
   });
   const paidRows = rows.filter(r => r.paid);
-  const unpaidRows = rows.filter(r => !r.paid);
+  const unpaidRows = rows.filter(r => !r.paid); // includes partial
   const lateRows = rows.filter(r => r.late);
-  const totalCollected = paidRows.reduce((s, r) => s + r.paidAmount, 0);
-  const totalDue = unpaidRows.reduce((s, r) => s + r.due, 0);
+  const totalCollected = rows.reduce((s, r) => s + r.paidAmt, 0);
+  const totalDue = rows.reduce((s, r) => s + r.balance, 0);
 
   return (
     <div className="bg-white p-4 md:p-6 max-w-5xl mx-auto print-area">
@@ -122,30 +126,32 @@ export default async function FeesReportPage({ searchParams }: { searchParams: P
 
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-5">
           <div className="border border-emerald-100 rounded-lg p-3 bg-emerald-50/40"><div className="text-xs text-gray-600">{ur ? "کل طلبہ (فیس والے)" : "Total Students (Fee)"}</div><div className="text-2xl font-extrabold text-emerald-900">{rows.length}</div></div>
-          <div className="border border-emerald-100 rounded-lg p-3"><div className="text-xs text-gray-600">{ur ? "ادا شدہ / وصولی" : "Paid / Collected"}</div><div className="text-xl font-extrabold text-emerald-800">{paidRows.length} <span className="text-sm font-semibold">(Rs {totalCollected})</span></div></div>
-          <div className="border border-amber-100 rounded-lg p-3"><div className="text-xs text-gray-600">{ur ? "باقی / واجب" : "Pending / Due"}</div><div className="text-xl font-extrabold text-amber-800">{unpaidRows.length} <span className="text-sm font-semibold">(Rs {totalDue})</span></div></div>
+          <div className="border border-emerald-100 rounded-lg p-3"><div className="text-xs text-gray-600">{ur ? "مکمل ادا شدہ / وصولی" : "Fully Paid / Collected"}</div><div className="text-xl font-extrabold text-emerald-800">{paidRows.length} <span className="text-sm font-semibold">(Rs {totalCollected})</span></div></div>
+          <div className="border border-amber-100 rounded-lg p-3"><div className="text-xs text-gray-600">{ur ? "باقی/جزوی (واجب)" : "Pending/Partial (Due)"}</div><div className="text-xl font-extrabold text-amber-800">{unpaidRows.length} <span className="text-sm font-semibold">(Rs {totalDue})</span></div></div>
           <div className="border border-red-100 rounded-lg p-3"><div className="text-xs text-gray-600">{ur ? "تاخیر سے ادائیگی" : "Late Payments"}</div><div className="text-2xl font-extrabold text-red-700">{lateRows.length}</div></div>
         </div>
 
         <h2 className="font-semibold text-emerald-900 mb-2">{ur ? "طالب علم وار خلاصہ" : "Student-wise Summary"}</h2>
         <div className="overflow-auto border border-gray-200 rounded-lg">
           <table className="w-full text-sm">
-            <thead className="bg-gray-50"><tr><th className="p-2 text-left">{ur ? "داخلہ نمبر" : "Admission"}</th><th className="p-2 text-left">{ur ? "نام" : "Name"}</th><th className="p-2 text-right">{ur ? "رقم/واجب" : "Amount/Due"}</th><th className="p-2 text-center">{ur ? "حیثیت" : "Status"}</th><th className="p-2 text-center">{ur ? "ادائیگی کی تاریخ" : "Paid Date"}</th></tr></thead>
+            <thead className="bg-gray-50"><tr><th className="p-2 text-left">{ur ? "داخلہ نمبر" : "Admission"}</th><th className="p-2 text-left">{ur ? "نام" : "Name"}</th><th className="p-2 text-right">{ur ? "واجب" : "Due"}</th><th className="p-2 text-right">{ur ? "ادا شدہ" : "Paid"}</th><th className="p-2 text-right">{ur ? "باقی" : "Balance"}</th><th className="p-2 text-center">{ur ? "حیثیت" : "Status"}</th><th className="p-2 text-center">{ur ? "ادائیگی کی تاریخ" : "Paid Date"}</th></tr></thead>
             <tbody>
-              {rows.map(({ en, f, due, paid, late, paidAmount }) => (
+              {rows.map(({ en, f, dueAmt, paidAmt, balance, paid, partial, late }) => (
                 <tr key={en.id} className="border-t">
                   <td className="p-2">{en.student.admissionNo}</td>
                   <td className="p-2">{en.student.nameEn}</td>
-                  <td className="p-2 text-right font-medium">Rs {paid ? paidAmount : due}</td>
+                  <td className="p-2 text-right">Rs {dueAmt}</td>
+                  <td className="p-2 text-right font-medium">Rs {paidAmt}</td>
+                  <td className="p-2 text-right font-medium">{balance > 0 ? `Rs ${balance}` : "-"}</td>
                   <td className="p-2 text-center">
-                    <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-semibold ${paid ? (late ? "bg-amber-100 text-amber-800" : "bg-emerald-100 text-emerald-800") : "bg-red-100 text-red-800"}`}>
-                      {paid ? (late ? (ur ? "تاخیر" : "Late") : (ur ? "ادا شدہ" : "Paid")) : (ur ? "باقی" : "Unpaid")}
+                    <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-semibold ${paid ? (late ? "bg-amber-100 text-amber-800" : "bg-emerald-100 text-emerald-800") : (partial ? "bg-amber-100 text-amber-800" : "bg-red-100 text-red-800")}`}>
+                      {paid ? (late ? (ur ? "تاخیر" : "Late") : (ur ? "ادا شدہ" : "Paid")) : (partial ? (ur ? "جزوی" : "Partial") : (ur ? "باقی" : "Unpaid"))}
                     </span>
                   </td>
                   <td className="p-2 text-center">{formatDateDMY(f?.paidAt) || "-"}</td>
                 </tr>
               ))}
-              {rows.length === 0 && <tr><td colSpan={5} className="p-4 text-center text-gray-500">{ur ? "اس مہینے کے لیے کوئی ریکارڈ نہیں۔" : "No records for this month."}</td></tr>}
+              {rows.length === 0 && <tr><td colSpan={7} className="p-4 text-center text-gray-500">{ur ? "اس مہینے کے لیے کوئی ریکارڈ نہیں۔" : "No records for this month."}</td></tr>}
             </tbody>
           </table>
         </div>

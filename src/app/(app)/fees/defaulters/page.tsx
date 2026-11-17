@@ -60,7 +60,7 @@ export default async function FeesDefaultersPage({ searchParams }: { searchParam
     }) : Promise.resolve([] as any[]),
     valid ? prisma.feePayment.findMany({
       where: { sessionId: session.id, month, year },
-      select: { studentId: true, amount: true, isPaid: true },
+      select: { studentId: true, amount: true, paidAmount: true, isPaid: true },
     }) : Promise.resolve([] as any[]),
   ]);
   const defaultAmount = Number((defaultAmountSettingSession || defaultAmountSettingGlobal)?.value || 0);
@@ -76,11 +76,15 @@ export default async function FeesDefaultersPage({ searchParams }: { searchParam
 
   const defaulters = enrolls.map((en: any) => {
     const f = map.get(en.studentId) as any;
-    if (f?.isPaid) return null;
     const studentFee = (en as any).monthlyFee;
     const effectiveDefault = studentFee != null ? Number(studentFee) : defaultAmount;
-    const due = f ? Number(f.amount || 0) : effectiveDefault;
-    return { en, due };
+    const dueAmt = f ? Number(f.amount || 0) : effectiveDefault;
+    let paidAmt = f ? Number(f.paidAmount ?? 0) : 0;
+    if (f?.isPaid && paidAmt <= 0) paidAmt = Number(f.amount || 0);
+    const fullyPaid = !!f?.isPaid || (dueAmt > 0 && paidAmt >= dueAmt);
+    if (fullyPaid) return null;
+    const balance = Math.max(0, dueAmt - paidAmt);
+    return { en, due: balance, dueAmt, paidAmt, partial: paidAmt > 0 && balance > 0 };
   }).filter(Boolean) as any[];
   const totalDue = defaulters.reduce((s, r) => s + Number(r.due || 0), 0);
 
@@ -121,18 +125,20 @@ export default async function FeesDefaultersPage({ searchParams }: { searchParam
 
         <div className="overflow-auto border border-gray-200 rounded-lg">
           <table className="w-full text-sm">
-            <thead className="bg-amber-50/50"><tr><th className="p-2 text-left w-16">#</th><th className="p-2 text-left">{ur ? "داخلہ نمبر" : "Admission"}</th><th className="p-2 text-left">{ur ? "نام" : "Name"}</th><th className="p-2 text-right">{ur ? "واجب رقم" : "Due Amount"}</th><th className="p-2 text-center">{ur ? "حیثیت" : "Status"}</th></tr></thead>
+            <thead className="bg-amber-50/50"><tr><th className="p-2 text-left w-16">#</th><th className="p-2 text-left">{ur ? "داخلہ نمبر" : "Admission"}</th><th className="p-2 text-left">{ur ? "نام" : "Name"}</th><th className="p-2 text-right">{ur ? "واجب" : "Due"}</th><th className="p-2 text-right">{ur ? "ادا شدہ" : "Paid"}</th><th className="p-2 text-right">{ur ? "باقی" : "Balance"}</th><th className="p-2 text-center">{ur ? "حیثیت" : "Status"}</th></tr></thead>
             <tbody>
-              {defaulters.map(({ en, due }: any, i: number) => (
+              {defaulters.map(({ en, due, dueAmt, paidAmt, partial }: any, i: number) => (
                 <tr key={en.id} className="border-t">
                   <td className="p-2">{i + 1}</td>
                   <td className="p-2 font-medium">{en.student.admissionNo}</td>
                   <td className="p-2">{en.student.nameEn} {en.student.nameUr ? <span className="font-urdu text-gray-600">/ {en.student.nameUr}</span> : null}</td>
+                  <td className="p-2 text-right">Rs {dueAmt}</td>
+                  <td className="p-2 text-right">Rs {paidAmt}</td>
                   <td className="p-2 text-right font-semibold">Rs {due}</td>
-                  <td className="p-2 text-center"><span className="inline-flex px-2 py-0.5 rounded-full text-xs font-semibold bg-red-100 text-red-800">{ur ? "باقی" : "Unpaid"}</span></td>
+                  <td className="p-2 text-center"><span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-semibold ${partial ? "bg-amber-100 text-amber-800" : "bg-red-100 text-red-800"}`}>{partial ? (ur ? "جزوی" : "Partial") : (ur ? "باقی" : "Unpaid")}</span></td>
                 </tr>
               ))}
-              {defaulters.length === 0 && <tr><td colSpan={5} className="p-4 text-center text-gray-500">{ur ? "اس مہینے کوئی باقی فیس نہیں۔" : "No pending fees for this month."}</td></tr>}
+              {defaulters.length === 0 && <tr><td colSpan={7} className="p-4 text-center text-gray-500">{ur ? "اس مہینے کوئی باقی فیس نہیں۔" : "No pending fees for this month."}</td></tr>}
             </tbody>
           </table>
         </div>

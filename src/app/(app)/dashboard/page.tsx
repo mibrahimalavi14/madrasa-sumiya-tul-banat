@@ -19,7 +19,7 @@ export default async function Dashboard() {
       select: {
         nameEn: true, nameUr: true, admissionNo: true, registrationNo: true,
         results: { take: 5, orderBy: { createdAt: "desc" }, select: { id: true, percentage: true, grade: true, status: true, position: true } },
-        feePayments: { take: 6, orderBy: { createdAt: "desc" }, select: { id: true, month: true, year: true, amount: true, isPaid: true, isLate: true } },
+        feePayments: { take: 6, orderBy: { createdAt: "desc" }, select: { id: true, month: true, year: true, amount: true, paidAmount: true, isPaid: true, isLate: true } },
       }
     }) : null;
     return (
@@ -28,7 +28,7 @@ export default async function Dashboard() {
         {!student ? <p>{tr.noLinkedStudent}</p> : (
           <div className="grid md:grid-cols-2 gap-4">
             <div className="bg-white rounded-xl shadow p-4"><h2 className="font-semibold mb-2">{tr.student}</h2><div>{student.nameEn} {student.nameUr && <span className="font-urdu">({student.nameUr})</span>}</div><div>{tr.admissionNo}: {student.admissionNo}</div><div>Reg: {student.registrationNo}</div></div>
-            <div className="bg-white rounded-xl shadow p-4"><h2 className="font-semibold mb-2">{tr.recentFees}</h2>{student.feePayments.length===0?<p className="text-sm text-gray-500">{tr.noRecords}</p>:<ul className="text-sm space-y-1">{student.feePayments.map(f=>(<li key={f.id}>{f.month}/{f.year} - Rs {f.amount} - {f.isPaid ? (f.isLate?tr.late:tr.paid) : tr.unpaid}</li>))}</ul>}</div>
+            <div className="bg-white rounded-xl shadow p-4"><h2 className="font-semibold mb-2">{tr.recentFees}</h2>{student.feePayments.length===0?<p className="text-sm text-gray-500">{tr.noRecords}</p>:<ul className="text-sm space-y-1">{student.feePayments.map((f: any)=>{ const paidAmt = Number(f.paidAmount ?? 0) > 0 ? Number(f.paidAmount ?? 0) : (f.isPaid ? Number(f.amount||0) : 0); const dueAmt = Number(f.amount||0); const full = f.isPaid || (dueAmt>0 && paidAmt>=dueAmt); const partial = paidAmt>0 && paidAmt<dueAmt; const label = full ? (f.isLate?tr.late:tr.paid) : (partial ? (lang === "ur" ? "جزوی" : "Partial") : tr.unpaid); return (<li key={f.id}>{f.month}/{f.year} - Rs {paidAmt}/{dueAmt} - {label}</li>); })}</ul>}</div>
             <div className="bg-white rounded-xl shadow p-4 md:col-span-2"><h2 className="font-semibold mb-2">{tr.recentResults}</h2>{student.results.length===0?<p className="text-sm text-gray-500">{tr.noResults}</p>:<ul className="text-sm space-y-1">{student.results.map(r=>(<li key={r.id}>{r.percentage?.toFixed(1)}% - {r.grade} - {r.status} {r.position?`(Pos ${r.position})`:""}</li>))}</ul>}</div>
           </div>
         )}
@@ -68,11 +68,15 @@ export default async function Dashboard() {
       prisma.result.count({ where: { exam: { sessionId: sid } } }),
       prisma.certificate.count({ where: { sessionId: sid } }),
     ]);
-    [feeGroups, monthAgg, monthPaidAgg] = await Promise.all([
+    const monthFeeRows = await prisma.feePayment.findMany({ where: { sessionId: sid, month: m, year: y }, select: { amount: true, paidAmount: true, isPaid: true } });
+    [feeGroups, monthAgg] = await Promise.all([
       prisma.feePayment.groupBy({ by: ["isPaid", "isLate"], where: { sessionId: sid }, _count: { _all: true } }),
       prisma.feePayment.aggregate({ where: { sessionId: sid, month: m, year: y }, _count: { _all: true } }),
-      prisma.feePayment.aggregate({ where: { sessionId: sid, month: m, year: y, isPaid: true }, _count: { _all: true }, _sum: { amount: true } }),
     ]);
+    monthPaidAgg = {
+      _count: { _all: monthFeeRows.filter((f: any) => !!f.isPaid || (Number(f.amount||0)>0 && Number(f.paidAmount??0)>=Number(f.amount||0))).length },
+      _sum: { amount: monthFeeRows.reduce((s: number, f: any) => s + (Number(f.paidAmount ?? 0) > 0 ? Number(f.paidAmount ?? 0) : (f.isPaid ? Number(f.amount || 0) : 0)), 0) },
+    } as any;
     [recentEnrolls, recentExams, recentResults] = await Promise.all([
       prisma.studentEnrollment.findMany({
         where: { sessionId: sid },

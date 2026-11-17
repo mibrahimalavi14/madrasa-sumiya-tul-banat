@@ -36,7 +36,7 @@ export default async function FeesSessionReportPage() {
     }),
     prisma.feePayment.findMany({
       where: { sessionId: session.id },
-      select: { studentId: true, month: true, year: true, amount: true, isPaid: true, isLate: true },
+      select: { studentId: true, month: true, year: true, amount: true, paidAmount: true, isPaid: true, isLate: true },
     }),
   ]);
   const defaultAmount = Number((defaultAmountSettingSession || defaultAmountSettingGlobal)?.value || 0);
@@ -50,13 +50,18 @@ export default async function FeesSessionReportPage() {
       const f = feeMap.get(`${en.studentId}:${year}:${month}`);
       const studentFee = en.monthlyFee;
       const effectiveDefault = studentFee != null ? Number(studentFee) : defaultAmount;
-      if (f?.isPaid) {
+      const dueAmt = f ? Number(f.amount || 0) : effectiveDefault;
+      let paidAmt = f ? Number(f.paidAmount ?? 0) : 0;
+      if (f?.isPaid && paidAmt <= 0) paidAmt = Number(f.amount || 0);
+      const fullyPaid = !!f?.isPaid || (dueAmt > 0 && paidAmt >= dueAmt);
+      collected += paidAmt;
+      const balance = Math.max(0, dueAmt - paidAmt);
+      due += balance;
+      if (fullyPaid) {
         paidCount++;
-        collected += Number(f.amount || 0);
-        if (f.isLate) lateCount++;
+        if (f?.isLate) lateCount++;
       } else {
         unpaidCount++;
-        due += f ? Number(f.amount || 0) : effectiveDefault;
       }
     }
     return { month, year, total: enrolls.length, paidCount, unpaidCount, lateCount, collected, due };
@@ -93,8 +98,8 @@ export default async function FeesSessionReportPage() {
 
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-5">
           <div className="border border-emerald-100 rounded-lg p-3 bg-emerald-50/40"><div className="text-xs text-gray-600">{ur ? "کل فیس والے طلبہ" : "Fee Students"}</div><div className="text-2xl font-extrabold text-emerald-900">{enrolls.length}</div></div>
-          <div className="border border-emerald-100 rounded-lg p-3"><div className="text-xs text-gray-600">{ur ? "کل وصولی (سیشن)" : "Total Collected (Session)"}</div><div className="text-xl font-extrabold text-emerald-800">Rs {totals.collected}</div><div className="text-xs text-gray-500">{ur ? "ادا شدہ اندراجات" : "Paid entries"}: {totals.paidCount}</div></div>
-          <div className="border border-amber-100 rounded-lg p-3"><div className="text-xs text-gray-600">{ur ? "کل واجب/باقی (سیشن)" : "Total Due/Pending (Session)"}</div><div className="text-xl font-extrabold text-amber-800">Rs {totals.due}</div><div className="text-xs text-gray-500">{ur ? "باقی اندراجات" : "Pending entries"}: {totals.unpaidCount}</div></div>
+          <div className="border border-emerald-100 rounded-lg p-3"><div className="text-xs text-gray-600">{ur ? "کل وصولی (سیشن)" : "Total Collected (Session)"}</div><div className="text-xl font-extrabold text-emerald-800">Rs {totals.collected}</div><div className="text-xs text-gray-500">{ur ? "مکمل ادا شدہ اندراجات" : "Fully paid entries"}: {totals.paidCount}</div></div>
+          <div className="border border-amber-100 rounded-lg p-3"><div className="text-xs text-gray-600">{ur ? "کل واجب/باقی (سیشن)" : "Total Due/Pending (Session)"}</div><div className="text-xl font-extrabold text-amber-800">Rs {totals.due}</div><div className="text-xs text-gray-500">{ur ? "باقی/جزوی اندراجات" : "Pending/partial entries"}: {totals.unpaidCount}</div></div>
           <div className="border border-red-100 rounded-lg p-3"><div className="text-xs text-gray-600">{ur ? "تاخیر سے ادائیگیاں" : "Late Payments"}</div><div className="text-2xl font-extrabold text-red-700">{totals.lateCount}</div></div>
         </div>
 

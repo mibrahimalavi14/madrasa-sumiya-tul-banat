@@ -18,11 +18,15 @@ export default async function FeeReceiptPage({ params }: { params: Promise<{ id:
   });
   if (!fee) notFound();
   if (user.role === "PARENT" && user.parentStudentId !== fee.studentId) redirect("/dashboard");
-  if (!fee.isPaid) notFound();
+  const paidAmount = Number((fee as any).paidAmount ?? 0) > 0 ? Number((fee as any).paidAmount ?? 0) : (fee.isPaid ? Number(fee.amount || 0) : 0);
+  const dueAmount = Number(fee.amount || 0);
+  const isFullyPaid = fee.isPaid || (dueAmount > 0 && paidAmount >= dueAmount);
+  if (!isFullyPaid && paidAmount <= 0) notFound();
 
   const receiptNo = `RCP-${fee.id.slice(-8).toUpperCase()}`;
   const monthNames = ["", "January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
   const monthName = monthNames[fee.month] || String(fee.month);
+  const balance = Math.max(0, dueAmount - paidAmount);
 
   return (
     <div className="bg-white p-4 md:p-6 max-w-3xl mx-auto print-area">
@@ -71,14 +75,28 @@ export default async function FeeReceiptPage({ params }: { params: Promise<{ id:
               <tbody>
                 <tr>
                   <td className="p-3">Monthly Fee — {monthName} {fee.year} <span className="text-gray-500">({fee.session.name})</span></td>
-                  <td className="p-3 text-center"><span className={`inline-flex px-2.5 py-1 rounded-full text-xs font-semibold ${fee.isLate ? "bg-amber-100 text-amber-800" : "bg-emerald-100 text-emerald-800"}`}>{fee.isLate ? "Late / تاخیر" : "Paid / ادا شدہ"}</span></td>
-                  <td className="p-3 text-right font-bold text-emerald-900">Rs {fee.amount}</td>
+                  <td className="p-3 text-center"><span className={`inline-flex px-2.5 py-1 rounded-full text-xs font-semibold ${balance > 0 ? "bg-amber-100 text-amber-800" : (fee.isLate ? "bg-amber-100 text-amber-800" : "bg-emerald-100 text-emerald-800")}`}>{balance > 0 ? "Partial / جزوی" : (fee.isLate ? "Late / تاخیر" : "Paid / ادا شدہ")}</span></td>
+                  <td className="p-3 text-right font-bold text-emerald-900">Rs {dueAmount}</td>
                 </tr>
+                {balance > 0 && (
+                  <tr className="border-t">
+                    <td className="p-3 text-gray-700">Amount Paid (Received so far) / موصولہ رقم</td>
+                    <td className="p-3"></td>
+                    <td className="p-3 text-right font-semibold text-emerald-800">Rs {paidAmount}</td>
+                  </tr>
+                )}
+                {balance > 0 && (
+                  <tr className="border-t">
+                    <td className="p-3 text-gray-700">Balance Due / بقایا</td>
+                    <td className="p-3"></td>
+                    <td className="p-3 text-right font-semibold text-amber-800">Rs {balance}</td>
+                  </tr>
+                )}
               </tbody>
               <tfoot>
                 <tr className="border-t-2 border-emerald-200 bg-emerald-50/50">
-                  <td className="p-3 font-semibold" colSpan={2}>Total Received / کل وصول شدہ</td>
-                  <td className="p-3 text-right font-extrabold text-lg text-emerald-900">Rs {fee.amount}</td>
+                  <td className="p-3 font-semibold" colSpan={2}>{balance > 0 ? "Total Received (So Far) / اب تک وصول شدہ" : "Total Received / کل وصول شدہ"}</td>
+                  <td className="p-3 text-right font-extrabold text-lg text-emerald-900">Rs {paidAmount}</td>
                 </tr>
               </tfoot>
             </table>
