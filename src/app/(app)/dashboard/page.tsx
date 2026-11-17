@@ -37,14 +37,25 @@ export default async function Dashboard() {
   }
 
   const now = new Date();
-  const m = now.getMonth() + 1;
-  const y = now.getFullYear();
+  let m = now.getMonth() + 1;
+  let y = now.getFullYear();
 
   let students = 0, activeStudents = 0, examsCount = 0, examsConducted = 0, feeGroups: any[] = [], resultsCount = 0, certsCount = 0;
   let recentEnrolls: any[] = [], recentExams: any[] = [], recentResults: any[] = [];
   let monthAgg: any = { _count: { _all: 0 } }, monthPaidAgg: any = { _count: { _all: 0 }, _sum: { amount: 0 } };
 
   if (session) {
+    // Clamp dashboard "This Month Fees" to session period (fees start from session start)
+    const sStart = session.startDate ? new Date(session.startDate) : null;
+    const sEnd = session.endDate ? new Date(session.endDate) : null;
+    if (sStart && sEnd) {
+      const startIdx = sStart.getFullYear() * 12 + sStart.getMonth();
+      const endIdx = sEnd.getFullYear() * 12 + sEnd.getMonth();
+      const nowIdx = y * 12 + (m - 1);
+      if (nowIdx < startIdx) { y = sStart.getFullYear(); m = sStart.getMonth() + 1; }
+      else if (nowIdx > endIdx) { y = sEnd.getFullYear(); m = sEnd.getMonth() + 1; }
+    }
+
     const sid = session.id;
     // Batched queries to avoid connection-pool exhaustion on serverless/pgbouncer
     [students, activeStudents, examsCount, examsConducted, resultsCount, certsCount] = await Promise.all([
