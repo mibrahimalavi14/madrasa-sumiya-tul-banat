@@ -3,6 +3,7 @@ import { getAuthUser } from "@/lib/auth";
 import { formatDateDMY } from "@/lib/utils";
 import { notFound, redirect } from "next/navigation";
 import Logo from "@/components/Logo";
+import PrintButton from "@/components/PrintButton";
 
 export default async function FeeReceiptPage({ params }: { params: Promise<{ id: string }> }) {
   const user = await getAuthUser();
@@ -33,8 +34,7 @@ export default async function FeeReceiptPage({ params }: { params: Promise<{ id:
       <style>{`@media print { @page { size: A4; margin: 10mm; } .no-print { display:none !important; } }`}</style>
       <div className="no-print mb-4 flex items-center gap-3 flex-wrap">
         <a href={`/fees?month=${fee.month}&year=${fee.year}`} className="text-sm text-emerald-800 hover:text-emerald-900 font-medium">← Back to Fees / واپس</a>
-        <button onClick={undefined as any} className="hidden" />
-        <a href="javascript:window.print()" className="bg-emerald-800 text-white px-4 py-2 rounded-lg font-medium">Print Receipt / رسید پرنٹ کریں</a>
+        <PrintButton label="Print Receipt / رسید پرنٹ کریں" className="bg-emerald-800 text-white px-4 py-2 rounded-lg font-medium" />
       </div>
 
       <div className="border-2 border-emerald-900 rounded-xl p-5 md:p-7 relative overflow-hidden">

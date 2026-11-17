@@ -3,6 +3,7 @@ import { getCurrentSession } from "@/lib/session";
 import { getAuthUser } from "@/lib/auth";
 import { getLang } from "@/lib/lang";
 import { redirect } from "next/navigation";
+import PrintButton from "@/components/PrintButton";
 
 export default async function FeesArrearsPage() {
   const user = await getAuthUser();
@@ -84,7 +85,7 @@ export default async function FeesArrearsPage() {
           <a href="/fees/session-report" className="text-sm text-teal-700 underline font-medium">{ur ? "سیشن رپورٹ" : "Session Report"}</a>
           <a href="/fees/defaulters" className="text-sm text-amber-700 underline font-medium">{ur ? "ماہانہ باقی فیس" : "Monthly Defaulters"}</a>
         </div>
-        <a href="javascript:window.print()" className="bg-amber-600 hover:bg-amber-700 text-white px-4 py-2 rounded-lg font-medium">{ur ? "پرنٹ کریں" : "Print"}</a>
+        <PrintButton label={ur ? "پرنٹ کریں" : "Print"} className="bg-amber-600 hover:bg-amber-700 text-white px-4 py-2 rounded-lg font-medium" />
       </div>
 
       <div className="border border-amber-200 rounded-xl p-4 md:p-6">

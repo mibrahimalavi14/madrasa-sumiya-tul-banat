@@ -3,6 +3,7 @@ import { getCurrentSession } from "@/lib/session";
 import { getAuthUser } from "@/lib/auth";
 import { getLang } from "@/lib/lang";
 import { redirect } from "next/navigation";
+import PrintButton from "@/components/PrintButton";
 
 export default async function FeesDefaultersPage({ searchParams }: { searchParams: Promise<{ month?: string; year?: string }> }) {
   const user = await getAuthUser();
@@ -96,7 +97,7 @@ export default async function FeesDefaultersPage({ searchParams }: { searchParam
           <a href={`/fees?month=${month}&year=${year}`} className="text-sm text-emerald-800 hover:text-emerald-900 font-medium">← {ur ? "فیس پر واپس" : "Back to Fees"}</a>
           <a href={`/fees/report?month=${month}&year=${year}`} className="text-sm text-emerald-700 underline font-medium">{ur ? "ماہانہ رپورٹ" : "Monthly Report"}</a>
         </div>
-        <a href="javascript:window.print()" className="bg-amber-600 hover:bg-amber-700 text-white px-4 py-2 rounded-lg font-medium">{ur ? "فہرست پرنٹ کریں" : "Print List"}</a>
+        <PrintButton label={ur ? "فہرست پرنٹ کریں" : "Print List"} className="bg-amber-600 hover:bg-amber-700 text-white px-4 py-2 rounded-lg font-medium" />
       </div>
 
       <div className="border border-amber-200 rounded-xl p-4 md:p-6">
