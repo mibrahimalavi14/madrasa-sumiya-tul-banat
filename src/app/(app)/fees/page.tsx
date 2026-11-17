@@ -137,11 +137,18 @@ export default async function FeesPage({ searchParams }: { searchParams: Promise
       return String(a.student?.admissionNo || "").localeCompare(String(b.student?.admissionNo || ""));
     });
   const map = new Map(fees.map((f: any)=>[f.studentId,f]));
+  const paidEnrolls = enrolls.filter((en: any) => (map.get(en.studentId) as any)?.isPaid);
+  const unpaidEnrolls = enrolls.filter((en: any) => !(map.get(en.studentId) as any)?.isPaid);
+  const paidTotalAmount = paidEnrolls.reduce((sum: number, en: any) => sum + Number((map.get(en.studentId) as any)?.amount || 0), 0);
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <h1 className="text-2xl font-bold text-emerald-900">{tr.fees}</h1>
-        <div className="text-sm text-gray-600">{lang === "ur" ? `کل: ${enrolls.length}` : `Total: ${enrolls.length}`}</div>
+        <div className="text-sm text-gray-600 flex gap-3 flex-wrap">
+          <span>{lang === "ur" ? `کل: ${enrolls.length}` : `Total: ${enrolls.length}`}</span>
+          <span>{lang === "ur" ? `ادا شدہ: ${paidEnrolls.length}` : `Paid: ${paidEnrolls.length}`}</span>
+          <span>{lang === "ur" ? `باقی: ${unpaidEnrolls.length}` : `Remaining: ${unpaidEnrolls.length}`}</span>
+        </div>
       </div>
       <form className="bg-white rounded-xl shadow p-4 flex gap-4 items-end no-print flex-wrap border border-emerald-100/80">
         <div className="flex items-center gap-2">
@@ -164,18 +171,22 @@ export default async function FeesPage({ searchParams }: { searchParams: Promise
         <span className="text-xs text-gray-600 w-full">{tr.feesNote} {lang === "ur" ? "ہر بچے کی ماہانہ فیس الگ سے سیٹ کی جا سکتی ہے۔" : "You can set a different monthly fee for each student."}</span>
       </form>
       <div className="bg-white rounded-2xl shadow-sm overflow-auto border border-emerald-100/80">
+        <div className="px-4 py-3 border-b border-emerald-100 bg-emerald-50/40 flex items-center justify-between gap-3 flex-wrap">
+          <h2 className="font-semibold text-emerald-900">{lang === "ur" ? "باقی فیس (اس مہینے)" : "Pending Fees (This Month)"}</h2>
+          <span className="text-sm text-gray-600">{lang === "ur" ? `تعداد: ${unpaidEnrolls.length}` : `Count: ${unpaidEnrolls.length}`}</span>
+        </div>
         <table className="w-full text-sm"><thead><tr><th className="p-3 text-left">{tr.admission}</th><th className="p-3 text-left">{tr.name}</th><th className="p-3 text-left">{lang === "ur" ? "طالب علم کی ماہانہ فیس" : "Student Monthly Fee"}</th><th className="p-3 text-left">{tr.amount}</th><th className="p-3 text-center">{tr.paid}</th><th className="p-3 text-left">{tr.paidDate}</th><th className="p-3 text-center">{tr.status}</th><th className="p-3 text-center">{tr.action}</th></tr></thead>
         <tbody>
-          {enrolls.map(en => { 
+          {unpaidEnrolls.map(en => { 
             const f = map.get(en.studentId); 
             const exempt = !!(en as any).feeExempt;
             const studentFee = (en as any).monthlyFee;
             const effectiveDefault = exempt ? 0 : (studentFee != null ? Number(studentFee) : defaultAmount);
-            const status = exempt ? (lang === "ur" ? "فیس معاف" : "Exempt") : (f?.isPaid ? (f.isLate?tr.late:tr.paid) : tr.unpaid); 
+            const status = tr.unpaid; 
             const formId = `fee-${en.studentId}`;
             const sFormId = `sfee-${en.studentId}`;
             return (
-              <tr key={en.id} className={`align-middle ${exempt ? "bg-amber-50/30" : ""}`}>
+              <tr key={en.id} className="align-middle">
                 <td className="p-3">
                   {en.student.admissionNo}
                   <form id={formId} action={upsertFee}>
@@ -189,30 +200,27 @@ export default async function FeesPage({ searchParams }: { searchParams: Promise
                 </td>
                 <td className="p-3 font-medium">
                   <div>{en.student.nameEn}</div>
-                  {exempt && <div className="text-[11px] text-amber-700 mt-0.5">{lang === "ur" ? "اس طالب علم سے فیس نہیں لی جاتی" : "No fee collected from this student"}</div>}
                 </td>
                 <td className="p-3">
                   <div className="flex items-center gap-2">
-                    <input form={sFormId} name="studentMonthlyFee" type="number" step="1" defaultValue={exempt ? 0 : (studentFee ?? "")} placeholder={String(defaultAmount)} disabled={exempt} className="border border-emerald-200/80 rounded-lg px-3 py-2 w-28 disabled:bg-gray-100 disabled:text-gray-500" />
-                    <button form={sFormId} disabled={exempt} className="bg-gray-700 hover:bg-gray-800 disabled:bg-gray-300 disabled:text-gray-600 text-white px-3 py-2 rounded-lg text-xs">{lang === "ur" ? "سیٹ" : "Set"}</button>
+                    <input form={sFormId} name="studentMonthlyFee" type="number" step="1" defaultValue={studentFee ?? ""} placeholder={String(defaultAmount)} className="border border-emerald-200/80 rounded-lg px-3 py-2 w-28" />
+                    <button form={sFormId} className="bg-gray-700 hover:bg-gray-800 text-white px-3 py-2 rounded-lg text-xs">{lang === "ur" ? "سیٹ" : "Set"}</button>
                   </div>
-                  <div className="text-[11px] text-gray-500 mt-1">{exempt ? (lang === "ur" ? "فیس معاف" : "Fee exempt") : (lang === "ur" ? "خالی = ڈیفالٹ فیس" : "Empty = default fee")}</div>
+                  <div className="text-[11px] text-gray-500 mt-1">{lang === "ur" ? "خالی = ڈیفالٹ فیس" : "Empty = default fee"}</div>
                 </td>
                 <td className="p-3">
-                  <input form={formId} name="amount" type="number" step="1" defaultValue={f?.amount ?? effectiveDefault} disabled={exempt} className="border border-emerald-200/80 rounded-lg px-3 py-2 w-28 disabled:bg-gray-100 disabled:text-gray-500" />
+                  <input form={formId} name="amount" type="number" step="1" defaultValue={f?.amount ?? effectiveDefault} className="border border-emerald-200/80 rounded-lg px-3 py-2 w-28" />
                 </td>
                 <td className="p-3 text-center">
-                  <label className={`inline-flex items-center gap-2 text-sm justify-center ${exempt ? "text-gray-400" : ""}`}>
-                    <input form={formId} type="checkbox" name="markPaid" defaultChecked={exempt ? false : (f?.isPaid||false)} disabled={exempt}/> {tr.paid}
+                  <label className="inline-flex items-center gap-2 text-sm justify-center">
+                    <input form={formId} type="checkbox" name="markPaid" defaultChecked={false}/> {tr.paid}
                   </label>
                 </td>
                 <td className="p-3">
-                  <div className={exempt ? "opacity-50 pointer-events-none" : ""}>
-                    <DateInputDMY form={formId} name="paidAt" defaultValue={toDateInputDMY(f?.paidAt)} inputClassName="border border-emerald-200/80 rounded-lg px-3 py-2" />
-                  </div>
+                  <DateInputDMY form={formId} name="paidAt" defaultValue={toDateInputDMY(f?.paidAt)} inputClassName="border border-emerald-200/80 rounded-lg px-3 py-2" />
                 </td>
                 <td className="p-3 text-center">
-                  <span className={`inline-flex px-2.5 py-1 rounded-full text-xs font-semibold ${exempt ? "bg-amber-100 text-amber-800" : status===tr.paid?"bg-emerald-100 text-emerald-800":status===tr.late?"bg-amber-100 text-amber-800":"bg-red-100 text-red-800"}`}>{status}{!exempt && f?.isPaid?" ✓":""}</span>
+                  <span className="inline-flex px-2.5 py-1 rounded-full text-xs font-semibold bg-red-100 text-red-800">{status}</span>
                 </td>
                 <td className="p-3 text-center">
                   <button form={formId} className="bg-emerald-800 hover:bg-emerald-900 text-white px-4 py-2 rounded-lg">{tr.save}</button>
@@ -220,7 +228,36 @@ export default async function FeesPage({ searchParams }: { searchParams: Promise
               </tr>
             );
           })}
-          {enrolls.length===0 && <tr><td colSpan={8} className="p-4 text-center text-gray-500">{lang==="ur" ? "فیس کے لیے کوئی طالب علم دستیاب نہیں (یا سب فیس معاف ہیں)" : "No students available for fees (or all are fee exempt)"}</td></tr>}
+          {unpaidEnrolls.length===0 && <tr><td colSpan={8} className="p-4 text-center text-gray-500">{lang==="ur" ? "اس مہینے کوئی فیس باقی نہیں۔" : "No pending fees for this month."}</td></tr>}
+        </tbody></table>
+      </div>
+
+      <div className="bg-white rounded-2xl shadow-sm overflow-auto border border-emerald-100/80">
+        <div className="px-4 py-3 border-b border-emerald-100 bg-emerald-50/40 flex items-center justify-between gap-3 flex-wrap">
+          <h2 className="font-semibold text-emerald-900">{lang === "ur" ? "جمع شدہ فیس (اس مہینے)" : "Deposited Fees (This Month)"}</h2>
+          <div className="text-sm text-gray-600 flex gap-3 flex-wrap">
+            <span>{lang === "ur" ? `تعداد: ${paidEnrolls.length}` : `Count: ${paidEnrolls.length}`}</span>
+            <span>{lang === "ur" ? `کل رقم: Rs ${paidTotalAmount}` : `Total Amount: Rs ${paidTotalAmount}`}</span>
+          </div>
+        </div>
+        <table className="w-full text-sm"><thead><tr><th className="p-3 text-left">{tr.admission}</th><th className="p-3 text-left">{tr.name}</th><th className="p-3 text-left">{lang === "ur" ? "جمع شدہ رقم" : "Amount Deposited"}</th><th className="p-3 text-left">{tr.paidDate}</th><th className="p-3 text-center">{tr.status}</th></tr></thead>
+        <tbody>
+          {paidEnrolls.map(en => { 
+            const f = map.get(en.studentId) as any; 
+            const status = f?.isLate ? tr.late : tr.paid; 
+            return (
+              <tr key={en.id} className="align-middle bg-emerald-50/20">
+                <td className="p-3">{en.student.admissionNo}</td>
+                <td className="p-3 font-medium">{en.student.nameEn}</td>
+                <td className="p-3 font-semibold">Rs {f?.amount ?? 0}</td>
+                <td className="p-3">{formatDateDMY(f?.paidAt) || "-"}</td>
+                <td className="p-3 text-center">
+                  <span className={`inline-flex px-2.5 py-1 rounded-full text-xs font-semibold ${f?.isLate ? "bg-amber-100 text-amber-800" : "bg-emerald-100 text-emerald-800"}`}>{status} ✓ <span className="ml-1 opacity-80">{lang === "ur" ? "(مقفل)" : "(Locked)"}</span></span>
+                </td>
+              </tr>
+            );
+          })}
+          {paidEnrolls.length===0 && <tr><td colSpan={5} className="p-4 text-center text-gray-500">{lang==="ur" ? "ابھی اس مہینے کسی نے فیس جمع نہیں کروائی۔" : "No fees deposited yet for this month."}</td></tr>}
         </tbody></table>
       </div>
     </div>
