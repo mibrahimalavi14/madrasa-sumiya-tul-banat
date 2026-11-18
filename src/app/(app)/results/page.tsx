@@ -6,6 +6,7 @@ import { getLang } from "@/lib/lang";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { gradeFromPercentage, calculatePositions } from "@/lib/grading";
+import { logAudit } from "@/lib/audit";
 
 async function saveWritten(formData: FormData) {
   "use server";
@@ -17,11 +18,12 @@ async function saveWritten(formData: FormData) {
   const oralObt = existing?.oralObtained ?? 0; const oralTot = existing?.oralTotal ?? 0;
   const totalObt = writtenObtained + oralObt; const totalMarks = writtenTotal + oralTot;
   const pct = totalMarks > 0 ? (totalObt/totalMarks)*100 : 0; const g = gradeFromPercentage(pct);
-  await prisma.result.upsert({
+  const saved = await prisma.result.upsert({
     where: { examId_studentId: { examId, studentId } },
     update: { writtenObtained, writtenTotal, oralObtained: oralObt, oralTotal: oralTot, totalObtained: totalObt, totalMarks, percentage: pct, grade: g.grade, status: g.status },
     create: { examId, studentId, writtenObtained, writtenTotal, oralObtained: oralObt, oralTotal: oralTot, totalObtained: totalObt, totalMarks, percentage: pct, grade: g.grade, status: g.status },
   });
+  await logAudit({ actorUserId: user.id, actorLabel: user.username || user.name, action: "RESULT_SAVE_WRITTEN", entityType: "Result", entityId: saved.id, details: JSON.stringify({ examId, studentId, writtenObtained, writtenTotal, totalObtained: totalObt, totalMarks, percentage: Number(pct.toFixed(2)), grade: g.grade, status: g.status, sessionId: session.id }) });
   const results = await prisma.result.findMany({ where: { examId }, select: { id: true, percentage: true, position: true } });
   const posMap = calculatePositions(results.map(r=>({id:r.id, percentage:r.percentage})));
   const updates = results

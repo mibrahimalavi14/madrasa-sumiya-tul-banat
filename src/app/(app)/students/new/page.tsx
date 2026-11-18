@@ -7,6 +7,7 @@ import { revalidatePath } from "next/cache";
 import { formatAdmissionNo, formatRegNo, parseDateInput } from "@/lib/utils";
 import DateInputDMY from "@/components/DateInputDMY";
 import ScrollToTopOnError from "@/components/ScrollToTopOnError";
+import { logAudit } from "@/lib/audit";
 
 async function createStudent(formData: FormData) {
   "use server";
@@ -92,6 +93,7 @@ async function createStudent(formData: FormData) {
       });
       await prisma.sibling.createMany({ data: pairs, skipDuplicates: true });
     }
+    await logAudit({ actorUserId: user.id, actorLabel: user.username || user.name, action: "STUDENT_CREATE", entityType: "Student", entityId: student.id, details: JSON.stringify({ admissionNo: student.admissionNo, nameEn: student.nameEn, sessionId: session.id }) });
     revalidatePath("/students");
     redirect("/students");
   } catch (e: any) {

@@ -191,3 +191,29 @@ main .print-area :where(.space-y-3, .space-y-4, .space-y-5, .space-y-6) > * + * 
   margin-top: revert !important;
   padding-top: revert !important;
 }
+
+/* Future-proof reusable UI utilities */
+.msb-page { display: flex; flex-direction: column; gap: 1.25rem; }
+.msb-card {
+  background: #fff;
+  border: 1px solid #dfe9e3;
+  border-radius: 1rem;
+  box-shadow: 0 8px 24px rgba(20,83,45,0.05);
+  padding: 1.25rem;
+}
+.msb-card-header { display: flex; align-items: center; justify-content: space-between; gap: .75rem; flex-wrap: wrap; margin-bottom: .75rem; }
+.msb-section-title { font-weight: 700; color: #065f46; line-height: 1.4; margin: 0 0 .75rem 0; }
+.msb-muted { color: #6b7280; font-size: .875rem; }
+.msb-table-wrap { overflow: auto; border: 1px solid #e2ece6; border-radius: .875rem; background: #fff; }
+.msb-actions { display: flex; gap: .5rem; flex-wrap: wrap; align-items: center; }
+.msb-form-grid { display: grid; gap: .75rem; }
+.msb-badge {
+  display: inline-flex; align-items: center; gap: .25rem;
+  padding: .2rem .55rem; border-radius: 999px; font-size: .75rem; font-weight: 600;
+  border: 1px solid #d7e3dc; background: #f8fbf9; color: #14532d;
+}
+.msb-print-surface { background: #fff; }
+@media print {
+  .msb-card { box-shadow: none !important; }
+  .msb-print-surface { border: none !important; }
+}

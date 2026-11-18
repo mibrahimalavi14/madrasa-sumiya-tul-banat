@@ -34,6 +34,43 @@ async function carrySelectedStudentsAction(formData: FormData) {
   revalidatePath("/sessions");
 }
 
+async function autoAssignRollNumbersAction(formData: FormData) {
+  "use server";
+  const user = await getAuthUser();
+  if (user?.role !== "ADMIN") throw new Error("UNAUTHORIZED");
+  const sessionId = String(formData.get("sessionId") || "");
+  const session = await getCurrentSession();
+  if (!session || session.id !== sessionId || session.status !== "ACTIVE") throw new Error("SESSION_NOT_ACTIVE");
+  const enrolls = await prisma.studentEnrollment.findMany({
+    where: { sessionId },
+    select: { id: true, rollNo: true, rollLocked: true, student: { select: { admissionNo: true } } },
+  });
+  const sorted = [...enrolls].sort((a, b) => {
+    const na = parseInt(String(a.student?.admissionNo || "").replace(/\D/g, ""), 10) || 0;
+    const nb = parseInt(String(b.student?.admissionNo || "").replace(/\D/g, ""), 10) || 0;
+    if (na !== nb) return na - nb;
+    return String(a.student?.admissionNo || "").localeCompare(String(b.student?.admissionNo || ""));
+  });
+  // Respect existing numeric roll numbers to avoid collisions; assign missing/unlocked sequentially.
+  const used = new Set<number>();
+  for (const e of sorted) {
+    const n = parseInt(String(e.rollNo || "").trim(), 10);
+    if (String(e.rollNo || "").trim() !== "" && Number.isFinite(n)) used.add(n);
+  }
+  let next = 1;
+  const takeNext = () => { while (used.has(next)) next++; const v = next; used.add(v); next++; return v; };
+  let assigned = 0;
+  for (const e of sorted) {
+    const hasRoll = String(e.rollNo || "").trim() !== "";
+    if (e.rollLocked || hasRoll) continue;
+    const n = takeNext();
+    await prisma.studentEnrollment.update({ where: { id: e.id }, data: { rollNo: String(n) } });
+    assigned++;
+  }
+  await logAudit({ actorUserId: user.id, actorLabel: user.username || user.name, action: "STUDENTS_AUTO_ASSIGN_ROLLS", entityType: "Session", entityId: sessionId, details: JSON.stringify({ assigned, total: sorted.length }) });
+  revalidatePath("/students");
+}
+
 export default async function StudentsPage({ searchParams }: { searchParams: Promise<{ q?: string; page?: string }> }) {
   const user = await getAuthUser();
   const session = await getCurrentSession();
@@ -130,6 +167,17 @@ export default async function StudentsPage({ searchParams }: { searchParams: Pro
           </div>
           <button className="bg-amber-600 hover:bg-amber-700 text-white px-4 py-2.5 rounded-xl font-medium text-sm">{lang==="ur" ? "منتخب طلبہ منتقل کریں" : "Carry Selected"}</button>
           <p className="text-xs text-gray-500 w-full">{lang==="ur" ? "نیچے چیک باکس سے طلبہ منتخب کریں۔ صرف اسی صفحے پر منتخب طلبہ منتقل ہوں گے۔" : "Select students using checkboxes below. Only selected students on this page will be carried."}</p>
+        </form>
+      )}
+
+      {session.status === "ACTIVE" && (
+        <form action={autoAssignRollNumbersAction} className="bg-white rounded-2xl shadow-sm border border-emerald-100 p-4 flex flex-wrap items-center gap-3 no-print">
+          <input type="hidden" name="sessionId" value={session.id} />
+          <div className="text-sm text-gray-700">
+            <div className="font-medium text-emerald-900">{lang==="ur" ? "رول نمبر مینجمنٹ" : "Roll Number Management"}</div>
+            <div className="text-xs text-gray-500">{lang==="ur" ? "خالی/غیر مقفل رول نمبرز کو داخلہ نمبر کی ترتیب سے خودکار تفویض کریں (موجودہ مقفل/مقرر رول نمبرز محفوظ رہیں گے)۔" : "Auto-assign missing/unlocked roll numbers in admission number order (existing locked/assigned roll numbers remain unchanged)."}</div>
+          </div>
+          <button className="bg-emerald-700 hover:bg-emerald-800 text-white px-4 py-2.5 rounded-xl font-medium text-sm">{lang==="ur" ? "خودکار رول نمبر لگائیں" : "Auto-Assign Roll Numbers"}</button>
         </form>
       )}
 
