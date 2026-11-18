@@ -113,7 +113,7 @@ export default async function ResultsPage({ searchParams }: { searchParams: Prom
       <div className="space-y-5">
         <div className="flex items-center justify-between flex-wrap gap-2">
           <h1 className="text-2xl font-bold text-emerald-900">{ur ? "سالانہ مجموعی نتیجہ" : "Annual Results"}</h1>
-          <div className="flex gap-2 flex-wrap"><Link href="/results" className="text-sm border px-3 py-1.5 rounded-lg">{ur ? "امتحان وار نتائج" : "Exam-wise Results"}</Link><a href="/api/export/results" className="text-sm bg-gray-700 hover:bg-gray-800 text-white px-3 py-1.5 rounded-lg">{ur ? "CSV ایکسپورٹ" : "Export CSV"}</a><Link href="/examination" className="text-sm border px-3 py-1.5 rounded-lg">{ur ? "امتحانات" : "Exams"}</Link></div>
+          <div className="flex gap-2 flex-wrap"><Link href="/results" className="text-sm border px-3 py-1.5 rounded-lg">{ur ? "امتحان وار نتائج" : "Exam-wise Results"}</Link><Link href="/results/annual-report" className="text-sm bg-emerald-700 hover:bg-emerald-800 text-white px-3 py-1.5 rounded-lg">{ur ? "سالانہ رپورٹ پرنٹ" : "Print Annual Report"}</Link><a href="/api/export/results" className="text-sm bg-gray-700 hover:bg-gray-800 text-white px-3 py-1.5 rounded-lg">{ur ? "CSV ایکسپورٹ" : "Export CSV"}</a><Link href="/examination" className="text-sm border px-3 py-1.5 rounded-lg">{ur ? "امتحانات" : "Exams"}</Link></div>
         </div>
         <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4 text-sm text-emerald-900 space-y-1">
           <div className="font-semibold">{ur ? "سالانہ مجموعی نتیجہ" : "Annual Combined Result"}</div>

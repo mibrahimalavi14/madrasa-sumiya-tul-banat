@@ -205,6 +205,7 @@ export default async function FeesPage({ searchParams }: { searchParams: Promise
         <Link href="/fees/session-report" className="bg-teal-700 hover:bg-teal-800 text-white px-4 py-2 rounded-lg text-sm font-medium">{lang === "ur" ? "سیشن رپورٹ" : "Session Report"}</Link>
         <Link href="/fees/arrears" className="bg-red-700 hover:bg-red-800 text-white px-4 py-2 rounded-lg text-sm font-medium">{lang === "ur" ? "بقایا جات" : "Arrears"}</Link>
         <Link href={`/fees/defaulters?month=${month}&year=${year}`} className="bg-amber-600 hover:bg-amber-700 text-white px-4 py-2 rounded-lg text-sm font-medium">{lang === "ur" ? "باقی فیس کی فہرست" : "Defaulters List"}</Link>
+        <Link href={`/fees/vouchers?month=${month}&year=${year}`} className="bg-teal-600 hover:bg-teal-700 text-white px-4 py-2 rounded-lg text-sm font-medium">{lang === "ur" ? "واؤچرز پرنٹ (سب)" : "Bulk Vouchers"}</Link>
         <a href={`/api/export/fees?month=${month}&year=${year}`} className="bg-gray-700 hover:bg-gray-800 text-white px-4 py-2 rounded-lg text-sm font-medium">{lang === "ur" ? "CSV ایکسپورٹ" : "Export CSV"}</a>
       </div>
       <div className="bg-white rounded-2xl shadow-sm overflow-auto border border-emerald-100/80">
