@@ -11,7 +11,7 @@ function csvEscape(v: any) {
 
 export async function GET(req: Request) {
   const user = await getAuthUser();
-  if (!user || user.role !== "ADMIN") return NextResponse.json({ error: "UNAUTHORIZED" }, { status: 401 });
+  if (!user || (user.role !== "ADMIN" && user.role !== "ACCOUNTANT")) return NextResponse.json({ error: "UNAUTHORIZED" }, { status: 401 });
   const session = await getCurrentSession();
   if (!session) return NextResponse.json({ error: "NO_SESSION" }, { status: 400 });
   const { searchParams } = new URL(req.url);

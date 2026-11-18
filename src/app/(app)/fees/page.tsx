@@ -12,7 +12,7 @@ import { logAudit } from "@/lib/audit";
 
 async function upsertFee(formData: FormData) {
   "use server";
-  const user = await getAuthUser(); if (user?.role !== "ADMIN") throw new Error("UNAUTHORIZED");
+  const user = await getAuthUser(); if (user?.role !== "ADMIN" && user?.role !== "ACCOUNTANT") throw new Error("UNAUTHORIZED");
   const session = await getCurrentSession(); if (!session || session.status !== "ACTIVE") throw new Error("SESSION_NOT_ACTIVE");
   const studentId = String(formData.get("studentId"));
   const month = Number(formData.get("month")); const year = Number(formData.get("year"));
@@ -50,7 +50,7 @@ async function upsertFee(formData: FormData) {
 
 async function saveStudentFee(formData: FormData) {
   "use server";
-  const user = await getAuthUser(); if (user?.role !== "ADMIN") throw new Error("UNAUTHORIZED");
+  const user = await getAuthUser(); if (user?.role !== "ADMIN" && user?.role !== "ACCOUNTANT") throw new Error("UNAUTHORIZED");
   const session = await getCurrentSession(); if (!session || session.status !== "ACTIVE") throw new Error("SESSION_NOT_ACTIVE");
   const studentId = String(formData.get("studentId"));
   const raw = String(formData.get("studentMonthlyFee") ?? "").trim();

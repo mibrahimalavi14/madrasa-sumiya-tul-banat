@@ -10,7 +10,7 @@ export async function loginAction(formData: FormData) {
   const user = await verifyLogin(username, password);
   if (!user) redirect("/login?error=1");
 
-  if (portal === "admin" && user.role !== "ADMIN") {
+  if (portal === "admin" && user.role !== "ADMIN" && user.role !== "ACCOUNTANT") {
     redirect("/login?error=portal");
   }
   if (portal === "parent" && user.role !== "PARENT") {

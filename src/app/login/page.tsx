@@ -45,6 +45,7 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
               <p className="text-sm text-emerald-800/80 mt-1">{ur ? "ایڈمن / انتظامیہ کے لیے" : "For admin / management staff"}</p>
             </div>
             <form action={loginAction} className="space-y-4">
+              <input type="hidden" name="portal" value="admin" />
               <div>
                 <label className="block text-sm font-medium text-gray-700">{tr.usernameLabel}</label>
                 <input

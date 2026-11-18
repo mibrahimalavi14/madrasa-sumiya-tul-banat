@@ -12,7 +12,7 @@ import SelectAllBulkCheckbox from "@/components/SelectAllBulkCheckbox";
 async function carrySelectedStudentsAction(formData: FormData) {
   "use server";
   const user = await getAuthUser();
-  if (user?.role !== "ADMIN") throw new Error("UNAUTHORIZED");
+  if (user?.role !== "ADMIN" && user?.role !== "ACCOUNTANT") throw new Error("UNAUTHORIZED");
   const fromSessionId = String(formData.get("fromSessionId") || "");
   const toId = String(formData.get("toId") || "");
   const ids = formData.getAll("studentIds").map(String).filter(Boolean);
@@ -37,7 +37,7 @@ async function carrySelectedStudentsAction(formData: FormData) {
 async function autoAssignRollNumbersAction(formData: FormData) {
   "use server";
   const user = await getAuthUser();
-  if (user?.role !== "ADMIN") throw new Error("UNAUTHORIZED");
+  if (user?.role !== "ADMIN" && user?.role !== "ACCOUNTANT") throw new Error("UNAUTHORIZED");
   const sessionId = String(formData.get("sessionId") || "");
   const session = await getCurrentSession();
   if (!session || session.id !== sessionId || session.status !== "ACTIVE") throw new Error("SESSION_NOT_ACTIVE");

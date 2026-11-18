@@ -6,7 +6,7 @@ import { notFound, redirect } from "next/navigation";
 
 
 export default async function ExamDetail({ params }: { params: Promise<{ id: string }> }) {
-  const user = await getAuthUser(); if (user?.role !== "ADMIN") redirect("/dashboard");
+  const user = await getAuthUser(); if (user?.role !== "ADMIN" && user?.role !== "ACCOUNTANT") redirect("/dashboard");
   const { id } = await params;
   const exam = await prisma.exam.findUnique({
     where: { id },

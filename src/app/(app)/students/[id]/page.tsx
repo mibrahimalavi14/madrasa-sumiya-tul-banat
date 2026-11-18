@@ -21,7 +21,7 @@ export default async function StudentProfile({ params }: { params: Promise<{ id:
   });
   if (!student) notFound();
   const siblings = [...student.siblingsA.map(s=>s.studentB), ...student.siblingsB.map(s=>s.studentA)];
-  const isAdmin = user?.role === "ADMIN";
+  const isAdmin = user?.role === "ADMIN" || user?.role === "ACCOUNTANT";
   const currentSession = student.enrollments.find(e=>e.session.isCurrent)?.session?.name || student.enrollments[0]?.session?.name;
   const Info = ({ label, value }: { label: string; value: React.ReactNode }) => (
     <div className="bg-gray-50 border border-gray-100 rounded-xl p-3">

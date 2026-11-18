@@ -7,7 +7,7 @@ import PrintButton from "@/components/PrintButton";
 export default async function BlankAdmissionForm() {
   const user = await getAuthUser();
   if (!user) redirect("/login");
-  if (user.role !== "ADMIN") redirect("/dashboard");
+  if (user.role !== "ADMIN" && user.role !== "ACCOUNTANT") redirect("/dashboard");
   const session = await getCurrentSession();
   const F = ({ label, labelUr, wide = false }: { label: string; labelUr: string; wide?: boolean }) => (
     <div className={wide ? "md:col-span-2" : ""}>

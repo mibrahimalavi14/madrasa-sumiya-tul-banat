@@ -9,7 +9,7 @@ import PrintButton from "@/components/PrintButton";
 export default async function ExamResultReportPage({ searchParams }: { searchParams: Promise<{ examId?: string }> }) {
   const user = await getAuthUser();
   if (!user) redirect("/login");
-  if (user.role !== "ADMIN") redirect("/dashboard");
+  if (user.role !== "ADMIN" && user.role !== "ACCOUNTANT") redirect("/dashboard");
   const session = await getCurrentSession();
   const lang = await getLang();
   const ur = lang === "ur";

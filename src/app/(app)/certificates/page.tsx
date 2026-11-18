@@ -11,7 +11,7 @@ import { logAudit } from "@/lib/audit";
 
 async function createCert(formData: FormData) {
   "use server";
-  const user = await getAuthUser(); if (user?.role !== "ADMIN") throw new Error("UNAUTHORIZED");
+  const user = await getAuthUser(); if (user?.role !== "ADMIN" && user?.role !== "ACCOUNTANT") throw new Error("UNAUTHORIZED");
   const session = await getCurrentSession(); if (!session || session.status !== "ACTIVE") throw new Error("SESSION_NOT_ACTIVE");
   const studentId = String(formData.get("studentId"));
   const type = String(formData.get("type")) as "ANNUAL" | "NAZRA_COMPLETION";

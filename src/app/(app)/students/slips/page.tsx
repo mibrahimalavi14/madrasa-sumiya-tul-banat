@@ -9,7 +9,7 @@ import PrintButton from "@/components/PrintButton";
 export default async function StudentRollListPage() {
   const user = await getAuthUser();
   if (!user) redirect("/login");
-  if (user.role !== "ADMIN") redirect("/dashboard");
+  if (user.role !== "ADMIN" && user.role !== "ACCOUNTANT") redirect("/dashboard");
   const session = await getCurrentSession();
   if (!session) return <p className="p-6">No session selected.</p>;
 

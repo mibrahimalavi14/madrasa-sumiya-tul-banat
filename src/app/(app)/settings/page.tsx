@@ -44,6 +44,18 @@ async function createParent(formData: FormData) {
   revalidatePath("/settings");
 }
 
+async function createAccountant(formData: FormData) {
+  "use server";
+  const user = await getAuthUser(); if (user?.role !== "ADMIN") throw new Error("UNAUTHORIZED");
+  const username = String(formData.get("username")||"").trim();
+  const password = String(formData.get("password")||"");
+  const name = String(formData.get("name")||"").trim() || null;
+  if (!username || !password) return;
+  const created = await prisma.user.create({ data: { username, passwordHash: await hashPassword(password), role: "ACCOUNTANT", name, parentStudentId: null } });
+  await logAudit({ actorUserId: user.id, actorLabel: user.username || user.name, action: "ACCOUNTANT_USER_CREATE", entityType: "User", entityId: created.id, details: JSON.stringify({ username }) });
+  revalidatePath("/settings");
+}
+
 export default async function SettingsPage() {
   const user = await getAuthUser(); if (user?.role !== "ADMIN") redirect("/dashboard");
   const session = await getCurrentSession();
@@ -51,10 +63,11 @@ export default async function SettingsPage() {
   const ur = lang === "ur";
   const tr = t[lang];
 
-  const [feeSetting, students, parents, sessionsCount, totalStudents, examsCount, resultsCount, certsCount, usersCount] = await Promise.all([
+  const [feeSetting, students, parents, accountants, sessionsCount, totalStudents, examsCount, resultsCount, certsCount, usersCount] = await Promise.all([
     prisma.setting.findFirst({ where: { key: "monthlyFee", sessionId: session?.id || null } }),
     session ? prisma.studentEnrollment.findMany({ where: { sessionId: session.id }, select: { studentId: true, student: { select: { admissionNo: true, nameEn: true } } }, orderBy: { student: { admissionNo: "asc" } } }) : Promise.resolve([] as any[]),
     prisma.user.findMany({ where: { role: "PARENT" }, select: { id: true, username: true, name: true, parentStudent: { select: { admissionNo: true, nameEn: true } } } }),
+    prisma.user.findMany({ where: { role: "ACCOUNTANT" }, select: { id: true, username: true, name: true }, orderBy: { createdAt: "asc" } }),
     prisma.session.count(),
     prisma.student.count(),
     session ? prisma.exam.count({ where: { sessionId: session.id } }) : Promise.resolve(0),
@@ -172,6 +185,24 @@ export default async function SettingsPage() {
       </div>
 
       <div className="bg-white rounded-2xl shadow-sm border border-emerald-100/80 p-5">
+        <h2 className="font-semibold mb-2 text-emerald-900">{ur ? "اکاؤنٹنٹ لاگ ان بنائیں" : "Create Accountant Login"}</h2>
+        <p className="text-xs text-gray-600 mb-3">{ur ? "اکاؤنٹنٹ Management Portal سے لاگ ان کرے گا۔ اس کو اہم ماڈیولز (Dashboard, Students, Exams, Results, Certificates, Fees) کی رسائی ہوگی؛ Sessions/Settings/Audit صرف Admin کے لیے رہیں گے۔" : "Accountant logs in via Management Portal. Access includes important modules (Dashboard, Students, Exams, Results, Certificates, Fees); Sessions/Settings/Audit remain Admin-only."}</p>
+        <form action={createAccountant} className="grid md:grid-cols-4 gap-4 items-end">
+          <div className="flex flex-col gap-2"><label className="text-sm font-medium text-gray-700">{tr.name}</label><input name="name" className="w-full border border-emerald-200/80 rounded-lg px-3 py-2.5"/></div>
+          <div className="flex flex-col gap-2"><label className="text-sm font-medium text-gray-700">{tr.username}</label><input name="username" required className="w-full border border-emerald-200/80 rounded-lg px-3 py-2.5"/></div>
+          <div className="flex flex-col gap-2"><label className="text-sm font-medium text-gray-700">{tr.password}</label><input name="password" required className="w-full border border-emerald-200/80 rounded-lg px-3 py-2.5"/></div>
+          <div className="flex flex-col gap-2"><label className="text-sm font-medium text-gray-700">{ur ? "کردار" : "Role"}</label><input value="ACCOUNTANT" disabled className="w-full border border-emerald-200/80 rounded-lg px-3 py-2.5 bg-gray-50 text-gray-700"/></div>
+          <div className="md:col-span-4 pt-1"><button className="bg-emerald-800 hover:bg-emerald-900 text-white px-4 py-2.5 rounded-lg">{ur ? "اکاؤنٹنٹ بنائیں" : "Create Accountant"}</button></div>
+        </form>
+        <div className="mt-4 text-sm">
+          <b className="text-emerald-900">{ur ? "موجودہ اکاؤنٹنٹس" : "Existing Accountants"}</b>
+          {accountants.length===0 ? <span className="ml-2 text-gray-500">{tr.none}</span> : (
+            <div className="mt-2 overflow-auto"><table className="w-full text-sm"><thead><tr><th className="p-2 text-left">{tr.username}</th><th className="p-2 text-left">{tr.name}</th><th className="p-2 text-left">{ur ? "کردار" : "Role"}</th></tr></thead><tbody>{accountants.map(a=><tr key={a.id}><td className="p-2">{a.username}</td><td className="p-2">{a.name||"-"}</td><td className="p-2">ACCOUNTANT</td></tr>)}</tbody></table></div>
+          )}
+        </div>
+      </div>
+
+      <div className="bg-white rounded-2xl shadow-sm border border-emerald-100/80 p-5">
         <h2 className="font-semibold mb-2 text-emerald-900">{tr.createParentLogin}</h2>
         <form action={createParent} className="grid md:grid-cols-4 gap-4 items-end">
           <div className="flex flex-col gap-2"><label className="text-sm font-medium text-gray-700">{tr.name}</label><input name="name" className="w-full border border-emerald-200/80 rounded-lg px-3 py-2.5"/></div>
@@ -263,8 +294,8 @@ export default async function SettingsPage() {
         <h2 className="font-semibold mb-2 text-emerald-900">{ur ? "مزید بقیہ کام (آپ کے input/design درکار)" : "Additional Remaining Items (need your input/design)"}</h2>
         <div className="grid md:grid-cols-3 gap-3 text-sm">
           <div className="rounded-xl border border-emerald-100 p-4 bg-emerald-50/20">
-            <div className="font-semibold text-emerald-900 mb-1">{ur ? "RBAC (اضافی roles)" : "RBAC (extra roles)"}</div>
-            <p className="text-gray-700 text-xs leading-5">{ur ? "بتائیں کن roles کی ضرورت ہے (Teacher/Accountant/Viewer وغیرہ) اور ہر role کو کن modules پر View/Create/Edit/Print/Export کی اجازت ہوگی۔ تصدیق کے بعد implement کروں گا۔" : "Tell me which roles you need (Teacher/Accountant/Viewer etc.) and each role's View/Create/Edit/Print/Export permissions per module. I can implement after confirmation."}</p>
+            <div className="font-semibold text-emerald-900 mb-1">{ur ? "RBAC (مزید roles)" : "RBAC (more roles)"}</div>
+            <p className="text-gray-700 text-xs leading-5">{ur ? "Accountant role شامل ہو گیا ہے (Dashboard, Students, Exams, Results, Certificates, Fees — Sessions/Settings/Audit Admin-only). اگر Teacher/Viewer وغیرہ یا permissions میں تبدیلی چاہیے تو بتائیں۔" : "Accountant role is added (Dashboard, Students, Exams, Results, Certificates, Fees — Sessions/Settings/Audit Admin-only). Tell me if you want Teacher/Viewer or different permissions."}</p>
           </div>
           <div className="rounded-xl border border-emerald-100 p-4 bg-emerald-50/20">
             <div className="font-semibold text-emerald-900 mb-1">{ur ? "Certificate Template / Custom Reports" : "Certificate Template / Custom Reports"}</div>

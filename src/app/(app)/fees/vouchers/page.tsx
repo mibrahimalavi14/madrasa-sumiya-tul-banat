@@ -9,7 +9,7 @@ import Link from "next/link";
 export default async function FeeVouchersBulkPage({ searchParams }: { searchParams: Promise<{ month?: string; year?: string; status?: string }> }) {
   const user = await getAuthUser();
   if (!user) redirect("/login");
-  if (user.role !== "ADMIN") redirect("/dashboard");
+  if (user.role !== "ADMIN" && user.role !== "ACCOUNTANT") redirect("/dashboard");
   const session = await getCurrentSession();
   if (!session) return <p className="p-6">No session selected.</p>;
   const sp = await searchParams;

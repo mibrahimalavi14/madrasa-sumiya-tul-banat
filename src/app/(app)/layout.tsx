@@ -28,16 +28,18 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   if (!user) redirect("/login");
   const tr = t[lang];
   const isAdmin = user.role === "ADMIN";
+  const isAccountant = user.role === "ACCOUNTANT";
+  const isStaff = isAdmin || isAccountant;
   const jar = await cookies();
   const viewSessionId = isAdmin ? (jar.get(VIEW_SESSION_COOKIE)?.value || "") : "";
   const isReadOnlyView = !!(isAdmin && viewSessionId && current && current.id === viewSessionId && current.status !== "ACTIVE");
-  const sections = isAdmin
+  const sections = isStaff
     ? [
         {
           title: lang === "ur" ? "جائزہ" : "Overview",
           items: [
             ["/dashboard", tr.dashboard, "🏠"],
-            ["/sessions", tr.sessions, "📅"],
+            ...(isAdmin ? [["/sessions", tr.sessions, "📅"] as [string, string, string]] : []),
           ] as [string, string, string][],
         },
         {
@@ -50,10 +52,10 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           ] as [string, string, string][],
         },
         {
-          title: lang === "ur" ? "مالیات و نظام" : "Finance & System",
+          title: lang === "ur" ? (isAdmin ? "مالیات و نظام" : "مالیات") : (isAdmin ? "Finance & System" : "Finance"),
           items: [
             ["/fees", tr.fees, "💳"],
-            ["/settings", tr.settings, "⚙️"],
+            ...(isAdmin ? [["/settings", tr.settings, "⚙️"] as [string, string, string]] : []),
           ] as [string, string, string][],
         },
       ]
@@ -123,9 +125,10 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       closeLabel={lang === "ur" ? "بند کریں" : "Close"}
       brandTitle="Madrasa Sumiya-tul-Banat"
     >
-      {!current && isAdmin && (
+      {!current && isStaff && (
         <div className="mb-5 bg-amber-50 border border-amber-300 text-amber-900 p-4 rounded-xl shadow-sm">
-          <b>{tr.noActiveSessionWarn}</b> {tr.createSelectSession} <Link className="underline font-semibold" href="/sessions">{tr.sessions}</Link> {tr.beforeEnteringData}
+          <b>{tr.noActiveSessionWarn}</b>{" "}
+          {isAdmin ? (<>{tr.createSelectSession} <Link className="underline font-semibold" href="/sessions">{tr.sessions}</Link> {tr.beforeEnteringData}</>) : (lang === "ur" ? "براہ کرم ایڈمن سے فعال سیشن بنانے/منتخب کرنے کو کہیں۔" : "Please ask admin to create/select an active session.")}
         </div>
       )}
       {isReadOnlyView && (

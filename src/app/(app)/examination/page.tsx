@@ -18,7 +18,7 @@ const STAGES = [
 
 async function createExam(formData: FormData) {
   "use server";
-  const user = await getAuthUser(); if (user?.role !== "ADMIN") throw new Error("UNAUTHORIZED");
+  const user = await getAuthUser(); if (user?.role !== "ADMIN" && user?.role !== "ACCOUNTANT") throw new Error("UNAUTHORIZED");
   const session = await getCurrentSession(); if (!session || session.status !== "ACTIVE") throw new Error("NO_SESSION");
   const stageNo = Number(formData.get("stage") || 0);
   const preset = STAGES.find(s => s.stage === stageNo);
@@ -45,7 +45,7 @@ async function createExam(formData: FormData) {
 
 async function selectStudentsForExam(formData: FormData) {
   "use server";
-  const user = await getAuthUser(); if (user?.role !== "ADMIN") throw new Error("UNAUTHORIZED");
+  const user = await getAuthUser(); if (user?.role !== "ADMIN" && user?.role !== "ACCOUNTANT") throw new Error("UNAUTHORIZED");
   const session = await getCurrentSession(); if (!session || session.status !== "ACTIVE") throw new Error("SESSION_NOT_ACTIVE");
   const examId = String(formData.get("examId"));
   const ids = formData.getAll("studentIds").map(String);
@@ -57,7 +57,7 @@ async function selectStudentsForExam(formData: FormData) {
 }
 
 export default async function ExaminationPage() {
-  const user = await getAuthUser(); if (user?.role !== "ADMIN") redirect("/dashboard");
+  const user = await getAuthUser(); if (user?.role !== "ADMIN" && user?.role !== "ACCOUNTANT") redirect("/dashboard");
   const lang = await getLang();
   const ur = lang === "ur";
   const session = await getCurrentSession();

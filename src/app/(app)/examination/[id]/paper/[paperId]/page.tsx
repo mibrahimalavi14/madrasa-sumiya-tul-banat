@@ -12,7 +12,7 @@ const SEC3_COUNT = 5;  // Short Q/A, 4 marks each = 20
 
 async function saveWrittenPaper(formData: FormData) {
   "use server";
-  const user = await getAuthUser(); if (user?.role !== "ADMIN") throw new Error("UNAUTHORIZED");
+  const user = await getAuthUser(); if (user?.role !== "ADMIN" && user?.role !== "ACCOUNTANT") throw new Error("UNAUTHORIZED");
   const session = await getCurrentSession(); if (!session || session.status !== "ACTIVE") throw new Error("SESSION_NOT_ACTIVE");
   const paperId = String(formData.get("paperId"));
   const examId = String(formData.get("examId"));
@@ -47,7 +47,7 @@ async function saveWrittenPaper(formData: FormData) {
 
 async function addOralQuestion(formData: FormData) {
   "use server";
-  const user = await getAuthUser(); if (user?.role !== "ADMIN") throw new Error("UNAUTHORIZED");
+  const user = await getAuthUser(); if (user?.role !== "ADMIN" && user?.role !== "ACCOUNTANT") throw new Error("UNAUTHORIZED");
   const session = await getCurrentSession(); if (!session || session.status !== "ACTIVE") throw new Error("SESSION_NOT_ACTIVE");
   const paperId = String(formData.get("paperId"));
   const examId = String(formData.get("examId"));
@@ -65,7 +65,7 @@ async function addOralQuestion(formData: FormData) {
 
 async function deleteQuestion(formData: FormData) {
   "use server";
-  const user = await getAuthUser(); if (user?.role !== "ADMIN") throw new Error("UNAUTHORIZED");
+  const user = await getAuthUser(); if (user?.role !== "ADMIN" && user?.role !== "ACCOUNTANT") throw new Error("UNAUTHORIZED");
   const session = await getCurrentSession(); if (!session || session.status !== "ACTIVE") throw new Error("SESSION_NOT_ACTIVE");
   const id = String(formData.get("id")); const examId = String(formData.get("examId")); const paperId = String(formData.get("paperId"));
   await prisma.question.delete({ where: { id } });
@@ -78,7 +78,7 @@ function parseOptions(q: any): string[] {
 }
 
 export default async function PaperEdit({ params, searchParams }: { params: Promise<{ id: string; paperId: string }>, searchParams?: Promise<{ saved?: string }> }) {
-  const user = await getAuthUser(); if (user?.role !== "ADMIN") redirect("/dashboard");
+  const user = await getAuthUser(); if (user?.role !== "ADMIN" && user?.role !== "ACCOUNTANT") redirect("/dashboard");
   const { id, paperId } = await params;
   const sp = (await searchParams) || {};
   const paper = await prisma.questionPaper.findUnique({ where: { id: paperId }, include: { exam: { include: { session: true } }, questions: { orderBy: { order: "asc" } } } });
