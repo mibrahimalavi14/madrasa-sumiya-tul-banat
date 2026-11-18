@@ -67,6 +67,7 @@ export default async function StudentProfile({ params }: { params: Promise<{ id:
           <div className="grid sm:grid-cols-2 gap-3 text-sm">
             <Info label="Admission No" value={student.admissionNo} />
             <Info label="Application No" value={student.applicationNo} />
+            <Info label="Admission Date / تاریخِ داخلہ" value={formatDateDMY(student.admissionDate)} />
             <Info label="Session" value={currentSession} />
             <Info label="Class for Admission" value={student.admissionClass} />
             <Info label="Name (English)" value={student.nameEn} />
