@@ -272,3 +272,18 @@ model Certificate {
   @@index([sessionId])
   @@index([studentId])
 }
+
+model AuditLog {
+  id          String   @id @default(cuid())
+  actorUserId String?
+  actorLabel  String?
+  action      String
+  entityType  String?
+  entityId    String?
+  details     String?
+  createdAt   DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([entityType, entityId])
+  @@index([actorUserId])
+}

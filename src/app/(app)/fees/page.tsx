@@ -8,6 +8,7 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import Link from "next/link";
 import DateInputDMY from "@/components/DateInputDMY";
+import { logAudit } from "@/lib/audit";
 
 async function upsertFee(formData: FormData) {
   "use server";
@@ -34,11 +35,12 @@ async function upsertFee(formData: FormData) {
   let isLate = false;
   if (paidAt) isLate = paidAt.getDate() > 7;
 
-  await prisma.feePayment.upsert({
+  const feeRow = await prisma.feePayment.upsert({
     where: { sessionId_studentId_month_year: { sessionId: session.id, studentId, month, year } },
     update: { amount: dueAmount, paidAmount, isPaid, paidAt: paidAmount > 0 ? paidAt : null, isLate: isPaid ? isLate : false },
     create: { sessionId: session.id, studentId, month, year, amount: dueAmount, paidAmount, isPaid, paidAt: paidAmount > 0 ? paidAt : null, isLate: isPaid ? isLate : false },
   });
+  await logAudit({ actorUserId: user.id, actorLabel: user.username || user.name, action: "FEE_UPSERT", entityType: "FeePayment", entityId: feeRow.id, details: JSON.stringify({ studentId, month, year, dueAmount, paidAmount, isPaid, sessionId: session.id }) });
   revalidatePath("/fees");
   revalidatePath("/fees/report");
   revalidatePath("/fees/defaulters");
@@ -53,10 +55,11 @@ async function saveStudentFee(formData: FormData) {
   const studentId = String(formData.get("studentId"));
   const raw = String(formData.get("studentMonthlyFee") ?? "").trim();
   const monthlyFee = raw === "" ? null : Number(raw);
-  await prisma.studentEnrollment.update({
+  const enr = await prisma.studentEnrollment.update({
     where: { studentId_sessionId: { studentId, sessionId: session.id } },
     data: { monthlyFee: Number.isFinite(monthlyFee as number) ? monthlyFee : null } as any,
   });
+  await logAudit({ actorUserId: user.id, actorLabel: user.username || user.name, action: "FEE_STUDENT_MONTHLY_SET", entityType: "StudentEnrollment", entityId: enr.id, details: JSON.stringify({ studentId, sessionId: session.id, monthlyFee: (enr as any).monthlyFee ?? null }) });
   revalidatePath("/fees");
 }
 

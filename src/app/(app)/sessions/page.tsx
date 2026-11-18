@@ -8,6 +8,7 @@ import { redirect } from "next/navigation";
 import { revalidatePath, revalidateTag } from "next/cache";
 import { cookies } from "next/headers";
 import DateInputDMY from "@/components/DateInputDMY";
+import { logAudit } from "@/lib/audit";
 
 async function createSessionAction(formData: FormData) {
   "use server";
@@ -34,10 +35,11 @@ async function createSessionAction(formData: FormData) {
   // If exact 1-year session ending today/in future hasn't ended yet, it's active; if already past end, treat as expired (and creation of next will be allowed after expiry state)
   const status = alreadyExpired ? "EXPIRED" : "ACTIVE";
   const isCurrent = makeCurrent && !alreadyExpired;
-  await prisma.$transaction(async (tx) => {
+  const created = await prisma.$transaction(async (tx) => {
     if (isCurrent) await tx.session.updateMany({ data: { isCurrent: false } });
-    await tx.session.create({ data: { name, startDate, endDate, status, isCurrent } });
+    return tx.session.create({ data: { name, startDate, endDate, status, isCurrent } });
   });
+  await logAudit({ actorUserId: user.id, actorLabel: user.username || user.name, action: "SESSION_CREATE", entityType: "Session", entityId: created.id, details: JSON.stringify({ name, status, isCurrent }) });
   revalidateTag("current-session", { expire: 0 });
   revalidatePath("/sessions"); revalidatePath("/dashboard");
 }
@@ -53,6 +55,7 @@ async function setCurrentAction(formData: FormData) {
     await tx.session.updateMany({ data: { isCurrent: false } });
     await tx.session.update({ where: { id }, data: { isCurrent: true } });
   });
+  await logAudit({ actorUserId: user.id, actorLabel: user.username || user.name, action: "SESSION_SET_CURRENT", entityType: "Session", entityId: id });
   const jar = await cookies();
   jar.set(VIEW_SESSION_COOKIE, "", { path: "/", maxAge: 0 });
   revalidateTag("current-session", { expire: 0 });
@@ -88,13 +91,16 @@ async function carryStudentsAction(formData: FormData) {
   const target = await prisma.session.findUnique({ where: { id: toId }, select: { status: true } });
   if (!target || target.status !== "ACTIVE") redirect("/sessions?error=carrytarget");
   const enrolls = await prisma.studentEnrollment.findMany({ where: { sessionId: fromId } });
+  let carried = 0;
   for (const e of enrolls) {
     await prisma.studentEnrollment.upsert({
       where: { studentId_sessionId: { studentId: e.studentId, sessionId: toId } },
       update: {},
       create: { studentId: e.studentId, sessionId: toId, carriedFromId: e.id, rollNo: null, rollLocked: false },
     });
+    carried++;
   }
+  await logAudit({ actorUserId: user.id, actorLabel: user.username || user.name, action: "SESSION_CARRY_STUDENTS", entityType: "Session", entityId: toId, details: JSON.stringify({ fromId, toId, count: carried }) });
   revalidatePath("/sessions"); revalidatePath("/students");
 }
 

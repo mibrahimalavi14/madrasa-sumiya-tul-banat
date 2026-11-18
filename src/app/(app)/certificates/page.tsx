@@ -7,6 +7,7 @@ import { formatDateDMY } from "@/lib/utils";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import Link from "next/link";
+import { logAudit } from "@/lib/audit";
 
 async function createCert(formData: FormData) {
   "use server";
@@ -16,7 +17,8 @@ async function createCert(formData: FormData) {
   const type = String(formData.get("type")) as "ANNUAL" | "NAZRA_COMPLETION";
   const count = await prisma.certificate.count();
   const serialNo = `MSB-CERT-${String(count+1).padStart(4,'0')}`;
-  await prisma.certificate.create({ data: { sessionId: session.id, studentId, type, serialNo, details: String(formData.get("details")||"")||null } });
+  const cert = await prisma.certificate.create({ data: { sessionId: session.id, studentId, type, serialNo, details: String(formData.get("details")||"")||null } });
+  await logAudit({ actorUserId: user.id, actorLabel: user.username || user.name, action: "CERTIFICATE_ISSUE", entityType: "Certificate", entityId: cert.id, details: JSON.stringify({ studentId, type, serialNo, sessionId: session.id }) });
   revalidatePath("/certificates");
 }
 

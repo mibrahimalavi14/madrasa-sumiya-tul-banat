@@ -160,6 +160,7 @@ export default async function SettingsPage() {
             <Link href="/sessions" className="px-3 py-2 rounded-lg bg-emerald-50 text-emerald-800 border border-emerald-200 hover:bg-emerald-100 text-sm">{ur ? "سیشنز کھولیں" : "Open Sessions"}</Link>
             <Link href="/students" className="px-3 py-2 rounded-lg bg-gray-50 text-gray-800 border border-gray-200 hover:bg-gray-100 text-sm">{ur ? "طلبہ" : "Students"}</Link>
             <Link href="/examination" className="px-3 py-2 rounded-lg bg-gray-50 text-gray-800 border border-gray-200 hover:bg-gray-100 text-sm">{ur ? "امتحانات" : "Examinations"}</Link>
+            <Link href="/settings/audit" className="px-3 py-2 rounded-lg bg-slate-50 text-slate-800 border border-slate-200 hover:bg-slate-100 text-sm">{ur ? "آڈٹ لاگ" : "Audit Log"}</Link>
           </div>
         </div>
       </div>
@@ -201,6 +202,30 @@ export default async function SettingsPage() {
               <li>Annual result is calculated using weighted formula across four exams.</li>
             </>)}
           </ul>
+        </div>
+      </div>
+
+      <div className="grid lg:grid-cols-2 gap-5">
+        <div className="bg-white rounded-2xl shadow-sm border border-emerald-100/80 p-5">
+          <h2 className="font-semibold mb-2 text-emerald-900">{ur ? "SMS / WhatsApp اطلاعات" : "SMS / WhatsApp Notifications"}</h2>
+          <div className="text-sm text-gray-700 space-y-2">
+            <p>{ur ? "خودکار SMS/WhatsApp الرٹس (فیس یاددہانی، نتائج وغیرہ) کے لیے بیرونی سروس فراہم کنندہ (Provider) کی API keys اور sender configuration درکار ہے۔" : "Automated SMS/WhatsApp alerts (fee reminders, results, etc.) require an external provider with API keys and sender configuration."}</p>
+            <div className="rounded-lg border border-amber-200 bg-amber-50 text-amber-900 p-3 text-xs">
+              <b>{ur ? "حیثیت:" : "Status:"}</b> {ur ? "کنفیگریشن دستیاب نہیں — Provider تفصیلات (API key, sender ID/number, templates) فراہم کریں تو انضمام مکمل کیا جا سکتا ہے۔" : "Not configured — provide provider details (API key, sender ID/number, templates) to enable integration."}
+            </div>
+          </div>
+        </div>
+        <div className="bg-white rounded-2xl shadow-sm border border-emerald-100/80 p-5">
+          <h2 className="font-semibold mb-2 text-emerald-900">{ur ? "بیک اپ اور ایکسپورٹ" : "Backup & Export"}</h2>
+          <div className="text-sm text-gray-700 space-y-2">
+            <p>{ur ? "ڈیٹا کی حفاظت کے لیے باقاعدگی سے CSV ایکسپورٹ اور ڈیٹابیس بیک اپ استعمال کریں۔" : "Use regular CSV exports and database backups to keep data safe."}</p>
+            <ul className="list-disc pl-5 space-y-1 text-xs text-gray-600">
+              <li>{ur ? "طلبہ/فیس/نتائج/سرٹیفکیٹس کے CSV ایکسپورٹ متعلقہ صفحات پر دستیاب ہیں۔" : "CSV exports are available on Students/Fees/Results/Certificates pages."}</li>
+              <li>{ur ? "ڈیٹابیس Supabase پر ہے — Supabase dashboard سے backups/PITR کنفیگر کریں۔" : "Database is on Supabase — configure backups/PITR from Supabase dashboard."}</li>
+              <li>{ur ? "آڈٹ لاگ میں اہم کارروائیوں کا ریکارڈ محفوظ ہوتا ہے۔" : "Audit log records key system actions."}</li>
+            </ul>
+            <Link href="/settings/audit" className="inline-flex mt-1 px-3 py-2 rounded-lg bg-slate-50 text-slate-800 border border-slate-200 hover:bg-slate-100 text-sm">{ur ? "آڈٹ لاگ دیکھیں" : "View Audit Log"}</Link>
+          </div>
         </div>
       </div>
     </div>
