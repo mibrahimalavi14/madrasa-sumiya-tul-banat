@@ -55,6 +55,13 @@ export async function requireUser() {
   return u;
 }
 
+export async function requireStudentAccess(studentId: string) {
+  const u = await requireUser();
+  if (u.role === "ADMIN") return u;
+  if (u.role === "PARENT" && u.parentStudentId === studentId) return u;
+  throw new Error("UNAUTHORIZED");
+}
+
 export async function verifyLogin(username: string, password: string) {
   const user = await prisma.user.findUnique({ where: { username } });
   if (!user) return null;

@@ -7,6 +7,7 @@ import { formatDateDMY, parseDateInput } from "@/lib/utils";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import DateInputDMY from "@/components/DateInputDMY";
+import { logAudit } from "@/lib/audit";
 
 const STAGES = [
   { stage: 1, name: "Initial Written Examination", month: "1st Month", desc: "Written exam only (MCQs, short questions, fill in the blanks, true/false, etc.). Nazra Quran not included. Separate result, 20% of annual.", written: true, oral: false, diagnostic: false, included: true, weight: 20 },
@@ -37,6 +38,7 @@ async function createExam(formData: FormData) {
     if (hasWritten) await prisma.questionPaper.create({ data: { examId: exam.id, type: "WRITTEN", paperCode: code, mazhmoon: "بنیادی اسلامیات", className: "ناظرہ قرآن و بنیادی اسلامیات", title: `تحریری پرچہ ${code}` } });
     if (hasOral) await prisma.questionPaper.create({ data: { examId: exam.id, type: "ORAL", paperCode: code, mazhmoon: "ناظرہ قرآن و بنیادی اسلامیات", className: "ناظرہ قرآن و بنیادی اسلامیات", title: `زبانی پرچہ ${code}` } });
   }
+  await logAudit({ actorUserId: user.id, actorLabel: user.username || user.name, action: "EXAM_CREATE", entityType: "Exam", entityId: exam.id, details: JSON.stringify({ sessionId: session.id, stage: preset.stage, name, examDate: examDate.toISOString() }) });
   revalidatePath("/examination");
   redirect(`/examination/${exam.id}`);
 }
@@ -49,6 +51,7 @@ async function selectStudentsForExam(formData: FormData) {
   const ids = formData.getAll("studentIds").map(String);
   await prisma.examStudent.deleteMany({ where: { examId } });
   if (ids.length) await prisma.examStudent.createMany({ data: ids.map(studentId => ({ examId, studentId })) });
+  await logAudit({ actorUserId: user.id, actorLabel: user.username || user.name, action: "EXAM_SELECT_STUDENTS", entityType: "Exam", entityId: examId, details: JSON.stringify({ examId, sessionId: session.id, count: ids.length }) });
   revalidatePath("/examination");
   revalidatePath(`/examination/${examId}`);
 }

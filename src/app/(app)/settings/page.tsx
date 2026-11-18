@@ -7,6 +7,7 @@ import { formatDateDMY } from "@/lib/utils";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import Link from "next/link";
+import { logAudit } from "@/lib/audit";
 
 async function saveFee(formData: FormData) {
   "use server";
@@ -18,6 +19,7 @@ async function saveFee(formData: FormData) {
     if (ex) await prisma.setting.update({ where: { id: ex.id }, data: { value: amount } });
     else await prisma.setting.create({ data: { sessionId: session?.id||null, key: "monthlyFee", value: amount } });
   });
+  await logAudit({ actorUserId: user.id, actorLabel: user.username || user.name, action: "SETTINGS_MONTHLY_FEE_SET", entityType: "Setting", details: JSON.stringify({ sessionId: session?.id || null, amount }) });
   revalidatePath("/settings"); revalidatePath("/fees");
 }
 async function changePassword(formData: FormData) {
@@ -26,6 +28,7 @@ async function changePassword(formData: FormData) {
   const pw = String(formData.get("password")||"");
   if (pw.length < 4) return;
   await prisma.user.update({ where: { id: user.id }, data: { passwordHash: await hashPassword(pw) } });
+  await logAudit({ actorUserId: user.id, actorLabel: user.username || user.name, action: "USER_PASSWORD_CHANGE", entityType: "User", entityId: user.id });
   revalidatePath("/settings");
 }
 async function createParent(formData: FormData) {
@@ -35,7 +38,8 @@ async function createParent(formData: FormData) {
   const password = String(formData.get("password")||"");
   const parentStudentId = String(formData.get("parentStudentId")||"") || null;
   if (!username || !password) return;
-  await prisma.user.create({ data: { username, passwordHash: await hashPassword(password), role: "PARENT", name: String(formData.get("name")||"")||null, parentStudentId } });
+  const created = await prisma.user.create({ data: { username, passwordHash: await hashPassword(password), role: "PARENT", name: String(formData.get("name")||"")||null, parentStudentId } });
+  await logAudit({ actorUserId: user.id, actorLabel: user.username || user.name, action: "PARENT_USER_CREATE", entityType: "User", entityId: created.id, details: JSON.stringify({ username, parentStudentId }) });
   revalidatePath("/settings");
 }
 

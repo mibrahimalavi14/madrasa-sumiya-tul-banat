@@ -7,6 +7,7 @@ import { revalidatePath } from "next/cache";
 import { parseDateInput, toDateInputDMY } from "@/lib/utils";
 import DateInputDMY from "@/components/DateInputDMY";
 import ScrollToTopOnError from "@/components/ScrollToTopOnError";
+import { logAudit } from "@/lib/audit";
 
 async function updateStudent(formData: FormData) {
   "use server";
@@ -88,6 +89,7 @@ async function updateStudent(formData: FormData) {
     });
     await prisma.sibling.createMany({ data: pairs, skipDuplicates: true });
   }
+  await logAudit({ actorUserId: user.id, actorLabel: user.username || user.name, action: "STUDENT_UPDATE", entityType: "Student", entityId: id, details: JSON.stringify({ sessionId: sessionId || null, status: String(formData.get("status")||"ACTIVE"), feeExempt }) });
   revalidatePath(`/students/${id}`); revalidatePath("/students"); redirect(`/students`);
 }
 

@@ -5,6 +5,7 @@ import { notFound, redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import Link from "next/link";
 import { gradeFromPercentage, calculatePositions } from "@/lib/grading";
+import { logAudit } from "@/lib/audit";
 
 async function saveOralMark(formData: FormData) {
   "use server";
@@ -47,6 +48,7 @@ async function saveOralMark(formData: FormData) {
       await prisma.$transaction(updates.map(u => prisma.result.update({ where: { id: u.id }, data: { position: u.position } })));
     }
   }
+  await logAudit({ actorUserId: user.id, actorLabel: user.username || user.name, action: "ORAL_MARK_SAVE", entityType: "Exam", entityId: examId, details: JSON.stringify({ examId, paperId, studentId, obtained, total }) });
   revalidatePath(`/examination/${examId}/oral/${paperId}`); revalidatePath(`/results`);
 }
 

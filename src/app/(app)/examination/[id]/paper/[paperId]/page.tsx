@@ -4,6 +4,7 @@ import { getCurrentSession } from "@/lib/session";
 import { notFound, redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import Link from "next/link";
+import { logAudit } from "@/lib/audit";
 
 const SEC1_COUNT = 5;  // MCQs, 4 marks each = 20
 const SEC2_COUNT = 5;  // Fill in blanks, 2 marks each = 10
@@ -38,6 +39,7 @@ async function saveWrittenPaper(formData: FormData) {
     prisma.question.deleteMany({ where: { paperId } }),
     prisma.question.createMany({ data: rows.map(r => ({ paperId, order: r.order, type: r.type, textUr: r.textUr, marks: r.marks, optionsJson: r.optionsJson, answerSpace: r.answerSpace })) }),
   ]);
+  await logAudit({ actorUserId: user.id, actorLabel: user.username || user.name, action: "EXAM_PAPER_SAVE", entityType: "QuestionPaper", entityId: paperId, details: JSON.stringify({ examId, paperId, type: "WRITTEN", questions: rows.length }) });
   revalidatePath(`/examination/${examId}/paper/${paperId}`);
   revalidatePath(`/examination/${examId}/paper/${paperId}/print`);
   redirect(`/examination/${examId}/paper/${paperId}?saved=1`);
@@ -50,13 +52,14 @@ async function addOralQuestion(formData: FormData) {
   const paperId = String(formData.get("paperId"));
   const examId = String(formData.get("examId"));
   const count = await prisma.question.count({ where: { paperId } });
-  await prisma.question.create({ data: {
+  const q = await prisma.question.create({ data: {
     paperId, order: count + 1,
     type: "short",
     textUr: String(formData.get("textUr")||""),
     marks: formData.get("marks") ? Number(formData.get("marks")) : null,
     answerSpace: 0,
   }});
+  await logAudit({ actorUserId: user.id, actorLabel: user.username || user.name, action: "EXAM_QUESTION_ADD", entityType: "QuestionPaper", entityId: paperId, details: JSON.stringify({ examId, paperId, questionId: q.id }) });
   revalidatePath(`/examination/${examId}/paper/${paperId}`);
 }
 
@@ -66,6 +69,7 @@ async function deleteQuestion(formData: FormData) {
   const session = await getCurrentSession(); if (!session || session.status !== "ACTIVE") throw new Error("SESSION_NOT_ACTIVE");
   const id = String(formData.get("id")); const examId = String(formData.get("examId")); const paperId = String(formData.get("paperId"));
   await prisma.question.delete({ where: { id } });
+  await logAudit({ actorUserId: user.id, actorLabel: user.username || user.name, action: "EXAM_QUESTION_DELETE", entityType: "QuestionPaper", entityId: paperId, details: JSON.stringify({ examId, paperId, questionId: id }) });
   revalidatePath(`/examination/${examId}/paper/${paperId}`);
 }
 
