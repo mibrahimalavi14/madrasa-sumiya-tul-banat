@@ -50,7 +50,15 @@ export default async function ResultsPage({ searchParams }: { searchParams: Prom
     ]);
     const rollBySession = new Map(enrolls.map(e => [e.sessionId, e.rollNo]));
     const resultsWithRoll = results.map(r => ({ ...r, rollNo: (r.exam as any)?.sessionId ? rollBySession.get((r.exam as any).sessionId) : null }));
-    return <div className="space-y-4"><h1 className="text-2xl font-bold text-emerald-900">{ur ? "میرے نتائج" : "My Results"}</h1><ResultsTable results={resultsWithRoll} ur={ur} /></div>;
+    return (
+      <div className="space-y-4 theme-parent">
+        <div className="bg-gradient-to-r from-blue-700 to-indigo-700 text-white rounded-2xl p-5 shadow-sm">
+          <h1 className="text-2xl font-bold">{ur ? "میرے نتائج" : "My Results"}</h1>
+          <p className="text-sm text-blue-100 mt-1">{ur ? "آپ کے بچے کے امتحانی نتائج" : "Exam results for your child"}</p>
+        </div>
+        <div className="bg-white rounded-2xl shadow-sm border border-blue-100 overflow-auto"><ResultsTable results={resultsWithRoll} ur={ur} /></div>
+      </div>
+    );
   }
   if (!session) return <p>{ur ? "براہ کرم پہلے فعال سیشن بنائیں/منتخب کریں۔" : "Create/select active session first."}</p>;
   const examsRaw = await prisma.exam.findMany({ where: { sessionId: session.id }, orderBy: { createdAt: "asc" } });
@@ -110,7 +118,7 @@ export default async function ResultsPage({ searchParams }: { searchParams: Prom
     const ql = q.toLowerCase();
     const annualWithPos = q ? annualWithPosAll.filter(a => [a.student?.nameEn, a.rollNo].some(v => (v || "").toLowerCase().includes(ql))) : annualWithPosAll;
     return (
-      <div className="space-y-5">
+      <div className="space-y-5 theme-results">
         <div className="flex items-center justify-between flex-wrap gap-2">
           <h1 className="text-2xl font-bold text-emerald-900">{ur ? "سالانہ مجموعی نتیجہ" : "Annual Results"}</h1>
           <div className="flex gap-2 flex-wrap"><Link href="/results" className="text-sm border px-3 py-1.5 rounded-lg">{ur ? "امتحان وار نتائج" : "Exam-wise Results"}</Link><Link href="/results/annual-report" className="text-sm bg-emerald-700 hover:bg-emerald-800 text-white px-3 py-1.5 rounded-lg">{ur ? "سالانہ رپورٹ پرنٹ" : "Print Annual Report"}</Link><a href="/api/export/results" className="text-sm bg-gray-700 hover:bg-gray-800 text-white px-3 py-1.5 rounded-lg">{ur ? "CSV ایکسپورٹ" : "Export CSV"}</a><Link href="/examination" className="text-sm border px-3 py-1.5 rounded-lg">{ur ? "امتحانات" : "Exams"}</Link></div>
@@ -174,7 +182,7 @@ export default async function ResultsPage({ searchParams }: { searchParams: Prom
   const rollMap = new Map(enrolls.map(e=>[e.studentId,e.rollNo]));
   const resMap = new Map(results.map(r=>[r.studentId,r]));
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 theme-results">
       <div className="flex items-center justify-between flex-wrap gap-2">
         <h1 className="text-2xl font-bold text-emerald-900">{ur ? "نتائج (محفوظ شدہ)" : "Results (All Saved)"}</h1>
         <div className="flex gap-2 flex-wrap">

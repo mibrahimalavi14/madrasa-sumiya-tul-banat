@@ -70,7 +70,7 @@ export default async function StudentsPage({ searchParams }: { searchParams: Pro
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 theme-students">
       <div className="bg-gradient-to-r from-emerald-800 to-emerald-700 text-white rounded-2xl p-5 shadow-sm flex items-center justify-between flex-wrap gap-3">
         <div>
           <h1 className="text-2xl font-bold">{tr.students}</h1>

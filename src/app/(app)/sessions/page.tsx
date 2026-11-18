@@ -127,7 +127,7 @@ export default async function SessionsPage({ searchParams }: { searchParams: Pro
     ? (lang === "ur" ? "طلبہ صرف فعال (ACTIVE) سیشن میں منتقل کیے جا سکتے ہیں۔" : "Students can only be carried into an ACTIVE session.")
     : "";
   return (
-    <div>
+    <div className="space-y-5 theme-sessions">
       <h1 className="text-2xl font-bold text-emerald-900 mb-4">{tr.sessions}</h1>
       <div className="bg-white rounded-xl shadow p-4 mb-6">
         <h2 className="font-semibold mb-3">{tr.createNewSession}</h2>

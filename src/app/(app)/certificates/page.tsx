@@ -20,7 +20,7 @@ async function createCert(formData: FormData) {
   revalidatePath("/certificates");
 }
 
-export default async function CertificatesPage({ searchParams }: { searchParams: Promise<{ page?: string }> }) {
+export default async function CertificatesPage({ searchParams }: { searchParams: Promise<{ page?: string; q?: string; type?: string }> }) {
   const user = await getAuthUser();
   const session = await getCurrentSession();
   const lang = await getLang();
@@ -28,15 +28,35 @@ export default async function CertificatesPage({ searchParams }: { searchParams:
   const sp = await searchParams;
   const page = Math.max(1, parseInt(sp.page || "1", 10) || 1);
   const pageSize = 30;
+  const q = sp.q?.trim() || "";
+  const typeFilter = sp.type === "ANNUAL" || sp.type === "NAZRA_COMPLETION" ? sp.type : "";
 
   if (user?.role === "PARENT") {
     if (!user.parentStudentId) return <p>{tr.noLinkedStudent}</p>;
     const certs = await prisma.certificate.findMany({ where: { studentId: user.parentStudentId }, include: { student: true, session: true }, orderBy: { createdAt: "desc" } });
-    return <div><h1 className="text-2xl font-bold text-emerald-900 mb-4">{tr.certificates}</h1><CertList certs={certs} lang={lang} tr={tr} /></div>;
+    return (
+      <div className="space-y-4 theme-parent">
+        <div className="bg-gradient-to-r from-amber-600 to-orange-600 text-white rounded-2xl p-5 shadow-sm">
+          <h1 className="text-2xl font-bold">{tr.certificates}</h1>
+          <p className="text-sm text-amber-50 mt-1">{lang === "ur" ? "آپ کے بچے کے جاری شدہ سرٹیفکیٹس" : "Issued certificates for your child"}</p>
+        </div>
+        <CertList certs={certs} lang={lang} tr={tr} />
+      </div>
+    );
   }
   if (!session) return <p>{lang==="ur" ? "براہ کرم پہلے فعال سیشن بنائیں/منتخب کریں۔" : "Create/select active session first."}</p>;
 
-  const where = { sessionId: session.id };
+  const where: any = { sessionId: session.id };
+  if (typeFilter) where.type = typeFilter;
+  if (q) {
+    where.OR = [
+      { serialNo: { contains: q, mode: "insensitive" } },
+      { student: { admissionNo: { contains: q, mode: "insensitive" } } },
+      { student: { nameEn: { contains: q, mode: "insensitive" } } },
+      { student: { nameUr: { contains: q, mode: "insensitive" } } },
+    ];
+  }
+
   const [total, enrolls, certs] = await Promise.all([
     prisma.certificate.count({ where }),
     prisma.studentEnrollment.findMany({ where: { sessionId: session.id }, select: { studentId: true, student: { select: { admissionNo: true, nameEn: true } } }, orderBy: { student: { nameEn: "asc" } } }),
@@ -45,27 +65,49 @@ export default async function CertificatesPage({ searchParams }: { searchParams:
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
   const safePage = Math.min(page, totalPages);
   const pageCerts = page > totalPages && totalPages > 0 ? [] : certs;
-  const mkHref = (p: number) => p > 1 ? `/certificates?page=${p}` : "/certificates";
+  const mkHref = (p: number) => {
+    const params = new URLSearchParams();
+    if (q) params.set("q", q);
+    if (typeFilter) params.set("type", typeFilter);
+    if (p > 1) params.set("page", String(p));
+    const s = params.toString();
+    return s ? `/certificates?${s}` : "/certificates";
+  };
+  const exportHref = `/api/export/certificates${q || typeFilter ? `?${new URLSearchParams({ ...(q?{q}:{}), ...(typeFilter?{type:typeFilter}:{}) }).toString()}` : ""}`;
 
   return (
-    <div>
-      <div className="flex items-center justify-between gap-3 flex-wrap mb-4">
-        <h1 className="text-2xl font-bold text-emerald-900">{tr.certificates}</h1>
-        <div className="text-sm text-gray-600">{lang==="ur" ? `کل: ${total}` : `Total: ${total}`}</div>
+    <div className="space-y-4 theme-certs">
+      <div className="bg-gradient-to-r from-amber-700 to-orange-600 text-white rounded-2xl p-5 shadow-sm flex items-center justify-between gap-3 flex-wrap">
+        <div>
+          <h1 className="text-2xl font-bold">{tr.certificates}</h1>
+          <p className="text-sm text-amber-50 mt-1">{session.name} · {lang==="ur" ? `کل: ${total}` : `Total: ${total}`}</p>
+        </div>
+        <a href={exportHref} className="no-print bg-white/15 hover:bg-white/25 border border-white/30 text-white px-4 py-2.5 rounded-xl font-semibold text-sm">{lang==="ur" ? "CSV ایکسپورٹ" : "Export CSV"}</a>
       </div>
-      <div className="bg-white rounded-xl shadow p-4 mb-6">
-        <h2 className="font-semibold mb-2">{tr.issueCertificate}</h2>
-        <p className="text-xs text-gray-500 mb-2">{lang==="ur" ? "سالانہ امتحان پر سالانہ سرٹیفکیٹ اور ناظرہ مکمل ہونے پر ناظرہ تکمیل سرٹیفکیٹ جاری کریں۔" : "Issue annual certificates on annual examination and Nazra completion certificates when completed."}</p>
-        <form action={createCert} className="grid md:grid-cols-4 gap-3 items-end">
-          <div><label className="text-sm">{tr.student}</label><select name="studentId" className="w-full border rounded px-2 py-2">{enrolls.map(e=><option key={e.studentId} value={e.studentId}>{e.student.admissionNo} - {e.student.nameEn}</option>)}</select></div>
-          <div><label className="text-sm">{tr.type}</label><select name="type" className="w-full border rounded px-2 py-2"><option value="ANNUAL">{tr.annual}</option><option value="NAZRA_COMPLETION">{tr.nazraCompletion}</option></select></div>
-          <div><label className="text-sm">{tr.detailsOptional}</label><input name="details" className="w-full border rounded px-2 py-2"/></div>
-          <div><button className="bg-emerald-800 text-white px-4 py-2 rounded">{tr.issue}</button></div>
+
+      <div className="bg-white rounded-2xl shadow-sm border border-amber-100 p-4 space-y-4">
+        <div>
+          <h2 className="font-semibold mb-2">{tr.issueCertificate}</h2>
+          <p className="text-xs text-gray-500 mb-2">{lang==="ur" ? "سالانہ امتحان پر سالانہ سرٹیفکیٹ اور ناظرہ مکمل ہونے پر ناظرہ تکمیل سرٹیفکیٹ جاری کریں۔" : "Issue annual certificates on annual examination and Nazra completion certificates when completed."}</p>
+          <form action={createCert} className="grid md:grid-cols-4 gap-3 items-end">
+            <div><label className="text-sm">{tr.student}</label><select name="studentId" className="w-full border rounded-lg px-3 py-2.5">{enrolls.map(e=><option key={e.studentId} value={e.studentId}>{e.student.admissionNo} - {e.student.nameEn}</option>)}</select></div>
+            <div><label className="text-sm">{tr.type}</label><select name="type" className="w-full border rounded-lg px-3 py-2.5"><option value="ANNUAL">{tr.annual}</option><option value="NAZRA_COMPLETION">{tr.nazraCompletion}</option></select></div>
+            <div><label className="text-sm">{tr.detailsOptional}</label><input name="details" className="w-full border rounded-lg px-3 py-2.5"/></div>
+            <div><button className="bg-amber-700 hover:bg-amber-800 text-white px-4 py-2.5 rounded-lg font-medium">{tr.issue}</button></div>
+          </form>
+        </div>
+
+        <form className="flex gap-2 flex-wrap items-end border-t border-amber-100 pt-4 no-print">
+          <div><label className="text-xs text-gray-600 block mb-1">{lang==="ur" ? "تلاش" : "Search"}</label><input name="q" defaultValue={q} placeholder={lang==="ur" ? "سیریل / داخلہ نمبر / نام" : "Serial / Admission / Name"} className="border border-amber-200 rounded-lg px-3 py-2 text-sm min-w-[220px]" /></div>
+          <div><label className="text-xs text-gray-600 block mb-1">{tr.type}</label><select name="type" defaultValue={typeFilter} className="border border-amber-200 rounded-lg px-3 py-2 text-sm"><option value="">{lang==="ur" ? "تمام" : "All"}</option><option value="ANNUAL">{tr.annual}</option><option value="NAZRA_COMPLETION">{tr.nazraCompletion}</option></select></div>
+          <button className="bg-gray-800 hover:bg-gray-900 text-white px-4 py-2 rounded-lg text-sm">{tr.search}</button>
+          {(q || typeFilter) && <Link href="/certificates" className="text-sm text-amber-800 underline">{lang==="ur" ? "صاف کریں" : "Clear"}</Link>}
         </form>
       </div>
+
       <CertList certs={pageCerts} lang={lang} tr={tr} />
       {totalPages > 1 && (
-        <div className="flex items-center justify-between gap-3 bg-white rounded-xl shadow border border-emerald-100 p-3 text-sm flex-wrap mt-4">
+        <div className="flex items-center justify-between gap-3 bg-white rounded-xl shadow-sm border border-amber-100 p-3 text-sm flex-wrap">
           <div className="text-gray-600">{lang==="ur" ? `صفحہ ${safePage} از ${totalPages}` : `Page ${safePage} of ${totalPages}`}</div>
           <div className="flex items-center gap-2">
             <Link href={mkHref(Math.max(1, safePage - 1))} aria-disabled={safePage <= 1} className={`px-3 py-1.5 rounded-lg border ${safePage <= 1 ? "pointer-events-none opacity-40" : "hover:bg-gray-50"}`}>{lang==="ur" ? "پچھلا" : "Prev"}</Link>
@@ -78,5 +120,5 @@ export default async function CertificatesPage({ searchParams }: { searchParams:
 }
 
 function CertList({ certs, lang, tr }: { certs: any[]; lang: "en"|"ur"; tr: any }) {
-  return <div className="bg-white rounded-xl shadow overflow-auto"><table className="w-full text-sm"><thead className="bg-emerald-50"><tr><th className="p-2">{tr.serial}</th><th className="p-2">{tr.student}</th><th className="p-2">{tr.type}</th><th className="p-2">{tr.session}</th><th className="p-2">{tr.date}</th><th className="p-2">{tr.action}</th></tr></thead><tbody>{certs.map(c=>(<tr key={c.id} className="border-t"><td className="p-2">{c.serialNo||"-"}</td><td className="p-2">{c.student.admissionNo} - {c.student.nameEn}</td><td className="p-2">{c.type==="ANNUAL"?tr.annual:tr.nazraCompletion}</td><td className="p-2">{c.session.name}</td><td className="p-2">{formatDateDMY(c.issueDate)}</td><td className="p-2"><Link className="text-emerald-700 underline" href={`/certificates/${c.id}/print`}>{tr.print}</Link></td></tr>))}{certs.length===0 && <tr><td colSpan={6} className="p-4 text-center text-gray-500">{tr.noCertificates}</td></tr>}</tbody></table></div>;
+  return <div className="bg-white rounded-2xl shadow-sm border border-amber-100/70 overflow-auto"><table className="w-full text-sm"><thead><tr><th className="p-3 text-left">{tr.serial}</th><th className="p-3 text-left">{tr.student}</th><th className="p-3 text-center">{tr.type}</th><th className="p-3 text-center">{tr.session}</th><th className="p-3 text-center">{tr.date}</th><th className="p-3 text-center">{tr.action}</th></tr></thead><tbody>{certs.map(c=>(<tr key={c.id} className="border-t"><td className="p-3 font-medium">{c.serialNo||"-"}</td><td className="p-3">{c.student.admissionNo} - {c.student.nameEn}</td><td className="p-3 text-center"><span className={`inline-flex px-2.5 py-1 rounded-full text-xs font-semibold ${c.type==="ANNUAL"?"bg-amber-100 text-amber-800":"bg-emerald-100 text-emerald-800"}`}>{c.type==="ANNUAL"?tr.annual:tr.nazraCompletion}</span></td><td className="p-3 text-center">{c.session.name}</td><td className="p-3 text-center">{formatDateDMY(c.issueDate)}</td><td className="p-3 text-center"><Link className="inline-flex px-3 py-1.5 rounded-lg border border-amber-200 bg-amber-50 text-amber-800 font-medium hover:bg-amber-100" href={`/certificates/${c.id}/print`}>{tr.print}</Link></td></tr>))}{certs.length===0 && <tr><td colSpan={6} className="p-5 text-center text-gray-500">{tr.noCertificates}</td></tr>}</tbody></table></div>;
 }

@@ -23,13 +23,34 @@ export default async function Dashboard() {
       }
     }) : null;
     return (
-      <div>
-        <h1 className="text-2xl font-bold text-emerald-900 mb-4">{tr.parentDashboard}</h1>
-        {!student ? <p>{tr.noLinkedStudent}</p> : (
+      <div className="space-y-5 theme-parent">
+        <div className="bg-gradient-to-r from-teal-700 via-emerald-700 to-cyan-700 text-white rounded-2xl p-6 shadow-sm">
+          <h1 className="text-2xl font-bold">{tr.parentDashboard}</h1>
+          <p className="text-sm text-teal-50 mt-1">{ur ? "والدین پورٹل — اپنے بچے کا تعلیمی و مالی ریکارڈ دیکھیں" : "Parent portal — view your child’s academic and fee records"}</p>
+        </div>
+        {!student ? <div className="bg-white rounded-2xl border border-amber-200 p-5 text-amber-900">{tr.noLinkedStudent}</div> : (
           <div className="grid md:grid-cols-2 gap-4">
-            <div className="bg-white rounded-xl shadow p-4"><h2 className="font-semibold mb-2">{tr.student}</h2><div>{student.nameEn} {student.nameUr && <span className="font-urdu">({student.nameUr})</span>}</div><div>{tr.admissionNo}: {student.admissionNo}</div><div>Reg: {student.registrationNo}</div></div>
-            <div className="bg-white rounded-xl shadow p-4"><h2 className="font-semibold mb-2">{tr.recentFees}</h2>{student.feePayments.length===0?<p className="text-sm text-gray-500">{tr.noRecords}</p>:<ul className="text-sm space-y-1">{student.feePayments.map((f: any)=>{ const paidAmt = Number(f.paidAmount ?? 0) > 0 ? Number(f.paidAmount ?? 0) : (f.isPaid ? Number(f.amount||0) : 0); const dueAmt = Number(f.amount||0); const full = f.isPaid || (dueAmt>0 && paidAmt>=dueAmt); const partial = paidAmt>0 && paidAmt<dueAmt; const label = full ? (f.isLate?tr.late:tr.paid) : (partial ? (lang === "ur" ? "جزوی" : "Partial") : tr.unpaid); return (<li key={f.id}>{f.month}/{f.year} - Rs {paidAmt}/{dueAmt} - {label}</li>); })}</ul>}</div>
-            <div className="bg-white rounded-xl shadow p-4 md:col-span-2"><h2 className="font-semibold mb-2">{tr.recentResults}</h2>{student.results.length===0?<p className="text-sm text-gray-500">{tr.noResults}</p>:<ul className="text-sm space-y-1">{student.results.map(r=>(<li key={r.id}>{r.percentage?.toFixed(1)}% - {r.grade} - {r.status} {r.position?`(Pos ${r.position})`:""}</li>))}</ul>}</div>
+            <div className="bg-white rounded-2xl shadow-sm border border-teal-100 p-5">
+              <h2 className="font-semibold mb-3 text-teal-900">{tr.student}</h2>
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between gap-3 border-b border-gray-100 pb-2"><span className="text-gray-500">{ur ? "نام" : "Name"}</span><span className="font-semibold text-gray-900">{student.nameEn} {student.nameUr && <span className="font-urdu">({student.nameUr})</span>}</span></div>
+                <div className="flex justify-between gap-3 border-b border-gray-100 pb-2"><span className="text-gray-500">{tr.admissionNo}</span><span className="font-semibold">{student.admissionNo}</span></div>
+                <div className="flex justify-between gap-3"><span className="text-gray-500">Reg</span><span className="font-semibold">{student.registrationNo || "-"}</span></div>
+              </div>
+              <div className="mt-4 flex flex-wrap gap-2">
+                <Link href="/students" className="text-sm bg-teal-700 hover:bg-teal-800 text-white px-3 py-2 rounded-lg">{ur ? "مکمل پروفائل" : "Full Profile"}</Link>
+                <Link href="/fees" className="text-sm border border-teal-200 text-teal-800 px-3 py-2 rounded-lg hover:bg-teal-50">{ur ? "فیس تفصیل" : "Fees"}</Link>
+                <Link href="/results" className="text-sm border border-teal-200 text-teal-800 px-3 py-2 rounded-lg hover:bg-teal-50">{ur ? "نتائج" : "Results"}</Link>
+              </div>
+            </div>
+            <div className="bg-white rounded-2xl shadow-sm border border-teal-100 p-5">
+              <h2 className="font-semibold mb-3 text-teal-900">{tr.recentFees}</h2>
+              {student.feePayments.length===0?<p className="text-sm text-gray-500">{tr.noRecords}</p>:<div className="overflow-auto"><table className="w-full text-sm"><thead><tr><th className="p-2 text-left">{tr.month}/{tr.year}</th><th className="p-2 text-center">{ur ? "ادا/واجب" : "Paid/Due"}</th><th className="p-2 text-center">{tr.status}</th></tr></thead><tbody>{student.feePayments.map((f: any)=>{ const paidAmt = Number(f.paidAmount ?? 0) > 0 ? Number(f.paidAmount ?? 0) : (f.isPaid ? Number(f.amount||0) : 0); const dueAmt = Number(f.amount||0); const full = f.isPaid || (dueAmt>0 && paidAmt>=dueAmt); const partial = paidAmt>0 && paidAmt<dueAmt; const label = full ? (f.isLate?tr.late:tr.paid) : (partial ? (lang === "ur" ? "جزوی" : "Partial") : tr.unpaid); return (<tr key={f.id} className="border-t"><td className="p-2">{f.month}/{f.year}</td><td className="p-2 text-center">Rs {paidAmt}/{dueAmt}</td><td className="p-2 text-center"><span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-semibold ${full ? (f.isLate?"bg-amber-100 text-amber-800":"bg-emerald-100 text-emerald-800") : (partial?"bg-amber-100 text-amber-800":"bg-red-100 text-red-800")}`}>{label}</span></td></tr>); })}</tbody></table></div>}
+            </div>
+            <div className="bg-white rounded-2xl shadow-sm border border-teal-100 p-5 md:col-span-2">
+              <h2 className="font-semibold mb-3 text-teal-900">{tr.recentResults}</h2>
+              {student.results.length===0?<p className="text-sm text-gray-500">{tr.noResults}</p>:<div className="overflow-auto"><table className="w-full text-sm"><thead><tr><th className="p-2 text-center">%</th><th className="p-2 text-center">{ur ? "گریڈ" : "Grade"}</th><th className="p-2 text-center">{ur ? "حیثیت" : "Status"}</th><th className="p-2 text-center">{ur ? "پوزیشن" : "Position"}</th></tr></thead><tbody>{student.results.map(r=>(<tr key={r.id} className="border-t"><td className="p-2 text-center font-medium">{r.percentage?.toFixed(1)}%</td><td className="p-2 text-center font-semibold">{r.grade}</td><td className={`p-2 text-center ${r.status==="Pass"?"text-emerald-700":"text-red-700"}`}>{r.status}</td><td className="p-2 text-center">{r.position??"-"}</td></tr>))}</tbody></table></div>}
+            </div>
           </div>
         )}
       </div>
@@ -149,7 +170,7 @@ export default async function Dashboard() {
   ] as const;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 theme-dashboard">
       {(sessionEndingSoon || pendingExams > 0 || (monthTotal - monthPaid) > 0) && (
         <div className="grid md:grid-cols-3 gap-3 no-print">
           {sessionEndingSoon && (

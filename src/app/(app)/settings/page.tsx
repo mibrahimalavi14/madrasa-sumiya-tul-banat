@@ -59,7 +59,7 @@ export default async function SettingsPage() {
   ]);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 theme-settings">
       <div className="bg-gradient-to-r from-emerald-800 to-emerald-700 text-white rounded-2xl p-5 shadow-sm">
         <h1 className="text-2xl font-bold">{tr.settings}</h1>
         <p className="text-sm text-emerald-50 mt-1">{ur ? "سسٹم، سیشن، فیس، اکاؤنٹس اور تعلیمی قواعد کی ترتیبات" : "System, session, fees, accounts and academic rules settings"}</p>

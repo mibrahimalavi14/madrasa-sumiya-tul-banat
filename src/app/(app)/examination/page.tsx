@@ -107,7 +107,7 @@ export default async function ExaminationPage() {
   const examDisplayMonth = (e: any) => (ur && e?.stage && monthUr[Number(e.stage)]) || e?.monthLabel || "-";
   const examDisplayStageLabel = (e: any) => (ur && e?.stage && examNameUr[Number(e.stage)]) || e?.stageLabel || (e?.stage ? `Stage ${e.stage}` : "-");
   return (
-    <div className="space-y-5">
+    <div className="space-y-5 theme-exams">
       <div className="bg-gradient-to-r from-emerald-800 to-emerald-700 text-white rounded-2xl p-5 shadow-sm">
         <h1 className="text-2xl font-bold">{ur ? "امتحانات" : "Examination"}</h1>
         <p className="text-sm text-emerald-50 mt-1">{ur ? `سیشن: ${session.name} — سالانہ امتحانی کیلنڈر اور چاروں امتحانات کا ریکارڈ` : `Session: ${session.name} — Annual exam calendar and records of all four exams`}</p>

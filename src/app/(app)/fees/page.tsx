@@ -69,13 +69,21 @@ export default async function FeesPage({ searchParams }: { searchParams: Promise
     if (!user.parentStudentId) return <p>{tr.noLinkedStudent}</p>;
     const sessionNow = await getCurrentSession();
     const [fees, enrollment] = await Promise.all([
-      prisma.feePayment.findMany({ where: { studentId: user.parentStudentId }, orderBy: [{ year: "desc" }, { month: "desc" }] }),
+      prisma.feePayment.findMany({ where: { studentId: user.parentStudentId }, include: { session: { select: { name: true } } }, orderBy: [{ year: "desc" }, { month: "desc" }] }),
       sessionNow ? prisma.studentEnrollment.findUnique({ where: { studentId_sessionId: { studentId: user.parentStudentId, sessionId: sessionNow.id } }, select: { feeExempt: true } }) : Promise.resolve(null),
     ]);
     if ((enrollment as any)?.feeExempt) {
-      return <div><h1 className="text-2xl font-bold text-emerald-900 mb-4">{tr.fees}</h1><div className="bg-amber-50 border border-amber-200 text-amber-800 rounded-xl p-4">{lang === "ur" ? "اس طالب علم کی فیس معاف ہے۔" : "This student is fee exempt."}</div></div>;
+      return <div className="space-y-4 theme-parent"><div className="bg-gradient-to-r from-teal-700 to-emerald-700 text-white rounded-2xl p-5 shadow-sm"><h1 className="text-2xl font-bold">{tr.fees}</h1></div><div className="bg-amber-50 border border-amber-200 text-amber-800 rounded-xl p-4">{lang === "ur" ? "اس طالب علم کی فیس معاف ہے۔" : "This student is fee exempt."}</div></div>;
     }
-    return <div><h1 className="text-2xl font-bold text-emerald-900 mb-4">{tr.fees}</h1><FeeTableRead fees={fees} tr={tr} lang={lang as any} /></div>;
+    return (
+      <div className="space-y-4 theme-parent">
+        <div className="bg-gradient-to-r from-teal-700 to-emerald-700 text-white rounded-2xl p-5 shadow-sm">
+          <h1 className="text-2xl font-bold">{tr.fees}</h1>
+          <p className="text-sm text-teal-50 mt-1">{lang === "ur" ? "آپ کے بچے کی فیس کی تفصیلات، رسیدیں اور ادائیگی کی صورتحال" : "Fee details, receipts and payment status for your child"}</p>
+        </div>
+        <FeeTableRead fees={fees} tr={tr} lang={lang as any} parentView />
+      </div>
+    );
   }
   if (!session) return <p>{lang==="ur" ? "براہ کرم پہلے فعال سیشن بنائیں/منتخب کریں۔" : "Create/select active session first."}</p>;
   const sp = await searchParams;
@@ -171,7 +179,7 @@ export default async function FeesPage({ searchParams }: { searchParams: Promise
   const unpaidEnrolls = enrolls.filter((en: any) => !isFullyPaid(en));
   const paidTotalAmount = paidEnrolls.reduce((sum: number, en: any) => sum + getAmounts(map.get(en.studentId) as any, en).paid, 0);
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 theme-fees">
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <h1 className="text-2xl font-bold text-emerald-900">{tr.fees}</h1>
         <div className="text-sm text-gray-600 flex gap-3 flex-wrap">
@@ -314,9 +322,43 @@ export default async function FeesPage({ searchParams }: { searchParams: Promise
   );
 }
 
-function FeeTableRead({ fees, tr, exempt = false, lang = "en" }: { fees: any[]; tr: any; exempt?: boolean; lang?: "en" | "ur" }) {
-  return <div className="bg-white rounded-2xl shadow-sm border border-emerald-100/80 overflow-auto">
+function FeeTableRead({ fees, tr, exempt = false, lang = "en", parentView = false }: { fees: any[]; tr: any; exempt?: boolean; lang?: "en" | "ur"; parentView?: boolean }) {
+  const cols = parentView ? 7 : 5;
+  return <div className="bg-white rounded-2xl shadow-sm border border-teal-100/80 overflow-auto">
     {exempt && <div className="px-4 pt-4"><span className="inline-flex px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-100 text-amber-800">{lang === "ur" ? "فیس معاف" : "Fee Exempt"}</span></div>}
-    <table className="w-full text-sm"><thead><tr><th className="p-3">{tr.month}/{tr.year}</th><th className="p-3">{lang === "ur" ? "واجب" : "Due"}</th><th className="p-3">{lang === "ur" ? "ادا شدہ" : "Paid"}</th><th className="p-3">{tr.status}</th><th className="p-3">{tr.paidDate}</th></tr></thead><tbody>{fees.map((f: any)=>{ const paidAmt = Number(f.paidAmount ?? 0) > 0 ? Number(f.paidAmount ?? 0) : (f.isPaid ? Number(f.amount||0) : 0); const dueAmt = Number(f.amount||0); const balance = Math.max(0, dueAmt - paidAmt); const full = f.isPaid || (dueAmt>0 && paidAmt>=dueAmt); const partial = paidAmt>0 && paidAmt<dueAmt; const status = exempt ? (lang === "ur" ? "فیس معاف" : "Exempt") : (full ? (f.isLate?tr.late:`${tr.paid} ✓`) : (partial ? (lang === "ur" ? "جزوی" : "Partial") : tr.unpaid)); return (<tr key={f.id}><td className="p-3 text-center">{f.month}/{f.year}</td><td className="p-3 text-center">Rs {dueAmt}</td><td className="p-3 text-center">Rs {paidAmt}{balance>0 ? <div className="text-[11px] text-amber-700">{lang === "ur" ? `باقی Rs ${balance}` : `Bal Rs ${balance}`}</div> : null}</td><td className="p-3 text-center">{status}</td><td className="p-3 text-center">{formatDateDMY(f.paidAt)}</td></tr>); })}{fees.length===0 && <tr><td colSpan={5} className="p-4 text-center text-gray-500">{tr.noFeeRecords}</td></tr>}</tbody></table>
+    <table className="w-full text-sm">
+      <thead><tr>
+        {parentView && <th className="p-3 text-left">{lang === "ur" ? "سیشن" : "Session"}</th>}
+        <th className="p-3 text-center">{tr.month}/{tr.year}</th>
+        <th className="p-3 text-center">{lang === "ur" ? "واجب" : "Due"}</th>
+        <th className="p-3 text-center">{lang === "ur" ? "ادا شدہ" : "Paid"}</th>
+        <th className="p-3 text-center">{tr.status}</th>
+        <th className="p-3 text-center">{tr.paidDate}</th>
+        {parentView && <th className="p-3 text-center">{lang === "ur" ? "رسید" : "Receipt"}</th>}
+      </tr></thead>
+      <tbody>
+        {fees.map((f: any) => {
+          const paidAmt = Number(f.paidAmount ?? 0) > 0 ? Number(f.paidAmount ?? 0) : (f.isPaid ? Number(f.amount||0) : 0);
+          const dueAmt = Number(f.amount||0);
+          const balance = Math.max(0, dueAmt - paidAmt);
+          const full = f.isPaid || (dueAmt>0 && paidAmt>=dueAmt);
+          const partial = paidAmt>0 && paidAmt<dueAmt;
+          const status = exempt ? (lang === "ur" ? "فیس معاف" : "Exempt") : (full ? (f.isLate?tr.late:`${tr.paid} ✓`) : (partial ? (lang === "ur" ? "جزوی" : "Partial") : tr.unpaid));
+          const statusBadge = <span className={`inline-flex px-2.5 py-1 rounded-full text-xs font-semibold ${full ? (f.isLate?"bg-amber-100 text-amber-800":"bg-emerald-100 text-emerald-800") : (partial?"bg-amber-100 text-amber-800":"bg-red-100 text-red-800")}`}>{status}</span>;
+          return (
+            <tr key={f.id} className="border-t">
+              {parentView && <td className="p-3">{f.session?.name || "-"}</td>}
+              <td className="p-3 text-center">{f.month}/{f.year}</td>
+              <td className="p-3 text-center">Rs {dueAmt}</td>
+              <td className="p-3 text-center">Rs {paidAmt}{balance>0 ? <div className="text-[11px] text-amber-700">{lang === "ur" ? `باقی Rs ${balance}` : `Bal Rs ${balance}`}</div> : null}</td>
+              <td className="p-3 text-center">{statusBadge}</td>
+              <td className="p-3 text-center">{formatDateDMY(f.paidAt)}</td>
+              {parentView && <td className="p-3 text-center">{f.id && full ? <Link href={`/fees/receipt/${f.id}`} className="inline-flex px-3 py-1.5 rounded-lg border border-teal-200 bg-teal-50 text-teal-800 font-medium hover:bg-teal-100">{lang === "ur" ? "رسید" : "Receipt"}</Link> : <span className="text-gray-400">-</span>}</td>}
+            </tr>
+          );
+        })}
+        {fees.length===0 && <tr><td colSpan={cols} className="p-4 text-center text-gray-500">{tr.noFeeRecords}</td></tr>}
+      </tbody>
+    </table>
   </div>;
 }

@@ -127,15 +127,29 @@ thead th {
   padding-top: 0.9rem !important;
   padding-bottom: 0.9rem !important;
 }
-:not(.print-area) thead th * {
-  color: inherit;
-}
-:not(.print-area) tbody td {
-  border-color: #d6e2da;
-}
-:not(.print-area) tbody tr:hover td {
-  background-color: #f7fbf8;
-}
+:not(.print-area) thead th * { color: inherit; }
+:not(.print-area) tbody td { border-color: #d6e2da; }
+:not(.print-area) tbody tr:nth-child(even) td { background-color: rgba(248, 252, 249, 0.75); }
+:not(.print-area) tbody tr:hover td { background-color: #ecf7f0; }
+
+/* Per-module table/header themes */
+:not(.print-area) .theme-students thead th { background: linear-gradient(180deg, #047857, #065f46) !important; border-color: #064e3b !important; }
+:not(.print-area) .theme-fees thead th { background: linear-gradient(180deg, #0f766e, #115e59) !important; border-color: #134e4a !important; }
+:not(.print-area) .theme-results thead th { background: linear-gradient(180deg, #1d4ed8, #1e40af) !important; border-color: #1e3a8a !important; }
+:not(.print-area) .theme-exams thead th { background: linear-gradient(180deg, #6d28d9, #5b21b6) !important; border-color: #4c1d95 !important; }
+:not(.print-area) .theme-certs thead th { background: linear-gradient(180deg, #b45309, #92400e) !important; border-color: #78350f !important; }
+:not(.print-area) .theme-sessions thead th { background: linear-gradient(180deg, #0369a1, #075985) !important; border-color: #0c4a6e !important; }
+:not(.print-area) .theme-settings thead th { background: linear-gradient(180deg, #334155, #1e293b) !important; border-color: #0f172a !important; }
+:not(.print-area) .theme-dashboard thead th { background: linear-gradient(180deg, #15803d, #166534) !important; border-color: #14532d !important; }
+:not(.print-area) .theme-parent thead th { background: linear-gradient(180deg, #0f766e, #065f46) !important; border-color: #064e3b !important; }
+.theme-students tbody tr:hover td { background-color: #ecfdf5; }
+.theme-fees tbody tr:hover td { background-color: #f0fdfa; }
+.theme-results tbody tr:hover td { background-color: #eff6ff; }
+.theme-exams tbody tr:hover td { background-color: #f5f3ff; }
+.theme-certs tbody tr:hover td { background-color: #fffbeb; }
+.theme-sessions tbody tr:hover td { background-color: #f0f9ff; }
+.theme-settings tbody tr:hover td { background-color: #f8fafc; }
+.theme-parent tbody tr:hover td { background-color: #ecfeff; }
 .print-area thead th {
   background: #f3f4f6;
   color: #111827;
