@@ -201,6 +201,9 @@ export default async function ResultsPage({ searchParams }: { searchParams: Prom
         </button>
       </form>
       {exam && <>
+        <div className="flex items-center justify-end no-print">
+          <Link href={`/results/exam-report?examId=${exam.id}`} className="text-sm bg-emerald-700 hover:bg-emerald-800 text-white px-4 py-2 rounded-lg font-medium">{ur ? "امتحان رپورٹ (میرٹ/پاس فیل) پرنٹ" : "Print Exam Report (Merit/Pass-Fail)"}</Link>
+        </div>
         <div className="bg-white rounded-xl shadow p-4 overflow-auto">
           <h2 className="font-semibold">{ur ? "تحریری نمبر درج کریں اور نتیجہ محفوظ کریں" : "Enter Written Marks & Save Results"}</h2>
           <p className="text-xs text-gray-500 mt-1 mb-3">{ur ? "ہر طالب علم کے تحریری نمبر درج کریں؛ زبانی نمبر زبانی امتحان سے آتے ہیں۔ مجموعی نتیجہ، گریڈ، پاس/فیل اور پوزیشنیں خودکار محفوظ ہوں گی۔" : "Enter written marks per student; oral marks come from Oral Conduct. Combined result, grade, pass/fail and positions are calculated and saved."}</p>
