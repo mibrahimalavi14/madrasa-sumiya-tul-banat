@@ -108,7 +108,7 @@ export default async function StudentsPage({ searchParams }: { searchParams: Pro
         <div className="flex gap-2 no-print flex-wrap">
           <Link href="/students/new" className="bg-white text-emerald-800 px-4 py-2.5 rounded-xl font-semibold shadow-sm hover:bg-emerald-50">{tr.newAdmission}</Link>
           <Link href="/students/admission-form" className="bg-amber-500 text-white px-4 py-2.5 rounded-xl font-semibold shadow-sm hover:bg-amber-600">{tr.blankAdmissionForm}</Link>
-          <Link href="/students/slips" className="bg-teal-500 text-white px-4 py-2.5 rounded-xl font-semibold shadow-sm hover:bg-teal-600">{lang==="ur" ? "امتحانی سلپس" : "Exam Slips"}</Link>
+          <Link href="/students/slips" className="bg-teal-500 text-white px-4 py-2.5 rounded-xl font-semibold shadow-sm hover:bg-teal-600">{lang==="ur" ? "رول نمبر فہرست" : "Roll No List"}</Link>
           <a href="/api/export/students" className="bg-emerald-900/40 border border-emerald-200/30 text-white px-4 py-2.5 rounded-xl font-semibold shadow-sm hover:bg-emerald-900/60">{lang==="ur" ? "CSV ایکسپورٹ" : "Export CSV"}</a>
         </div>
       </div>

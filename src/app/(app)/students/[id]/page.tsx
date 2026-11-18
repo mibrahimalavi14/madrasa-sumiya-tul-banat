@@ -55,8 +55,8 @@ export default async function StudentProfile({ params }: { params: Promise<{ id:
           <div className="text-xs text-amber-700 mt-0.5">Admission Form</div>
         </Link>
         <Link href={`/students/${id}/slip`} className="bg-white rounded-2xl shadow-sm border border-teal-200 p-4 sm:p-5 hover:shadow-md hover:bg-teal-50/40 transition block">
-          <div className="text-lg font-bold text-teal-800">Exam Slip</div>
-          <div className="text-xs text-teal-700 mt-0.5">Name & Roll No / امتحانی سلپ</div>
+          <div className="text-lg font-bold text-teal-800">Roll No</div>
+          <div className="text-xs text-teal-700 mt-0.5">Name & Roll No / نام اور رول نمبر</div>
         </Link>
       </div>
 
