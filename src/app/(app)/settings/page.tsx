@@ -8,6 +8,7 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import Link from "next/link";
 import { logAudit } from "@/lib/audit";
+import { getNotificationConfig } from "@/lib/notifications";
 
 async function saveFee(formData: FormData) {
   "use server";
@@ -61,6 +62,7 @@ export default async function SettingsPage() {
     session ? prisma.certificate.count({ where: { sessionId: session.id } }) : Promise.resolve(0),
     prisma.user.count(),
   ]);
+  const notifyCfg = getNotificationConfig();
 
   return (
     <div className="space-y-6 theme-settings">
@@ -213,22 +215,64 @@ export default async function SettingsPage() {
         <div className="bg-white rounded-2xl shadow-sm border border-emerald-100/80 p-5">
           <h2 className="font-semibold mb-2 text-emerald-900">{ur ? "SMS / WhatsApp اطلاعات" : "SMS / WhatsApp Notifications"}</h2>
           <div className="text-sm text-gray-700 space-y-2">
-            <p>{ur ? "خودکار SMS/WhatsApp الرٹس (فیس یاددہانی، نتائج وغیرہ) کے لیے بیرونی سروس فراہم کنندہ (Provider) کی API keys اور sender configuration درکار ہے۔" : "Automated SMS/WhatsApp alerts (fee reminders, results, etc.) require an external provider with API keys and sender configuration."}</p>
-            <div className="rounded-lg border border-amber-200 bg-amber-50 text-amber-900 p-3 text-xs">
-              <b>{ur ? "حیثیت:" : "Status:"}</b> {ur ? "کنفیگریشن دستیاب نہیں — Provider تفصیلات (API key, sender ID/number, templates) فراہم کریں تو انضمام مکمل کیا جا سکتا ہے۔" : "Not configured — provide provider details (API key, sender ID/number, templates) to enable integration."}
+            <p>{ur ? "خودکار SMS/WhatsApp الرٹس کے لیے بیرونی provider درکار ہے۔ Code foundation تیار ہے؛ provider credentials/config ملنے پر ارسال فعال کیا جا سکتا ہے۔" : "Automated SMS/WhatsApp alerts require an external provider. Code foundation is ready; sending can be enabled once provider credentials/config are provided."}</p>
+            <div className={`rounded-lg border p-3 text-xs ${notifyCfg.configured ? "border-emerald-200 bg-emerald-50 text-emerald-900" : "border-amber-200 bg-amber-50 text-amber-900"}`}>
+              <div><b>{ur ? "حیثیت:" : "Status:"}</b> {notifyCfg.configured ? (ur ? "Config موجود ہے (provider implementation مزید درکار ہو سکتی ہے)" : "Config present (provider implementation may still be required)") : (ur ? "کنفیگریشن دستیاب نہیں" : "Not configured")}</div>
+              <div className="mt-1"><b>{ur ? "Provider:" : "Provider:"}</b> {notifyCfg.provider || (ur ? "سیٹ نہیں" : "not set")}</div>
+              {!notifyCfg.configured && notifyCfg.missing.length > 0 && (
+                <div className="mt-1"><b>{ur ? "درکار env vars:" : "Missing env vars:"}</b> {notifyCfg.missing.join(", ")}</div>
+              )}
+            </div>
+            <div className="rounded-lg border border-gray-200 bg-gray-50 p-3 text-xs text-gray-700">
+              <div className="font-semibold text-gray-900 mb-1">{ur ? "مجھے آپ سے کیا چاہیے:" : "What I need from you:"}</div>
+              <ul className="list-disc pl-5 space-y-0.5">
+                <li>{ur ? "Provider کا نام (Twilio / Meta WhatsApp Cloud API / دیگر)" : "Provider choice (Twilio / Meta WhatsApp Cloud API / other)"}</li>
+                <li>{ur ? "API key/token اور sender/from (SMS/WhatsApp)" : "API key/token and sender/from (SMS/WhatsApp)"}</li>
+                <li>{ur ? "کن مواقع پر پیغام بھیجنا ہے + templates/متن + test نمبر" : "Which events to notify + templates/text + test number"}</li>
+              </ul>
+              <div className="mt-1 text-gray-600">{ur ? "تفصیل: docs/REMAINING-SETUP.md (repo)" : "Details: docs/REMAINING-SETUP.md (repo)"}</div>
             </div>
           </div>
         </div>
         <div className="bg-white rounded-2xl shadow-sm border border-emerald-100/80 p-5">
           <h2 className="font-semibold mb-2 text-emerald-900">{ur ? "بیک اپ اور ایکسپورٹ" : "Backup & Export"}</h2>
           <div className="text-sm text-gray-700 space-y-2">
-            <p>{ur ? "ڈیٹا کی حفاظت کے لیے باقاعدگی سے CSV ایکسپورٹ اور ڈیٹابیس بیک اپ استعمال کریں۔" : "Use regular CSV exports and database backups to keep data safe."}</p>
-            <ul className="list-disc pl-5 space-y-1 text-xs text-gray-600">
-              <li>{ur ? "طلبہ/فیس/نتائج/سرٹیفکیٹس کے CSV ایکسپورٹ متعلقہ صفحات پر دستیاب ہیں۔" : "CSV exports are available on Students/Fees/Results/Certificates pages."}</li>
-              <li>{ur ? "ڈیٹابیس Supabase پر ہے — Supabase dashboard سے backups/PITR کنفیگر کریں۔" : "Database is on Supabase — configure backups/PITR from Supabase dashboard."}</li>
-              <li>{ur ? "آڈٹ لاگ میں اہم کارروائیوں کا ریکارڈ محفوظ ہوتا ہے۔" : "Audit log records key system actions."}</li>
-            </ul>
-            <Link href="/settings/audit" className="inline-flex mt-1 px-3 py-2 rounded-lg bg-slate-50 text-slate-800 border border-slate-200 hover:bg-slate-100 text-sm">{ur ? "آڈٹ لاگ دیکھیں" : "View Audit Log"}</Link>
+            <p>{ur ? "ڈیٹا کی حفاظت کے لیے CSV exports اور Supabase backups/PITR دونوں استعمال کریں (DB: Supabase ap-southeast-1)." : "Use both CSV exports and Supabase backups/PITR for data safety (DB: Supabase ap-southeast-1)."}</p>
+            <div className="rounded-lg border border-gray-200 bg-gray-50 p-3 text-xs">
+              <div className="font-semibold text-gray-900 mb-1">{ur ? "CSV ایکسپورٹس (app میں دستیاب):" : "CSV exports (available in app):"}</div>
+              <ul className="list-disc pl-5 space-y-0.5">
+                <li><Link className="text-emerald-700 underline" href="/api/export/students">{ur ? "طلبہ" : "Students"}</Link>, <Link className="text-emerald-700 underline" href="/api/export/fees">{ur ? "فیس" : "Fees"}</Link>, <Link className="text-emerald-700 underline" href="/api/export/results">{ur ? "نتائج" : "Results"}</Link>, <Link className="text-emerald-700 underline" href="/api/export/certificates">{ur ? "سرٹیفکیٹس" : "Certificates"}</Link></li>
+              </ul>
+            </div>
+            <div className="rounded-lg border border-blue-200 bg-blue-50 text-blue-900 p-3 text-xs">
+              <div className="font-semibold mb-1">{ur ? "Supabase پر آپ کو کیا کرنا ہوگا:" : "What you need to do in Supabase:"}</div>
+              <ul className="list-disc pl-5 space-y-0.5">
+                <li>{ur ? "Supabase Dashboard → Project → Database/Backups کھولیں" : "Open Supabase Dashboard → Project → Database/Backups"}</li>
+                <li>{ur ? "Automated backups enable/verify کریں" : "Enable/verify automated backups"}</li>
+                <li>{ur ? "اگر plan میں ہو تو PITR enable کریں (retention منتخب کریں)" : "Enable PITR if available (choose retention)"}</li>
+              </ul>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <Link href="/settings/audit" className="inline-flex px-3 py-2 rounded-lg bg-slate-50 text-slate-800 border border-slate-200 hover:bg-slate-100 text-sm">{ur ? "آڈٹ لاگ دیکھیں" : "View Audit Log"}</Link>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="bg-white rounded-2xl shadow-sm border border-emerald-100/80 p-5">
+        <h2 className="font-semibold mb-2 text-emerald-900">{ur ? "مزید بقیہ کام (آپ کے input/design درکار)" : "Additional Remaining Items (need your input/design)"}</h2>
+        <div className="grid md:grid-cols-3 gap-3 text-sm">
+          <div className="rounded-xl border border-emerald-100 p-4 bg-emerald-50/20">
+            <div className="font-semibold text-emerald-900 mb-1">{ur ? "RBAC (اضافی roles)" : "RBAC (extra roles)"}</div>
+            <p className="text-gray-700 text-xs leading-5">{ur ? "بتائیں کن roles کی ضرورت ہے (Teacher/Accountant/Viewer وغیرہ) اور ہر role کو کن modules پر View/Create/Edit/Print/Export کی اجازت ہوگی۔ تصدیق کے بعد implement کروں گا۔" : "Tell me which roles you need (Teacher/Accountant/Viewer etc.) and each role's View/Create/Edit/Print/Export permissions per module. I can implement after confirmation."}</p>
+          </div>
+          <div className="rounded-xl border border-emerald-100 p-4 bg-emerald-50/20">
+            <div className="font-semibold text-emerald-900 mb-1">{ur ? "Certificate Template / Custom Reports" : "Certificate Template / Custom Reports"}</div>
+            <p className="text-gray-700 text-xs leading-5">{ur ? "اگر نیا certificate design/editor یا مخصوص report format چاہیے تو sample/layout/fields بھیجیں۔ موجودہ data کے مطابق custom print/report بنا سکتا ہوں۔" : "If you want a new certificate design/editor or specific report format, share sample/layout/fields. I can build custom print/reports from existing data."}</p>
+          </div>
+          <div className="rounded-xl border border-emerald-100 p-4 bg-emerald-50/20">
+            <div className="font-semibold text-emerald-900 mb-1">{ur ? "Production QA" : "Production QA"}</div>
+            <p className="text-gray-700 text-xs leading-5">{ur ? "Deploy کے بعد live data پر final testing آپ کی طرف سے ضروری ہے۔ مکمل checklist docs/REMAINING-SETUP.md میں شامل ہے؛ مسئلہ ہو تو page + steps + screenshot/error بھیجیں۔" : "After deploy, final testing on live data is required from your side. Full checklist is in docs/REMAINING-SETUP.md; if issues appear, send page + steps + screenshot/error."}</p>
           </div>
         </div>
       </div>
