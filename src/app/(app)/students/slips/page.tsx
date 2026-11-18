@@ -36,63 +36,61 @@ export default async function StudentRollListPage() {
   });
 
   return (
-    <div className="bg-white min-h-screen p-4 md:p-6 print-area">
-      <style>{`@media print { @page { size: A4 portrait; margin: 10mm; } .no-print { display:none !important; } body { background: white !important; } table { font-size: 13px; } th, td { padding: 8px 10px !important; } }`}</style>
-      <div className="no-print max-w-5xl mx-auto mb-4 flex items-center justify-between gap-3 flex-wrap">
+    <div className="bg-white min-h-screen p-2 md:p-4 print-area">
+      <style>{`@media print { @page { size: A4 portrait; margin: 6mm; } .no-print { display:none !important; } body { background: white !important; } .roll-list-wrap { border-width: 1.5px !important; padding: 6px !important; } .roll-list-header { padding-bottom: 4px !important; margin-bottom: 6px !important; } .roll-list-table { font-size: 10.5px !important; } .roll-list-table th, .roll-list-table td { padding: 2px 5px !important; line-height: 1.2 !important; } .roll-list-note { margin-top: 4px !important; font-size: 9px !important; } }`}</style>
+      <div className="no-print max-w-5xl mx-auto mb-3 flex items-center justify-between gap-3 flex-wrap">
         <Link href="/students" className="text-sm text-emerald-800 hover:text-emerald-900 font-medium">← Back to Students / واپس</Link>
         <div className="text-sm text-gray-600">Class Display List / کلاس فہرست</div>
         <PrintButton label="Print List / فہرست پرنٹ کریں" className="bg-emerald-800 text-white px-4 py-2 rounded-lg font-medium" />
       </div>
 
-      <div className="max-w-5xl mx-auto border-2 border-emerald-800 rounded-xl p-4 md:p-5">
-        <div className="flex items-center justify-between gap-4 border-b-2 border-emerald-200 pb-3 mb-4 flex-wrap">
-          <div className="flex items-center gap-3">
-            <Logo size={56} />
+      <div className="roll-list-wrap max-w-5xl mx-auto border-2 border-emerald-800 rounded-lg p-3 md:p-4">
+        <div className="roll-list-header flex items-center justify-between gap-3 border-b-2 border-emerald-200 pb-2 mb-2 flex-wrap">
+          <div className="flex items-center gap-2">
+            <div className="shrink-0 print:scale-90 origin-left"><Logo size={44} /></div>
             <div>
-              <div className="text-xl md:text-2xl font-extrabold text-emerald-900 leading-tight">Madrasa Sumiya-tul-Banat</div>
-              <div className="font-urdu text-lg text-emerald-800">مدرسہ سمیّة البنات</div>
-              <div className="text-sm text-gray-700 mt-1 font-semibold">Student Roll Number List / طلبہ کی رول نمبر فہرست (کلاس میں لگانے کے لیے)</div>
+              <div className="text-lg md:text-xl font-extrabold text-emerald-900 leading-tight">Madrasa Sumiya-tul-Banat <span className="font-urdu text-base md:text-lg text-emerald-800 font-bold">/ مدرسہ سمیّة البنات</span></div>
+              <div className="text-xs md:text-sm text-gray-700 font-semibold">Student Roll Number List / طلبہ کی رول نمبر فہرست (کلاس میں لگانے کے لیے)</div>
             </div>
           </div>
-          <div className="text-sm bg-emerald-50 border border-emerald-200 rounded-lg px-4 py-3 min-w-[200px]">
-            <div><span className="text-gray-600">Session / سیشن:</span> <span className="font-bold text-emerald-900">{session.name}</span></div>
-            <div className="mt-1"><span className="text-gray-600">Total Students / کل طلبہ:</span> <span className="font-semibold">{sorted.length}</span></div>
+          <div className="text-xs bg-emerald-50 border border-emerald-200 rounded px-3 py-2">
+            <div><span className="text-gray-600">Session / سیشن:</span> <span className="font-bold text-emerald-900">{session.name}</span> <span className="text-gray-500">|</span> <span className="text-gray-600">Total / کل:</span> <span className="font-semibold">{sorted.length}</span></div>
           </div>
         </div>
 
         <div className="overflow-auto">
-          <table className="w-full text-sm border border-emerald-200">
+          <table className="roll-list-table w-full text-[12px] border border-emerald-200">
             <thead>
               <tr className="bg-emerald-800 text-white">
-                <th className="p-3 text-center border border-emerald-900 w-16">#</th>
-                <th className="p-3 text-center border border-emerald-900 w-28">Roll No<br /><span className="font-urdu text-xs font-normal">رول نمبر</span></th>
-                <th className="p-3 text-left border border-emerald-900">Student Name<br /><span className="font-urdu text-xs font-normal">طالب علم کا نام</span></th>
-                <th className="p-3 text-left border border-emerald-900">Class<br /><span className="font-urdu text-xs font-normal">جماعت</span></th>
-                <th className="p-3 text-center border border-emerald-900 w-32">Admission No<br /><span className="font-urdu text-xs font-normal">داخلہ نمبر</span></th>
+                <th className="py-1.5 px-2 text-center border border-emerald-900 w-10">#</th>
+                <th className="py-1.5 px-2 text-center border border-emerald-900 w-20">Roll No<br /><span className="font-urdu text-[10px] font-normal">رول نمبر</span></th>
+                <th className="py-1.5 px-2 text-left border border-emerald-900">Student Name / <span className="font-urdu text-[10px] font-normal">نام</span></th>
+                <th className="py-1.5 px-2 text-left border border-emerald-900 w-28">Class / <span className="font-urdu text-[10px] font-normal">جماعت</span></th>
+                <th className="py-1.5 px-2 text-center border border-emerald-900 w-28">Admission No<br /><span className="font-urdu text-[10px] font-normal">داخلہ نمبر</span></th>
               </tr>
             </thead>
             <tbody>
               {sorted.map((en, idx) => (
-                <tr key={en.student.id} className={idx % 2 === 0 ? "bg-white" : "bg-emerald-50/30"}>
-                  <td className="p-3 text-center border border-emerald-100 font-medium text-gray-700">{idx + 1}</td>
-                  <td className="p-3 text-center border border-emerald-100 font-extrabold text-lg text-emerald-900">{en.rollNo || "-"}</td>
-                  <td className="p-3 border border-emerald-100 font-semibold text-gray-900">
-                    <div>{en.student.nameEn}</div>
-                    {en.student.nameUr ? <div className="font-urdu text-gray-700 text-base leading-snug">{en.student.nameUr}</div> : null}
+                <tr key={en.student.id} className={idx % 2 === 0 ? "bg-white" : "bg-emerald-50/20"}>
+                  <td className="py-1 px-2 text-center border border-emerald-100 text-gray-700">{idx + 1}</td>
+                  <td className="py-1 px-2 text-center border border-emerald-100 font-extrabold text-[15px] text-emerald-900 leading-none">{en.rollNo || "-"}</td>
+                  <td className="py-1 px-2 border border-emerald-100 text-gray-900">
+                    <span className="font-semibold">{en.student.nameEn}</span>
+                    {en.student.nameUr ? <span className="font-urdu text-gray-700"> / {en.student.nameUr}</span> : null}
                   </td>
-                  <td className="p-3 border border-emerald-100">{en.student.admissionClass || "-"}</td>
-                  <td className="p-3 text-center border border-emerald-100">{en.student.admissionNo}</td>
+                  <td className="py-1 px-2 border border-emerald-100">{en.student.admissionClass || "-"}</td>
+                  <td className="py-1 px-2 text-center border border-emerald-100">{en.student.admissionNo}</td>
                 </tr>
               ))}
               {sorted.length === 0 && (
-                <tr><td colSpan={5} className="p-6 text-center text-gray-500 border border-emerald-100">No enrolled students found. / کوئی طالب علم نہیں ملا۔</td></tr>
+                <tr><td colSpan={5} className="p-4 text-center text-gray-500 border border-emerald-100">No enrolled students found. / کوئی طالب علم نہیں ملا۔</td></tr>
               )}
             </tbody>
           </table>
         </div>
 
-        <div className="mt-3 text-xs text-gray-600 flex items-center justify-between gap-3 flex-wrap">
-          <div>Note: Students can check their Name and Roll Number from this list. / نوٹ: طلبہ اس فہرست سے اپنا نام اور رول نمبر دیکھ سکتے ہیں۔</div>
+        <div className="roll-list-note mt-2 text-[10px] text-gray-600 flex items-center justify-between gap-3 flex-wrap">
+          <div>Students can check their Name & Roll No. / طلبہ اپنا نام اور رول نمبر دیکھ سکتے ہیں۔</div>
           <div className="font-urdu" dir="rtl">مدرسہ سمیّة البنات</div>
         </div>
       </div>
