@@ -21,7 +21,8 @@ export default async function StudentProfile({ params }: { params: Promise<{ id:
   });
   if (!student) notFound();
   const siblings = [...student.siblingsA.map(s=>s.studentB), ...student.siblingsB.map(s=>s.studentA)];
-  const isAdmin = user?.role === "ADMIN" || user?.role === "ACCOUNTANT";
+  const canViewStaff = user?.role === "ADMIN" || user?.role === "ACCOUNTANT";
+  const canEdit = user?.role === "ADMIN";
   const currentSession = student.enrollments.find(e=>e.session.isCurrent)?.session?.name || student.enrollments[0]?.session?.name;
   const Info = ({ label, value }: { label: string; value: React.ReactNode }) => (
     <div className="bg-gray-50 border border-gray-100 rounded-xl p-3">
@@ -30,22 +31,22 @@ export default async function StudentProfile({ params }: { params: Promise<{ id:
     </div>
   );
   return (
-    <div className={`space-y-5 ${isAdmin ? "theme-students" : "theme-parent"}`}>
-      {isAdmin ? (
+    <div className={`space-y-5 ${canViewStaff ? "theme-students" : "theme-parent"}`}>
+      {canViewStaff ? (
         <Link href="/students" className="inline-flex items-center gap-2 text-sm text-emerald-800 hover:text-emerald-900 font-medium no-print">← Back / واپس</Link>
       ) : (
         <Link href="/dashboard" className="inline-flex items-center gap-2 text-sm text-teal-800 hover:text-teal-900 font-medium no-print">← {user?.role === "PARENT" ? "Dashboard / ڈیش بورڈ" : "Back / واپس"}</Link>
       )}
-      <div className={`rounded-2xl p-5 shadow-sm text-white ${isAdmin ? "bg-gradient-to-r from-emerald-800 to-emerald-700" : "bg-gradient-to-r from-teal-700 to-cyan-700"}`}>
-        <h1 className="text-2xl font-bold">{isAdmin ? "Student Profile" : "My Profile / میری پروفائل"}</h1>
-        <p className={`${isAdmin ? "text-emerald-50" : "text-teal-50"} mt-1`}>{student.admissionNo} — {student.nameEn} {student.nameUr ? <span className="font-urdu">/ {student.nameUr}</span> : ""}</p>
+      <div className={`rounded-2xl p-5 shadow-sm text-white ${canViewStaff ? "bg-gradient-to-r from-emerald-800 to-emerald-700" : "bg-gradient-to-r from-teal-700 to-cyan-700"}`}>
+        <h1 className="text-2xl font-bold">{canViewStaff ? "Student Profile" : "My Profile / میری پروفائل"}</h1>
+        <p className={`${canViewStaff ? "text-emerald-50" : "text-teal-50"} mt-1`}>{student.admissionNo} — {student.nameEn} {student.nameUr ? <span className="font-urdu">/ {student.nameUr}</span> : ""}</p>
       </div>
 
-      <div className={`grid gap-3 no-print ${isAdmin ? "grid-cols-4" : "grid-cols-3"}`}>
+      <div className={`grid gap-3 no-print ${canEdit ? "grid-cols-4" : (canViewStaff ? "grid-cols-3" : "grid-cols-3")}`}>
         <div className="bg-white rounded-2xl shadow-sm border border-emerald-200 p-4 sm:p-5">
           <div className="text-lg font-bold text-emerald-900">Profile</div>
         </div>
-        {isAdmin && (
+        {canEdit && (
           <Link href={`/students/${id}/edit`} className="bg-white rounded-2xl shadow-sm border border-blue-200 p-4 sm:p-5 hover:shadow-md hover:bg-blue-50/40 transition block">
             <div className="text-lg font-bold text-blue-800">Edit</div>
           </Link>
@@ -98,7 +99,7 @@ export default async function StudentProfile({ params }: { params: Promise<{ id:
             <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-5">
               <h2 className="font-semibold text-gray-800 mb-1">Siblings</h2>
               <p className="text-sm text-gray-500">No siblings added.</p>
-              {isAdmin && <p className="text-xs text-gray-400 mt-2">To add siblings, use the Edit Student page.</p>}
+              {canEdit && <p className="text-xs text-gray-400 mt-2">To add siblings, use the Edit Student page.</p>}
             </div>
           )}
         </div>

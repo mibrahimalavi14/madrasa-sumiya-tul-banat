@@ -11,7 +11,7 @@ import { logAudit } from "@/lib/audit";
 
 async function createCert(formData: FormData) {
   "use server";
-  const user = await getAuthUser(); if (user?.role !== "ADMIN" && user?.role !== "ACCOUNTANT") throw new Error("UNAUTHORIZED");
+  const user = await getAuthUser(); if (user?.role !== "ADMIN") throw new Error("UNAUTHORIZED");
   const session = await getCurrentSession(); if (!session || session.status !== "ACTIVE") throw new Error("SESSION_NOT_ACTIVE");
   const studentId = String(formData.get("studentId"));
   const type = String(formData.get("type")) as "ANNUAL" | "NAZRA_COMPLETION";
@@ -47,6 +47,7 @@ export default async function CertificatesPage({ searchParams }: { searchParams:
     );
   }
   if (!session) return <p>{lang==="ur" ? "براہ کرم پہلے فعال سیشن بنائیں/منتخب کریں۔" : "Create/select active session first."}</p>;
+  const canEditCertificates = user?.role === "ADMIN";
 
   const where: any = { sessionId: session.id };
   if (typeFilter) where.type = typeFilter;
@@ -88,18 +89,22 @@ export default async function CertificatesPage({ searchParams }: { searchParams:
       </div>
 
       <div className="bg-white rounded-2xl shadow-sm border border-amber-100 p-4 space-y-4">
-        <div>
-          <h2 className="font-semibold mb-2">{tr.issueCertificate}</h2>
-          <p className="text-xs text-gray-500 mb-2">{lang==="ur" ? "سالانہ امتحان پر سالانہ سرٹیفکیٹ اور ناظرہ مکمل ہونے پر ناظرہ تکمیل سرٹیفکیٹ جاری کریں۔" : "Issue annual certificates on annual examination and Nazra completion certificates when completed."}</p>
-          <form action={createCert} className="grid md:grid-cols-4 gap-3 items-end">
-            <div><label className="text-sm">{tr.student}</label><select name="studentId" className="w-full border rounded-lg px-3 py-2.5">{enrolls.map(e=><option key={e.studentId} value={e.studentId}>{e.student.admissionNo} - {e.student.nameEn}</option>)}</select></div>
-            <div><label className="text-sm">{tr.type}</label><select name="type" className="w-full border rounded-lg px-3 py-2.5"><option value="ANNUAL">{tr.annual}</option><option value="NAZRA_COMPLETION">{tr.nazraCompletion}</option></select></div>
-            <div><label className="text-sm">{tr.detailsOptional}</label><input name="details" className="w-full border rounded-lg px-3 py-2.5"/></div>
-            <div><button className="bg-amber-700 hover:bg-amber-800 text-white px-4 py-2.5 rounded-lg font-medium">{tr.issue}</button></div>
-          </form>
-        </div>
+        {canEditCertificates ? (
+          <div>
+            <h2 className="font-semibold mb-2">{tr.issueCertificate}</h2>
+            <p className="text-xs text-gray-500 mb-2">{lang==="ur" ? "سالانہ امتحان پر سالانہ سرٹیفکیٹ اور ناظرہ مکمل ہونے پر ناظرہ تکمیل سرٹیفکیٹ جاری کریں۔" : "Issue annual certificates on annual examination and Nazra completion certificates when completed."}</p>
+            <form action={createCert} className="grid md:grid-cols-4 gap-3 items-end">
+              <div><label className="text-sm">{tr.student}</label><select name="studentId" className="w-full border rounded-lg px-3 py-2.5">{enrolls.map(e=><option key={e.studentId} value={e.studentId}>{e.student.admissionNo} - {e.student.nameEn}</option>)}</select></div>
+              <div><label className="text-sm">{tr.type}</label><select name="type" className="w-full border rounded-lg px-3 py-2.5"><option value="ANNUAL">{tr.annual}</option><option value="NAZRA_COMPLETION">{tr.nazraCompletion}</option></select></div>
+              <div><label className="text-sm">{tr.detailsOptional}</label><input name="details" className="w-full border rounded-lg px-3 py-2.5"/></div>
+              <div><button className="bg-amber-700 hover:bg-amber-800 text-white px-4 py-2.5 rounded-lg font-medium">{tr.issue}</button></div>
+            </form>
+          </div>
+        ) : (
+          <div className="text-sm text-blue-900 bg-blue-50 border border-blue-200 rounded-lg p-3">{lang==="ur" ? "سرٹیفکیٹ جاری کرنے کی اجازت صرف ایڈمن کو ہے۔ آپ سرٹیفکیٹس دیکھ/تلاش/پرنٹ/ایکسپورٹ کر سکتے ہیں۔" : "Issuing certificates is Admin-only. You can view, search, print, and export certificates."}</div>
+        )}
 
-        <form className="flex gap-2 flex-wrap items-end border-t border-amber-100 pt-4 no-print">
+        <form className={`flex gap-2 flex-wrap items-end ${canEditCertificates ? "border-t border-amber-100 pt-4" : ""} no-print`}>
           <div><label className="text-xs text-gray-600 block mb-1">{lang==="ur" ? "تلاش" : "Search"}</label><input name="q" defaultValue={q} placeholder={lang==="ur" ? "سیریل / داخلہ نمبر / نام" : "Serial / Admission / Name"} className="border border-amber-200 rounded-lg px-3 py-2 text-sm min-w-[220px]" /></div>
           <div><label className="text-xs text-gray-600 block mb-1">{tr.type}</label><select name="type" defaultValue={typeFilter} className="border border-amber-200 rounded-lg px-3 py-2 text-sm"><option value="">{lang==="ur" ? "تمام" : "All"}</option><option value="ANNUAL">{tr.annual}</option><option value="NAZRA_COMPLETION">{tr.nazraCompletion}</option></select></div>
           <button className="bg-gray-800 hover:bg-gray-900 text-white px-4 py-2 rounded-lg text-sm">{tr.search}</button>

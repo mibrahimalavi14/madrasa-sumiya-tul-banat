@@ -12,7 +12,7 @@ import { logAudit } from "@/lib/audit";
 async function createStudent(formData: FormData) {
   "use server";
   const user = await getAuthUser();
-  if (user?.role !== "ADMIN" && user?.role !== "ACCOUNTANT") redirect("/login");
+  if (user?.role !== "ADMIN") redirect("/login");
   const session = await getCurrentSession();
   if (!session || session.status !== "ACTIVE") redirect("/students/new?error=session");
   const count = await prisma.student.count();
@@ -104,7 +104,7 @@ async function createStudent(formData: FormData) {
 }
 
 export default async function NewStudent({ searchParams }: { searchParams?: Promise<{ error?: string }> }) {
-  const user = await getAuthUser(); if (user?.role !== "ADMIN" && user?.role !== "ACCOUNTANT") redirect("/dashboard");
+  const user = await getAuthUser(); if (user?.role !== "ADMIN") redirect("/dashboard");
   const session = await getCurrentSession(); if (!session) return <p>Create an active session first.</p>;
   const sp = (await searchParams) || {};
   const [all, prev] = await Promise.all([

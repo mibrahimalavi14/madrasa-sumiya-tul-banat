@@ -10,7 +10,7 @@ import { logAudit } from "@/lib/audit";
 
 async function saveWritten(formData: FormData) {
   "use server";
-  const user = await getAuthUser(); if (user?.role !== "ADMIN" && user?.role !== "ACCOUNTANT") throw new Error("UNAUTHORIZED");
+  const user = await getAuthUser(); if (user?.role !== "ADMIN") throw new Error("UNAUTHORIZED");
   const session = await getCurrentSession(); if (!session || session.status !== "ACTIVE") throw new Error("SESSION_NOT_ACTIVE");
   const examId = String(formData.get("examId")); const studentId = String(formData.get("studentId"));
   const writtenObtained = Number(formData.get("writtenObtained")||0); const writtenTotal = Number(formData.get("writtenTotal")||0);
@@ -63,6 +63,7 @@ export default async function ResultsPage({ searchParams }: { searchParams: Prom
     );
   }
   if (!session) return <p>{ur ? "براہ کرم پہلے فعال سیشن بنائیں/منتخب کریں۔" : "Create/select active session first."}</p>;
+  const canEditResults = user?.role === "ADMIN";
   const examsRaw = await prisma.exam.findMany({ where: { sessionId: session.id }, orderBy: { createdAt: "asc" } });
   const exams = [...examsRaw].sort((a, b) => ((a as any).stage ?? 99) - ((b as any).stage ?? 99) || a.createdAt.getTime() - b.createdAt.getTime());
   const examNameUr: Record<number, string> = { 1: "ابتدائی تحریری امتحان", 2: "ششماہی امتحان", 3: "سہ ماہی امتحان", 4: "سالانہ امتحان" };
@@ -214,7 +215,7 @@ export default async function ResultsPage({ searchParams }: { searchParams: Prom
         <div className="flex items-center justify-end no-print">
           <Link href={`/results/exam-report?examId=${exam.id}`} className="text-sm bg-emerald-700 hover:bg-emerald-800 text-white px-4 py-2 rounded-lg font-medium">{ur ? "امتحان رپورٹ (میرٹ/پاس فیل) پرنٹ" : "Print Exam Report (Merit/Pass-Fail)"}</Link>
         </div>
-        <div className="bg-white rounded-xl shadow p-4 overflow-auto">
+        {canEditResults && <div className="bg-white rounded-xl shadow p-4 overflow-auto">
           <h2 className="font-semibold">{ur ? "تحریری نمبر درج کریں اور نتیجہ محفوظ کریں" : "Enter Written Marks & Save Results"}</h2>
           <p className="text-xs text-gray-500 mt-1 mb-3">{ur ? "ہر طالب علم کے تحریری نمبر درج کریں؛ زبانی نمبر زبانی امتحان سے آتے ہیں۔ مجموعی نتیجہ، گریڈ، پاس/فیل اور پوزیشنیں خودکار محفوظ ہوں گی۔" : "Enter written marks per student; oral marks come from Oral Conduct. Combined result, grade, pass/fail and positions are calculated and saved."}</p>
           <table className="w-full text-sm">
@@ -256,7 +257,8 @@ export default async function ResultsPage({ searchParams }: { searchParams: Prom
               {exam.students.length === 0 && <tr><td colSpan={5} className="p-4 text-center text-gray-500">{ur ? "پہلے اس امتحان کے لیے طلبہ منتخب کریں۔" : "Select students for this exam first."}</td></tr>}
             </tbody>
           </table>
-        </div>
+        </div>}
+        {!canEditResults && <div className="bg-blue-50 border border-blue-200 text-blue-900 rounded-xl p-4 text-sm">{ur ? "تحریری نمبر درج کرنے/محفوظ کرنے کی اجازت صرف ایڈمن کو ہے۔ آپ نتائج صرف دیکھ/پرنٹ/ایکسپورٹ کر سکتے ہیں۔" : "Entering/saving written marks is Admin-only. You can view, print, and export results."}</div>}
         <div className="bg-white rounded-xl shadow p-4 overflow-auto">
           <h2 className={`font-semibold mt-0 mb-2 ${ur ? "font-urdu" : ""}`} dir={ur?"rtl":"ltr"}>{ur ? "تمام محفوظ نتائج" : "All Saved Results"} - {examDisplayName(exam)}</h2>
           <ResultsTable results={results} ur={ur} rollMap={Object.fromEntries(rollMap)} />

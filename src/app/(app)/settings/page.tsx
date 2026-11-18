@@ -295,7 +295,7 @@ export default async function SettingsPage() {
         <div className="grid md:grid-cols-3 gap-3 text-sm">
           <div className="rounded-xl border border-emerald-100 p-4 bg-emerald-50/20">
             <div className="font-semibold text-emerald-900 mb-1">{ur ? "RBAC (مزید roles)" : "RBAC (more roles)"}</div>
-            <p className="text-gray-700 text-xs leading-5">{ur ? "Accountant role شامل ہو گیا ہے (Dashboard, Students, Exams, Results, Certificates, Fees — Sessions/Settings/Audit Admin-only). اگر Teacher/Viewer وغیرہ یا permissions میں تبدیلی چاہیے تو بتائیں۔" : "Accountant role is added (Dashboard, Students, Exams, Results, Certificates, Fees — Sessions/Settings/Audit Admin-only). Tell me if you want Teacher/Viewer or different permissions."}</p>
+            <p className="text-gray-700 text-xs leading-5">{ur ? "Accountant role: Fees مکمل رسائی، باقی ماڈیولز (Students/Exams/Results/Certificates) صرف دیکھنے/پرنٹ/ایکسپورٹ کے لیے؛ Sessions/Settings/Audit صرف Admin۔ اگر Teacher/Viewer وغیرہ یا تبدیلی چاہیے تو بتائیں۔" : "Accountant role: full access to Fees, view/print/export only for Students/Exams/Results/Certificates; Sessions/Settings/Audit Admin-only. Tell me if you want Teacher/Viewer or different permissions."}</p>
           </div>
           <div className="rounded-xl border border-emerald-100 p-4 bg-emerald-50/20">
             <div className="font-semibold text-emerald-900 mb-1">{ur ? "Certificate Template / Custom Reports" : "Certificate Template / Custom Reports"}</div>

@@ -18,7 +18,7 @@ const STAGES = [
 
 async function createExam(formData: FormData) {
   "use server";
-  const user = await getAuthUser(); if (user?.role !== "ADMIN" && user?.role !== "ACCOUNTANT") throw new Error("UNAUTHORIZED");
+  const user = await getAuthUser(); if (user?.role !== "ADMIN") throw new Error("UNAUTHORIZED");
   const session = await getCurrentSession(); if (!session || session.status !== "ACTIVE") throw new Error("NO_SESSION");
   const stageNo = Number(formData.get("stage") || 0);
   const preset = STAGES.find(s => s.stage === stageNo);
@@ -45,7 +45,7 @@ async function createExam(formData: FormData) {
 
 async function selectStudentsForExam(formData: FormData) {
   "use server";
-  const user = await getAuthUser(); if (user?.role !== "ADMIN" && user?.role !== "ACCOUNTANT") throw new Error("UNAUTHORIZED");
+  const user = await getAuthUser(); if (user?.role !== "ADMIN") throw new Error("UNAUTHORIZED");
   const session = await getCurrentSession(); if (!session || session.status !== "ACTIVE") throw new Error("SESSION_NOT_ACTIVE");
   const examId = String(formData.get("examId"));
   const ids = formData.getAll("studentIds").map(String);
@@ -58,6 +58,7 @@ async function selectStudentsForExam(formData: FormData) {
 
 export default async function ExaminationPage() {
   const user = await getAuthUser(); if (user?.role !== "ADMIN" && user?.role !== "ACCOUNTANT") redirect("/dashboard");
+  const canEditExams = user?.role === "ADMIN";
   const lang = await getLang();
   const ur = lang === "ur";
   const session = await getCurrentSession();
@@ -69,7 +70,7 @@ export default async function ExaminationPage() {
   });
   const have = new Set(existingStages.map(e => e.stage));
   const missing = STAGES.filter(s => !have.has(s.stage));
-  if (missing.length && session.status === "ACTIVE") {
+  if (canEditExams && missing.length && session.status === "ACTIVE") {
     await prisma.$transaction(async (tx) => {
       for (const preset of missing) {
         const exam = await tx.exam.create({ data: {
@@ -161,19 +162,23 @@ export default async function ExaminationPage() {
                     <div className="text-xs text-gray-500 mt-0.5">{ur ? "مرحلہ" : "Stage"} {(e as any).stage ?? "-"} — {ur ? "مہینہ" : "Month"} {(e as any).stage===1?"First":(e as any).stage===2?"Fourth":(e as any).stage===3?"Eighth":(e as any).stage===4?"Twelfth":"-"}</div>
                   </div>
                 </div>
-                <form action={selectStudentsForExam}>
-                  <input type="hidden" name="examId" value={e.id} />
-                  <div className="grid md:grid-cols-3 gap-2 max-h-56 overflow-auto border rounded-lg p-3 mb-3">
-                    {enrollments.map(en => (
-                      <label key={en.id} className="text-sm flex items-center gap-2">
-                        <input type="checkbox" name="studentIds" value={en.studentId} defaultChecked={selectedSet.has(en.studentId)} />
-                        <span>{en.student.admissionNo} - {en.student.nameEn}</span>
-                      </label>
-                    ))}
-                    {enrollments.length === 0 && <div className="text-sm text-gray-500">{ur ? "کوئی طالب علم enrolled نہیں ہے۔" : "No enrolled students."}</div>}
-                  </div>
-                  <button className="bg-emerald-800 hover:bg-emerald-900 text-white px-4 py-2 rounded-lg">{ur ? "منتخب طلبہ محفوظ کریں" : "Save Selected Students"}</button>
-                </form>
+                {canEditExams ? (
+                  <form action={selectStudentsForExam}>
+                    <input type="hidden" name="examId" value={e.id} />
+                    <div className="grid md:grid-cols-3 gap-2 max-h-56 overflow-auto border rounded-lg p-3 mb-3">
+                      {enrollments.map(en => (
+                        <label key={en.id} className="text-sm flex items-center gap-2">
+                          <input type="checkbox" name="studentIds" value={en.studentId} defaultChecked={selectedSet.has(en.studentId)} />
+                          <span>{en.student.admissionNo} - {en.student.nameEn}</span>
+                        </label>
+                      ))}
+                      {enrollments.length === 0 && <div className="text-sm text-gray-500">{ur ? "کوئی طالب علم enrolled نہیں ہے۔" : "No enrolled students."}</div>}
+                    </div>
+                    <button className="bg-emerald-800 hover:bg-emerald-900 text-white px-4 py-2 rounded-lg">{ur ? "منتخب طلبہ محفوظ کریں" : "Save Selected Students"}</button>
+                  </form>
+                ) : (
+                  <div className="text-sm text-gray-600 bg-gray-50 border rounded-lg p-3">{ur ? `منتخب طلبہ: ${selectedSet.size} (صرف دیکھنے کی اجازت)` : `Selected students: ${selectedSet.size} (view only)`}</div>
+                )}
               </div>
             );
           })}
@@ -181,7 +186,7 @@ export default async function ExaminationPage() {
         </div>
       </div>
 
-      <div className="bg-white rounded-2xl shadow-sm border border-emerald-100 p-5">
+      {canEditExams && <div className="bg-white rounded-2xl shadow-sm border border-emerald-100 p-5">
         <h2 className="font-semibold mb-2">{ur ? "امتحان بنائیں (مرحلہ وار)" : "Create Exam (by Stage)"}</h2>
         <form action={createExam} className="grid md:grid-cols-5 gap-4 items-end">
           <div className="flex flex-col gap-2">
@@ -220,7 +225,7 @@ export default async function ExaminationPage() {
           </div>
         </form>
         <p className="text-xs text-gray-500 mt-2">{ur ? "تاریخ منتخب کیے بغیر امتحان نہیں بنے گا۔ مرحلہ منتخب کریں (مہینہ اسی کے مطابق ہوگا)۔ مرحلہ 1 اور 2 میں صرف تحریری پرچے بنیں گے، مرحلہ 3 اور 4 میں تحریری اور زبانی پرچے بنیں گے۔" : "Exam will not be created without selecting a date. Select stage (month follows the stage). Stages 1 and 2 create written papers only; stages 3 and 4 create written and oral papers."}</p>
-      </div>
+      </div>}
 
       <div className="bg-white rounded-2xl shadow-sm border border-emerald-100 overflow-auto">
         <div className="p-4 border-b flex items-center justify-between flex-wrap gap-2">

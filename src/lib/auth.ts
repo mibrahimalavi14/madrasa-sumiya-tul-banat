@@ -21,6 +21,26 @@ export function isStaff(user: Pick<AuthUser, "role"> | null | undefined) {
   return user?.role === "ADMIN" || user?.role === "ACCOUNTANT";
 }
 
+export function canManageFees(user: Pick<AuthUser, "role"> | null | undefined) {
+  return user?.role === "ADMIN" || user?.role === "ACCOUNTANT";
+}
+
+export function canEditStudents(user: Pick<AuthUser, "role"> | null | undefined) {
+  return user?.role === "ADMIN";
+}
+
+export function canEditExams(user: Pick<AuthUser, "role"> | null | undefined) {
+  return user?.role === "ADMIN";
+}
+
+export function canEditResults(user: Pick<AuthUser, "role"> | null | undefined) {
+  return user?.role === "ADMIN";
+}
+
+export function canEditCertificates(user: Pick<AuthUser, "role"> | null | undefined) {
+  return user?.role === "ADMIN";
+}
+
 const COOKIE = "msb_session";
 
 function encode(payload: object) {

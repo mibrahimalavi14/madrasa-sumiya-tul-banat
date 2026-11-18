@@ -11,7 +11,7 @@ import { logAudit } from "@/lib/audit";
 
 async function updateStudent(formData: FormData) {
   "use server";
-  const user = await getAuthUser(); if (user?.role !== "ADMIN" && user?.role !== "ACCOUNTANT") throw new Error("UNAUTHORIZED");
+  const user = await getAuthUser(); if (user?.role !== "ADMIN") throw new Error("UNAUTHORIZED");
   const id = String(formData.get("id"));
   const sessionId = String(formData.get("sessionId") || "");
   const rollNoInput = String(formData.get("rollNo") || "").trim() || null;
@@ -94,7 +94,7 @@ async function updateStudent(formData: FormData) {
 }
 
 export default async function EditStudent({ params, searchParams }: { params: Promise<{ id: string }>, searchParams?: Promise<{ error?: string }> }) {
-  const user = await getAuthUser(); if (user?.role !== "ADMIN" && user?.role !== "ACCOUNTANT") redirect("/dashboard");
+  const user = await getAuthUser(); if (user?.role !== "ADMIN") redirect("/dashboard");
   const { id } = await params;
   const sp = (await searchParams) || {};
   const session = await getCurrentSession();

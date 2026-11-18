@@ -9,7 +9,7 @@ import { logAudit } from "@/lib/audit";
 
 async function saveOralMark(formData: FormData) {
   "use server";
-  const user = await getAuthUser(); if (user?.role !== "ADMIN" && user?.role !== "ACCOUNTANT") throw new Error("UNAUTHORIZED");
+  const user = await getAuthUser(); if (user?.role !== "ADMIN") throw new Error("UNAUTHORIZED");
   const session = await getCurrentSession(); if (!session || session.status !== "ACTIVE") throw new Error("SESSION_NOT_ACTIVE");
   const examId = String(formData.get("examId")); const paperId = String(formData.get("paperId")); const studentId = String(formData.get("studentId"));
   const obtained = Number(formData.get("obtained")||0); const total = Number(formData.get("total")||100);
@@ -53,7 +53,7 @@ async function saveOralMark(formData: FormData) {
 }
 
 export default async function OralConduct({ params }: { params: Promise<{ id: string; paperId: string }> }) {
-  const user = await getAuthUser(); if (user?.role !== "ADMIN" && user?.role !== "ACCOUNTANT") redirect("/dashboard");
+  const user = await getAuthUser(); if (user?.role !== "ADMIN") redirect("/dashboard");
   const { id, paperId } = await params;
   const paper = await prisma.questionPaper.findUnique({ where: { id: paperId }, include: { exam: { include: { session: true, students: { include: { student: true } } } }, questions: { orderBy: { order: "asc" } }, oralMarks: true } });
   if (!paper || paper.examId !== id || paper.type !== "ORAL") notFound();
