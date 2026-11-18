@@ -64,27 +64,24 @@ h3 { font-weight: 700; color: #065f46; }
   background: linear-gradient(90deg, #059669, #f59e0b);
   margin-top: 0.45rem;
 }
-/* visible lines inside boxes */
+/* visible separation inside boxes - subtle, avoids touching */
 main :is(.bg-white, .card):is([class*="rounded"]) > h2,
 main :is(.bg-white, .card):is([class*="rounded"]) > h3 {
-  border-bottom: 2px solid #b8ccbf !important;
-  padding-bottom: 0.6rem !important;
+  border-bottom: 1px solid #d9e5de;
+  padding-bottom: 0.6rem;
+  margin-bottom: 0.25rem;
 }
 main :is(.bg-white, .card):is([class*="rounded"]) > * + * {
-  border-top: 1px solid #cfdcd4 !important;
-  margin-top: 1rem !important;
-  padding-top: 1rem !important;
+  margin-top: 0.85rem;
 }
 main :is(.bg-white, .card):is([class*="rounded"]) > h1 + *,
 main :is(.bg-white, .card):is([class*="rounded"]) > h2 + *,
 main :is(.bg-white, .card):is([class*="rounded"]) > h3 + * {
-  border-top: 1px solid #cfdcd4 !important;
-  margin-top: 0.85rem !important;
-  padding-top: 0.85rem !important;
+  margin-top: 0.75rem;
 }
-.print-area :is(.bg-white, .card) > h2,
-.print-area :is(.bg-white, .card) > h3,
-.print-area :is(.bg-white, .card) > * + * {
+main .print-area :is(.bg-white, .card) > h2,
+main .print-area :is(.bg-white, .card) > h3,
+main .print-area :is(.bg-white, .card) > * + * {
   border-top: none !important;
   border-bottom: none !important;
   margin-top: revert !important;
@@ -166,15 +163,11 @@ main :is(.bg-white,.card)[class*="rounded"][class*="border"]:not([class*="p-"]):
 .print-area h2::after, .print-area h1::after, .print-area h3::after { display: none !important; }
 .print-area [class*="border-b"], .print-area [class*="border-t"] { padding-top: revert !important; padding-bottom: revert !important; }
 
-/* more spacing between stacked boxes/cards + clean divider lines */
-main :where(.space-y-3, .space-y-4, .space-y-5, .space-y-6) > * + * {
-  border-top: 1.5px solid #b7c8be !important;
-  box-shadow: 0 -1px 0 0 rgba(20,83,45,0.06);
-}
-main .space-y-3 > * + * { margin-top: 1.5rem !important; padding-top: 1.5rem !important; }
-main .space-y-4 > * + * { margin-top: 1.75rem !important; padding-top: 1.75rem !important; }
-main .space-y-5 > * + * { margin-top: 2rem !important; padding-top: 2rem !important; }
-main .space-y-6 > * + * { margin-top: 2.25rem !important; padding-top: 2.25rem !important; }
+/* spacing between stacked blocks - keep clean without forcing divider lines */
+main .space-y-3 > * + * { margin-top: 1rem; }
+main .space-y-4 > * + * { margin-top: 1.25rem; }
+main .space-y-5 > * + * { margin-top: 1.5rem; }
+main .space-y-6 > * + * { margin-top: 1.75rem; }
 
 /* extra breathing room inside common boxes so text never touches borders */
 main :is(.bg-white, .card):is([class*="rounded-xl"], [class*="rounded-2xl"], [class*="rounded-lg"]) {
@@ -184,11 +177,16 @@ main :is(.bg-white, .card):is([class*="rounded-xl"], [class*="rounded-2xl"], [cl
   padding: revert-layer;
 }
 main :is(.bg-white, .card) :is(h1,h2,h3,h4) {
-  margin-bottom: 0.75rem;
+  margin-top: 0.15rem;
+  margin-bottom: 0.8rem;
+  line-height: 1.4;
 }
-.print-area :is(.bg-white, .card) { padding: revert !important; }
+main :is(.bg-white, .card)[class*="border"] :is(label, .text-sm, p) {
+  line-height: 1.5;
+}
+main .print-area :is(.bg-white, .card) { padding: revert !important; }
 
-.print-area :where(.space-y-3, .space-y-4, .space-y-5, .space-y-6) > * + * {
+main .print-area :where(.space-y-3, .space-y-4, .space-y-5, .space-y-6) > * + * {
   border-top: none !important;
   margin-top: revert !important;
   padding-top: revert !important;
