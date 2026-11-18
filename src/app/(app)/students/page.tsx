@@ -5,6 +5,33 @@ import { getAuthUser } from "@/lib/auth";
 import { getLang } from "@/lib/lang";
 import { t } from "@/lib/i18n";
 import { redirect } from "next/navigation";
+import { revalidatePath } from "next/cache";
+import { logAudit } from "@/lib/audit";
+
+async function carrySelectedStudentsAction(formData: FormData) {
+  "use server";
+  const user = await getAuthUser();
+  if (user?.role !== "ADMIN") throw new Error("UNAUTHORIZED");
+  const fromSessionId = String(formData.get("fromSessionId") || "");
+  const toId = String(formData.get("toId") || "");
+  const ids = formData.getAll("studentIds").map(String).filter(Boolean);
+  if (!fromSessionId || !toId || fromSessionId === toId || ids.length === 0) return;
+  const target = await prisma.session.findUnique({ where: { id: toId }, select: { status: true } });
+  if (!target || target.status !== "ACTIVE") return;
+  const enrolls = await prisma.studentEnrollment.findMany({ where: { sessionId: fromSessionId, studentId: { in: ids } }, select: { id: true, studentId: true } });
+  let carried = 0;
+  for (const e of enrolls) {
+    await prisma.studentEnrollment.upsert({
+      where: { studentId_sessionId: { studentId: e.studentId, sessionId: toId } },
+      update: {},
+      create: { studentId: e.studentId, sessionId: toId, carriedFromId: e.id, rollNo: null, rollLocked: false },
+    });
+    carried++;
+  }
+  await logAudit({ actorUserId: user.id, actorLabel: user.username || user.name, action: "STUDENTS_CARRY_SELECTED", entityType: "Session", entityId: toId, details: JSON.stringify({ fromSessionId, toId, count: carried, studentIds: ids.slice(0, 50) }) });
+  revalidatePath("/students");
+  revalidatePath("/sessions");
+}
 
 export default async function StudentsPage({ searchParams }: { searchParams: Promise<{ q?: string; page?: string }> }) {
   const user = await getAuthUser();
@@ -37,7 +64,7 @@ export default async function StudentsPage({ searchParams }: { searchParams: Pro
     };
   }
 
-  const [total, enrollments] = await Promise.all([
+  const [total, enrollments, targetSessions] = await Promise.all([
     prisma.studentEnrollment.count({ where }),
     prisma.studentEnrollment.findMany({
       where,
@@ -55,6 +82,7 @@ export default async function StudentsPage({ searchParams }: { searchParams: Pro
       skip: (page - 1) * pageSize,
       take: pageSize,
     }),
+    prisma.session.findMany({ where: { status: "ACTIVE", id: { not: session.id } }, select: { id: true, name: true }, orderBy: { startDate: "desc" } }),
   ]);
 
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
@@ -87,12 +115,29 @@ export default async function StudentsPage({ searchParams }: { searchParams: Pro
         <button className="bg-gray-800 hover:bg-gray-900 text-white px-5 py-2.5 rounded-xl font-medium">{tr.search}</button>
         {q && <Link href="/students" className="text-sm text-emerald-700 underline">{lang==="ur" ? "صاف کریں" : "Clear"}</Link>}
       </form>
+
+      {targetSessions.length > 0 && (
+        <form id="bulk-carry-form" action={carrySelectedStudentsAction} className="bg-white rounded-2xl shadow-sm border border-emerald-100 p-4 flex flex-wrap items-end gap-3 no-print">
+          <input type="hidden" name="fromSessionId" value={session.id} />
+          <div>
+            <label className="block text-xs text-gray-600 mb-1">{lang==="ur" ? "منتخب طلبہ کو منتقل کریں (فعال سیشن میں)" : "Carry selected students to (ACTIVE session)"}</label>
+            <select name="toId" required className="border border-emerald-200 rounded-xl px-3 py-2.5 min-w-[220px] text-sm">
+              <option value="">{lang==="ur" ? "ہدف سیشن منتخب کریں" : "Select target session"}</option>
+              {targetSessions.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+            </select>
+          </div>
+          <button className="bg-amber-600 hover:bg-amber-700 text-white px-4 py-2.5 rounded-xl font-medium text-sm">{lang==="ur" ? "منتخب طلبہ منتقل کریں" : "Carry Selected"}</button>
+          <p className="text-xs text-gray-500 w-full">{lang==="ur" ? "نیچے چیک باکس سے طلبہ منتخب کریں۔ صرف اسی صفحے پر منتخب طلبہ منتقل ہوں گے۔" : "Select students using checkboxes below. Only selected students on this page will be carried."}</p>
+        </form>
+      )}
+
       <div className="bg-white rounded-2xl shadow-sm border border-emerald-100 overflow-auto">
         <table className="w-full text-sm">
-          <thead className="bg-emerald-50 text-emerald-900"><tr><th className="p-3 text-center w-14">{lang === "ur" ? "نمبر شمار" : "S.No"}</th><th className="p-3 text-left">{tr.admissionNo}</th><th className="p-3 text-left">{tr.applicationNo}</th><th className="p-3 text-left">{tr.name}</th><th className="p-3 text-left">{tr.fatherMother}</th><th className="p-3 text-left">{tr.class}</th><th className="p-3 text-center">{tr.rollNo}</th><th className="p-3 text-left">{tr.actions}</th></tr></thead>
+          <thead className="bg-emerald-50 text-emerald-900"><tr>{targetSessions.length > 0 && <th className="p-3 text-center w-10 no-print">{lang==="ur" ? "منتخب" : "Sel"}</th>}<th className="p-3 text-center w-14">{lang === "ur" ? "نمبر شمار" : "S.No"}</th><th className="p-3 text-left">{tr.admissionNo}</th><th className="p-3 text-left">{tr.applicationNo}</th><th className="p-3 text-left">{tr.name}</th><th className="p-3 text-left">{tr.fatherMother}</th><th className="p-3 text-left">{tr.class}</th><th className="p-3 text-center">{tr.rollNo}</th><th className="p-3 text-left">{tr.actions}</th></tr></thead>
           <tbody>
             {pageEnrollments.map((e, i) => (
               <tr key={e.id} className="border-t hover:bg-gray-50/70">
+                {targetSessions.length > 0 && <td className="p-3 text-center no-print"><input type="checkbox" name="studentIds" value={e.student.id} form="bulk-carry-form" className="h-4 w-4 rounded border-emerald-300 text-emerald-700" /></td>}
                 <td className="p-3 text-center text-gray-600 font-medium">{(safePage - 1) * pageSize + i + 1}</td>
                 <td className="p-3 font-semibold text-gray-900">{e.student.admissionNo}</td>
                 <td className="p-3">{e.student.applicationNo || "-"}</td>
@@ -109,7 +154,7 @@ export default async function StudentsPage({ searchParams }: { searchParams: Pro
                 </td>
               </tr>
             ))}
-            {pageEnrollments.length===0 && <tr><td colSpan={8} className="p-6 text-center text-gray-500">{tr.noStudents}</td></tr>}
+            {pageEnrollments.length===0 && <tr><td colSpan={targetSessions.length > 0 ? 9 : 8} className="p-6 text-center text-gray-500">{tr.noStudents}</td></tr>}
           </tbody>
         </table>
       </div>

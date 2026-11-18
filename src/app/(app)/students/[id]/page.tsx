@@ -30,11 +30,15 @@ export default async function StudentProfile({ params }: { params: Promise<{ id:
     </div>
   );
   return (
-    <div className="space-y-5">
-      <Link href="/students" className="inline-flex items-center gap-2 text-sm text-emerald-800 hover:text-emerald-900 font-medium no-print">← Back / واپس</Link>
-      <div className="bg-gradient-to-r from-emerald-800 to-emerald-700 text-white rounded-2xl p-5 shadow-sm">
-        <h1 className="text-2xl font-bold">Student Profile</h1>
-        <p className="text-emerald-50 mt-1">{student.admissionNo} — {student.nameEn} {student.nameUr ? <span className="font-urdu">/ {student.nameUr}</span> : ""}</p>
+    <div className={`space-y-5 ${isAdmin ? "theme-students" : "theme-parent"}`}>
+      {isAdmin ? (
+        <Link href="/students" className="inline-flex items-center gap-2 text-sm text-emerald-800 hover:text-emerald-900 font-medium no-print">← Back / واپس</Link>
+      ) : (
+        <Link href="/dashboard" className="inline-flex items-center gap-2 text-sm text-teal-800 hover:text-teal-900 font-medium no-print">← {user?.role === "PARENT" ? "Dashboard / ڈیش بورڈ" : "Back / واپس"}</Link>
+      )}
+      <div className={`rounded-2xl p-5 shadow-sm text-white ${isAdmin ? "bg-gradient-to-r from-emerald-800 to-emerald-700" : "bg-gradient-to-r from-teal-700 to-cyan-700"}`}>
+        <h1 className="text-2xl font-bold">{isAdmin ? "Student Profile" : "My Profile / میری پروفائل"}</h1>
+        <p className={`${isAdmin ? "text-emerald-50" : "text-teal-50"} mt-1`}>{student.admissionNo} — {student.nameEn} {student.nameUr ? <span className="font-urdu">/ {student.nameUr}</span> : ""}</p>
       </div>
 
       <div className={`grid gap-3 no-print ${isAdmin ? "grid-cols-3" : "grid-cols-2"}`}>
