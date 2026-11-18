@@ -41,7 +41,7 @@ export default async function StudentProfile({ params }: { params: Promise<{ id:
         <p className={`${isAdmin ? "text-emerald-50" : "text-teal-50"} mt-1`}>{student.admissionNo} — {student.nameEn} {student.nameUr ? <span className="font-urdu">/ {student.nameUr}</span> : ""}</p>
       </div>
 
-      <div className={`grid gap-3 no-print ${isAdmin ? "grid-cols-3" : "grid-cols-2"}`}>
+      <div className={`grid gap-3 no-print ${isAdmin ? "grid-cols-4" : "grid-cols-3"}`}>
         <div className="bg-white rounded-2xl shadow-sm border border-emerald-200 p-4 sm:p-5">
           <div className="text-lg font-bold text-emerald-900">Profile</div>
         </div>
@@ -52,6 +52,11 @@ export default async function StudentProfile({ params }: { params: Promise<{ id:
         )}
         <Link href={`/students/${id}/admission-form`} className="bg-white rounded-2xl shadow-sm border border-amber-200 p-4 sm:p-5 hover:shadow-md hover:bg-amber-50/40 transition block">
           <div className="text-lg font-bold text-amber-800">Print</div>
+          <div className="text-xs text-amber-700 mt-0.5">Admission Form</div>
+        </Link>
+        <Link href={`/students/${id}/slip`} className="bg-white rounded-2xl shadow-sm border border-teal-200 p-4 sm:p-5 hover:shadow-md hover:bg-teal-50/40 transition block">
+          <div className="text-lg font-bold text-teal-800">Exam Slip</div>
+          <div className="text-xs text-teal-700 mt-0.5">Name & Roll No / امتحانی سلپ</div>
         </Link>
       </div>
 

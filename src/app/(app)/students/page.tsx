@@ -7,6 +7,7 @@ import { t } from "@/lib/i18n";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { logAudit } from "@/lib/audit";
+import SelectAllBulkCheckbox from "@/components/SelectAllBulkCheckbox";
 
 async function carrySelectedStudentsAction(formData: FormData) {
   "use server";
@@ -107,6 +108,7 @@ export default async function StudentsPage({ searchParams }: { searchParams: Pro
         <div className="flex gap-2 no-print flex-wrap">
           <Link href="/students/new" className="bg-white text-emerald-800 px-4 py-2.5 rounded-xl font-semibold shadow-sm hover:bg-emerald-50">{tr.newAdmission}</Link>
           <Link href="/students/admission-form" className="bg-amber-500 text-white px-4 py-2.5 rounded-xl font-semibold shadow-sm hover:bg-amber-600">{tr.blankAdmissionForm}</Link>
+          <Link href="/students/slips" className="bg-teal-500 text-white px-4 py-2.5 rounded-xl font-semibold shadow-sm hover:bg-teal-600">{lang==="ur" ? "امتحانی سلپس" : "Exam Slips"}</Link>
           <a href="/api/export/students" className="bg-emerald-900/40 border border-emerald-200/30 text-white px-4 py-2.5 rounded-xl font-semibold shadow-sm hover:bg-emerald-900/60">{lang==="ur" ? "CSV ایکسپورٹ" : "Export CSV"}</a>
         </div>
       </div>
@@ -133,7 +135,7 @@ export default async function StudentsPage({ searchParams }: { searchParams: Pro
 
       <div className="bg-white rounded-2xl shadow-sm border border-emerald-100 overflow-auto">
         <table className="w-full text-sm">
-          <thead className="bg-emerald-50 text-emerald-900"><tr>{targetSessions.length > 0 && <th className="p-3 text-center w-10 no-print">{lang==="ur" ? "منتخب" : "Sel"}</th>}<th className="p-3 text-center w-14">{lang === "ur" ? "نمبر شمار" : "S.No"}</th><th className="p-3 text-left">{tr.admissionNo}</th><th className="p-3 text-left">{tr.applicationNo}</th><th className="p-3 text-left">{tr.name}</th><th className="p-3 text-left">{tr.fatherMother}</th><th className="p-3 text-left">{tr.class}</th><th className="p-3 text-center">{tr.rollNo}</th><th className="p-3 text-left">{tr.actions}</th></tr></thead>
+          <thead className="bg-emerald-50 text-emerald-900"><tr>{targetSessions.length > 0 && <th className="p-3 text-center w-10 no-print"><div className="flex flex-col items-center gap-1"><SelectAllBulkCheckbox formId="bulk-carry-form" name="studentIds" title={lang==="ur" ? "سب منتخب کریں" : "Select all"} /><span className="text-[10px] font-medium">{lang==="ur" ? "سب" : "All"}</span></div></th>}<th className="p-3 text-center w-14">{lang === "ur" ? "نمبر شمار" : "S.No"}</th><th className="p-3 text-left">{tr.admissionNo}</th><th className="p-3 text-left">{tr.applicationNo}</th><th className="p-3 text-left">{tr.name}</th><th className="p-3 text-left">{tr.fatherMother}</th><th className="p-3 text-left">{tr.class}</th><th className="p-3 text-center">{tr.rollNo}</th><th className="p-3 text-left">{tr.actions}</th></tr></thead>
           <tbody>
             {pageEnrollments.map((e, i) => (
               <tr key={e.id} className="border-t hover:bg-gray-50/70">
