@@ -212,7 +212,7 @@ export default async function FeesPage({ searchParams }: { searchParams: Promise
           <h2 className="font-semibold text-emerald-900">{lang === "ur" ? "باقی / جزوی فیس (اس مہینے)" : "Pending / Partial Fees (This Month)"}</h2>
           <span className="text-sm text-gray-600">{lang === "ur" ? `تعداد: ${unpaidEnrolls.length}` : `Count: ${unpaidEnrolls.length}`}</span>
         </div>
-        <table className="w-full text-sm"><thead><tr><th className="p-3 text-left">{tr.admission}</th><th className="p-3 text-left">{tr.name}</th><th className="p-3 text-left">{lang === "ur" ? "ماہانہ فیس (سیٹ)" : "Monthly Fee (Set)"}</th><th className="p-3 text-left">{lang === "ur" ? "واجب (Due)" : "Due"}</th><th className="p-3 text-left">{lang === "ur" ? "ادا شدہ (کل)" : "Paid (Total)"}</th><th className="p-3 text-left">{lang === "ur" ? "باقی" : "Balance"}</th><th className="p-3 text-left">{tr.paidDate}</th><th className="p-3 text-center">{tr.status}</th><th className="p-3 text-center">{tr.action}</th></tr></thead>
+        <table className="w-full text-sm"><thead><tr><th className="p-3 text-left">{tr.admission}</th><th className="p-3 text-left">{tr.name}</th><th className="p-3 text-left">{lang === "ur" ? "ماہانہ فیس (سیٹ)" : "Monthly Fee (Set)"}</th><th className="p-3 text-left">{lang === "ur" ? "واجب (Due)" : "Due"}</th><th className="p-3 text-left">{lang === "ur" ? "ادا شدہ (کل)" : "Paid (Total)"}</th><th className="p-3 text-left">{lang === "ur" ? "باقی" : "Balance"}</th><th className="p-3 text-left">{tr.paidDate}</th><th className="p-3 text-center">{tr.status}</th><th className="p-3 text-center">{tr.action}</th><th className="p-3 text-center">{lang === "ur" ? "واؤچر" : "Voucher"}</th></tr></thead>
         <tbody>
           {unpaidEnrolls.map(en => { 
             const f = map.get(en.studentId) as any; 
@@ -263,10 +263,13 @@ export default async function FeesPage({ searchParams }: { searchParams: Promise
                 <td className="p-3 text-center">
                   <button form={formId} className="bg-emerald-800 hover:bg-emerald-900 text-white px-4 py-2 rounded-lg">{tr.save}</button>
                 </td>
+                <td className="p-3 text-center">
+                  <Link href={`/fees/voucher?studentId=${en.studentId}&month=${month}&year=${year}`} className="inline-flex px-3 py-1.5 rounded-lg border border-teal-200 bg-teal-50 text-teal-800 font-medium hover:bg-teal-100">{lang === "ur" ? "واؤچر" : "Voucher"}</Link>
+                </td>
               </tr>
             );
           })}
-          {unpaidEnrolls.length===0 && <tr><td colSpan={9} className="p-4 text-center text-gray-500">{lang==="ur" ? "اس مہینے کوئی فیس باقی نہیں۔" : "No pending fees for this month."}</td></tr>}
+          {unpaidEnrolls.length===0 && <tr><td colSpan={10} className="p-4 text-center text-gray-500">{lang==="ur" ? "اس مہینے کوئی فیس باقی نہیں۔" : "No pending fees for this month."}</td></tr>}
         </tbody></table>
       </div>
 
@@ -278,7 +281,7 @@ export default async function FeesPage({ searchParams }: { searchParams: Promise
             <span>{lang === "ur" ? `کل رقم: Rs ${paidTotalAmount}` : `Total Amount: Rs ${paidTotalAmount}`}</span>
           </div>
         </div>
-        <table className="w-full text-sm"><thead><tr><th className="p-3 text-left">{tr.admission}</th><th className="p-3 text-left">{tr.name}</th><th className="p-3 text-left">{lang === "ur" ? "واجب" : "Due"}</th><th className="p-3 text-left">{lang === "ur" ? "جمع شدہ" : "Deposited"}</th><th className="p-3 text-left">{tr.paidDate}</th><th className="p-3 text-center">{tr.status}</th><th className="p-3 text-center">{lang === "ur" ? "رسید" : "Receipt"}</th></tr></thead>
+        <table className="w-full text-sm"><thead><tr><th className="p-3 text-left">{tr.admission}</th><th className="p-3 text-left">{tr.name}</th><th className="p-3 text-left">{lang === "ur" ? "واجب" : "Due"}</th><th className="p-3 text-left">{lang === "ur" ? "جمع شدہ" : "Deposited"}</th><th className="p-3 text-left">{tr.paidDate}</th><th className="p-3 text-center">{tr.status}</th><th className="p-3 text-center">{lang === "ur" ? "رسید" : "Receipt"}</th><th className="p-3 text-center">{lang === "ur" ? "واؤچر" : "Voucher"}</th></tr></thead>
         <tbody>
           {paidEnrolls.map(en => { 
             const f = map.get(en.studentId) as any; 
@@ -297,10 +300,13 @@ export default async function FeesPage({ searchParams }: { searchParams: Promise
                 <td className="p-3 text-center">
                   {f?.id ? <Link href={`/fees/receipt/${f.id}`} className="inline-flex px-3 py-1.5 rounded-lg border border-emerald-200 bg-white text-emerald-800 font-medium hover:bg-emerald-50">{lang === "ur" ? "رسید" : "Receipt"}</Link> : "-"}
                 </td>
+                <td className="p-3 text-center">
+                  <Link href={`/fees/voucher?studentId=${en.studentId}&month=${month}&year=${year}`} className="inline-flex px-3 py-1.5 rounded-lg border border-teal-200 bg-teal-50 text-teal-800 font-medium hover:bg-teal-100">{lang === "ur" ? "واؤچر" : "Voucher"}</Link>
+                </td>
               </tr>
             );
           })}
-          {paidEnrolls.length===0 && <tr><td colSpan={7} className="p-4 text-center text-gray-500">{lang==="ur" ? "ابھی اس مہینے کسی نے مکمل فیس جمع نہیں کروائی۔" : "No fully deposited fees yet for this month."}</td></tr>}
+          {paidEnrolls.length===0 && <tr><td colSpan={8} className="p-4 text-center text-gray-500">{lang==="ur" ? "ابھی اس مہینے کسی نے مکمل فیس جمع نہیں کروائی۔" : "No fully deposited fees yet for this month."}</td></tr>}
         </tbody></table>
       </div>
     </div>
