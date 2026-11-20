@@ -36,7 +36,7 @@ export default async function ExamDetail({ params }: { params: Promise<{ id: str
       <div className="flex items-center justify-between flex-wrap gap-2">
         <div>
           <h1 className="text-2xl font-bold text-emerald-900">{exam.name}{exam.stage ? ` (${exam.stage===4?40:20}%)` : ""}</h1>
-          {exam.stageLabel && <p className="text-sm text-gray-600 mt-0.5 font-urdu" dir="rtl">{exam.monthLabel ? `${exam.monthLabel} — ` : ""}{exam.stageLabel}{exam.stage ? ` (Annual Weight: ${exam.stage===4?40:20}%)` : ""}</p>}
+          {exam.stageLabel && <p className="text-sm text-gray-600 mt-0.5 font-urdu" dir="rtl">{(() => { const m: Record<number,string>={1:"3rd Month",2:"6th Month",3:"9th Month",4:"12th Month"}; const ml = exam.stage ? m[Number(exam.stage)] : exam.monthLabel; return ml ? `${ml} — ` : ""; })()}{exam.stageLabel}{exam.stage ? ` (Annual Weight: ${exam.stage===4?40:20}%)` : ""}</p>}
         </div>
         <Link href="/examination" className="text-emerald-700 underline">← Back</Link>
       </div>

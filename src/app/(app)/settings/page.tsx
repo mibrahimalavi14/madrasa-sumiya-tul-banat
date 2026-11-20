@@ -8,7 +8,6 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import Link from "next/link";
 import { logAudit } from "@/lib/audit";
-import { getNotificationConfig } from "@/lib/notifications";
 
 async function saveFee(formData: FormData) {
   "use server";
@@ -75,7 +74,6 @@ export default async function SettingsPage() {
     session ? prisma.certificate.count({ where: { sessionId: session.id } }) : Promise.resolve(0),
     prisma.user.count(),
   ]);
-  const notifyCfg = getNotificationConfig();
 
   return (
     <div className="space-y-6 theme-settings">
@@ -242,50 +240,26 @@ export default async function SettingsPage() {
         </div>
       </div>
 
-      <div className="grid lg:grid-cols-2 gap-5">
-        <div className="bg-white rounded-2xl shadow-sm border border-emerald-100/80 p-5">
-          <h2 className="font-semibold mb-2 text-emerald-900">{ur ? "SMS / WhatsApp اطلاعات" : "SMS / WhatsApp Notifications"}</h2>
-          <div className="text-sm text-gray-700 space-y-2">
-            <p>{ur ? "خودکار SMS/WhatsApp الرٹس کے لیے بیرونی provider درکار ہے۔ Code foundation تیار ہے؛ provider credentials/config ملنے پر ارسال فعال کیا جا سکتا ہے۔" : "Automated SMS/WhatsApp alerts require an external provider. Code foundation is ready; sending can be enabled once provider credentials/config are provided."}</p>
-            <div className={`rounded-lg border p-3 text-xs ${notifyCfg.configured ? "border-emerald-200 bg-emerald-50 text-emerald-900" : "border-amber-200 bg-amber-50 text-amber-900"}`}>
-              <div><b>{ur ? "حیثیت:" : "Status:"}</b> {notifyCfg.configured ? (ur ? "Config موجود ہے (provider implementation مزید درکار ہو سکتی ہے)" : "Config present (provider implementation may still be required)") : (ur ? "کنفیگریشن دستیاب نہیں" : "Not configured")}</div>
-              <div className="mt-1"><b>{ur ? "Provider:" : "Provider:"}</b> {notifyCfg.provider || (ur ? "سیٹ نہیں" : "not set")}</div>
-              {!notifyCfg.configured && notifyCfg.missing.length > 0 && (
-                <div className="mt-1"><b>{ur ? "درکار env vars:" : "Missing env vars:"}</b> {notifyCfg.missing.join(", ")}</div>
-              )}
-            </div>
-            <div className="rounded-lg border border-gray-200 bg-gray-50 p-3 text-xs text-gray-700">
-              <div className="font-semibold text-gray-900 mb-1">{ur ? "مجھے آپ سے کیا چاہیے:" : "What I need from you:"}</div>
-              <ul className="list-disc pl-5 space-y-0.5">
-                <li>{ur ? "Provider کا نام (Twilio / Meta WhatsApp Cloud API / دیگر)" : "Provider choice (Twilio / Meta WhatsApp Cloud API / other)"}</li>
-                <li>{ur ? "API key/token اور sender/from (SMS/WhatsApp)" : "API key/token and sender/from (SMS/WhatsApp)"}</li>
-                <li>{ur ? "کن مواقع پر پیغام بھیجنا ہے + templates/متن + test نمبر" : "Which events to notify + templates/text + test number"}</li>
-              </ul>
-              <div className="mt-1 text-gray-600">{ur ? "تفصیل: docs/REMAINING-SETUP.md (repo)" : "Details: docs/REMAINING-SETUP.md (repo)"}</div>
-            </div>
+      <div className="bg-white rounded-2xl shadow-sm border border-emerald-100/80 p-5">
+        <h2 className="font-semibold mb-2 text-emerald-900">{ur ? "بیک اپ اور ایکسپورٹ" : "Backup & Export"}</h2>
+        <div className="text-sm text-gray-700 space-y-2">
+          <p>{ur ? "ڈیٹا کی حفاظت کے لیے CSV exports اور Supabase backups/PITR دونوں استعمال کریں (DB: Supabase ap-southeast-1)." : "Use both CSV exports and Supabase backups/PITR for data safety (DB: Supabase ap-southeast-1)."}</p>
+          <div className="rounded-lg border border-gray-200 bg-gray-50 p-3 text-xs">
+            <div className="font-semibold text-gray-900 mb-1">{ur ? "CSV ایکسپورٹس (app میں دستیاب):" : "CSV exports (available in app):"}</div>
+            <ul className="list-disc pl-5 space-y-0.5">
+              <li><Link className="text-emerald-700 underline" href="/api/export/students">{ur ? "طلبہ" : "Students"}</Link>, <Link className="text-emerald-700 underline" href="/api/export/fees">{ur ? "فیس" : "Fees"}</Link>, <Link className="text-emerald-700 underline" href="/api/export/results">{ur ? "نتائج" : "Results"}</Link>, <Link className="text-emerald-700 underline" href="/api/export/certificates">{ur ? "سرٹیفکیٹس" : "Certificates"}</Link></li>
+            </ul>
           </div>
-        </div>
-        <div className="bg-white rounded-2xl shadow-sm border border-emerald-100/80 p-5">
-          <h2 className="font-semibold mb-2 text-emerald-900">{ur ? "بیک اپ اور ایکسپورٹ" : "Backup & Export"}</h2>
-          <div className="text-sm text-gray-700 space-y-2">
-            <p>{ur ? "ڈیٹا کی حفاظت کے لیے CSV exports اور Supabase backups/PITR دونوں استعمال کریں (DB: Supabase ap-southeast-1)." : "Use both CSV exports and Supabase backups/PITR for data safety (DB: Supabase ap-southeast-1)."}</p>
-            <div className="rounded-lg border border-gray-200 bg-gray-50 p-3 text-xs">
-              <div className="font-semibold text-gray-900 mb-1">{ur ? "CSV ایکسپورٹس (app میں دستیاب):" : "CSV exports (available in app):"}</div>
-              <ul className="list-disc pl-5 space-y-0.5">
-                <li><Link className="text-emerald-700 underline" href="/api/export/students">{ur ? "طلبہ" : "Students"}</Link>, <Link className="text-emerald-700 underline" href="/api/export/fees">{ur ? "فیس" : "Fees"}</Link>, <Link className="text-emerald-700 underline" href="/api/export/results">{ur ? "نتائج" : "Results"}</Link>, <Link className="text-emerald-700 underline" href="/api/export/certificates">{ur ? "سرٹیفکیٹس" : "Certificates"}</Link></li>
-              </ul>
-            </div>
-            <div className="rounded-lg border border-blue-200 bg-blue-50 text-blue-900 p-3 text-xs">
-              <div className="font-semibold mb-1">{ur ? "Supabase پر آپ کو کیا کرنا ہوگا:" : "What you need to do in Supabase:"}</div>
-              <ul className="list-disc pl-5 space-y-0.5">
-                <li>{ur ? "Supabase Dashboard → Project → Database/Backups کھولیں" : "Open Supabase Dashboard → Project → Database/Backups"}</li>
-                <li>{ur ? "Automated backups enable/verify کریں" : "Enable/verify automated backups"}</li>
-                <li>{ur ? "اگر plan میں ہو تو PITR enable کریں (retention منتخب کریں)" : "Enable PITR if available (choose retention)"}</li>
-              </ul>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              <Link href="/settings/audit" className="inline-flex px-3 py-2 rounded-lg bg-slate-50 text-slate-800 border border-slate-200 hover:bg-slate-100 text-sm">{ur ? "آڈٹ لاگ دیکھیں" : "View Audit Log"}</Link>
-            </div>
+          <div className="rounded-lg border border-blue-200 bg-blue-50 text-blue-900 p-3 text-xs">
+            <div className="font-semibold mb-1">{ur ? "Supabase پر آپ کو کیا کرنا ہوگا:" : "What you need to do in Supabase:"}</div>
+            <ul className="list-disc pl-5 space-y-0.5">
+              <li>{ur ? "Supabase Dashboard → Project → Database/Backups کھولیں" : "Open Supabase Dashboard → Project → Database/Backups"}</li>
+              <li>{ur ? "Automated backups enable/verify کریں" : "Enable/verify automated backups"}</li>
+              <li>{ur ? "اگر plan میں ہو تو PITR enable کریں (retention منتخب کریں)" : "Enable PITR if available (choose retention)"}</li>
+            </ul>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <Link href="/settings/audit" className="inline-flex px-3 py-2 rounded-lg bg-slate-50 text-slate-800 border border-slate-200 hover:bg-slate-100 text-sm">{ur ? "آڈٹ لاگ دیکھیں" : "View Audit Log"}</Link>
           </div>
         </div>
       </div>

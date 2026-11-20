@@ -10,9 +10,9 @@ import DateInputDMY from "@/components/DateInputDMY";
 import { logAudit } from "@/lib/audit";
 
 const STAGES = [
-  { stage: 1, name: "Initial Written Examination", month: "1st Month", desc: "Written exam only (MCQs, short questions, fill in the blanks, true/false, etc.). Nazra Quran not included. Separate result, 20% of annual.", written: true, oral: false, diagnostic: false, included: true, weight: 20 },
-  { stage: 2, name: "Six-Monthly Examination", month: "4th Month", desc: "Written exam only (same types as initial). Nazra Quran not included. Separate result, 20% of annual.", written: true, oral: false, diagnostic: false, included: true, weight: 20 },
-  { stage: 3, name: "Quarterly Examination", month: "8th Month", desc: "Two parts: Written + Oral (Nazra Quran, Islamic knowledge, etc.). Combined result, 20% of annual.", written: true, oral: true, diagnostic: false, included: true, weight: 20 },
+  { stage: 1, name: "Initial Written Examination", month: "3rd Month", desc: "Written exam only (MCQs, short questions, fill in the blanks, true/false, etc.). Nazra Quran not included. Separate result, 20% of annual.", written: true, oral: false, diagnostic: false, included: true, weight: 20 },
+  { stage: 2, name: "Six-Monthly Examination", month: "6th Month", desc: "Written exam only (same types as initial). Nazra Quran not included. Separate result, 20% of annual.", written: true, oral: false, diagnostic: false, included: true, weight: 20 },
+  { stage: 3, name: "Quarterly Examination", month: "9th Month", desc: "Two parts: Written + Oral (Nazra Quran, Islamic knowledge, etc.). Combined result, 20% of annual.", written: true, oral: true, diagnostic: false, included: true, weight: 20 },
   { stage: 4, name: "Annual Examination", month: "12th Month", desc: "Two parts: Written + Oral. Combined result, 40% of annual. Top 3 positions receive certificates.", written: true, oral: true, diagnostic: false, included: true, weight: 40 },
 ] as const;
 
@@ -106,9 +106,10 @@ export default async function ExaminationPage() {
     return (a.student.admissionNo || "").localeCompare(b.student.admissionNo || "");
   });
   const examNameUr: Record<number, string> = { 1: "ابتدائی تحریری امتحان", 2: "ششماہی امتحان", 3: "سہ ماہی امتحان", 4: "سالانہ امتحان" };
-  const monthUr: Record<number, string> = { 1: "پہلا مہینہ", 2: "چوتھا مہینہ", 3: "آٹھواں مہینہ", 4: "بارہواں مہینہ" };
+  const monthUr: Record<number, string> = { 1: "تیسرا مہینہ", 2: "چھٹا مہینہ", 3: "نواں مہینہ", 4: "بارہواں مہینہ" };
+  const monthEn: Record<number, string> = { 1: "3rd Month", 2: "6th Month", 3: "9th Month", 4: "12th Month" };
   const examDisplayName = (e: any) => (ur && e?.stage && examNameUr[Number(e.stage)]) || e?.name || "-";
-  const examDisplayMonth = (e: any) => (ur && e?.stage && monthUr[Number(e.stage)]) || e?.monthLabel || "-";
+  const examDisplayMonth = (e: any) => (e?.stage && (ur ? monthUr[Number(e.stage)] : monthEn[Number(e.stage)])) || e?.monthLabel || "-";
   const examDisplayStageLabel = (e: any) => (ur && e?.stage && examNameUr[Number(e.stage)]) || e?.stageLabel || (e?.stage ? `Stage ${e.stage}` : "-");
   return (
     <div className="space-y-5 theme-exams">
@@ -127,7 +128,7 @@ export default async function ExaminationPage() {
             <div key={s.stage} className="border border-emerald-100 rounded-xl p-4 bg-emerald-50/30">
               <div className="flex items-center justify-between gap-2 mb-1">
                 <div className="font-semibold text-emerald-900">{s.stage}</div>
-                <span className="text-xs bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full">{s.stage===1?1:s.stage===2?4:s.stage===3?8:12}</span>
+                <span className="text-xs bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full">{s.stage===1?3:s.stage===2?6:s.stage===3?9:12}</span>
               </div>
               <p className={`text-sm text-gray-700 leading-6 ${ur ? "font-urdu" : ""}`} dir={ur ? "rtl" : "ltr"}>{ur ? (s.stage===1?"صرف تحریری امتحان (MCQs، مختصر سوالات، خالی جگہیں، درست/غلط وغیرہ)۔ قرآن مجید ناظرہ شامل نہیں۔ الگ نتیجہ، سالانہ میں 20%۔":s.stage===2?"صرف تحریری امتحان (ابتدائی جیسی اقسام)۔ قرآن مجید ناظرہ شامل نہیں۔ الگ نتیجہ، سالانہ میں 20%۔":s.stage===3?"دو حصے: تحریری + زبانی (ناظرہ قرآن، اسلامی معلومات وغیرہ)۔ مشترکہ نتیجہ، سالانہ میں 20%۔":"دو حصے: تحریری + زبانی۔ مشترکہ نتیجہ، سالانہ میں 40%۔ پہلی تا تیسری پوزیشن پر سرٹیفکیٹ۔") : s.desc}</p>
               <div className="mt-2 flex flex-wrap gap-2 text-xs">
@@ -159,7 +160,7 @@ export default async function ExaminationPage() {
                 <div className="flex items-center justify-between flex-wrap gap-2 mb-3">
                   <div>
                     <div className="font-semibold text-emerald-900">{examDisplayName(e)}</div>
-                    <div className="text-xs text-gray-500 mt-0.5">{ur ? "مرحلہ" : "Stage"} {(e as any).stage ?? "-"} — {ur ? "مہینہ" : "Month"} {(e as any).stage===1?"First":(e as any).stage===2?"Fourth":(e as any).stage===3?"Eighth":(e as any).stage===4?"Twelfth":"-"}</div>
+                    <div className="text-xs text-gray-500 mt-0.5">{ur ? "مرحلہ" : "Stage"} {(e as any).stage ?? "-"} — {ur ? "مہینہ" : "Month"} {(e as any).stage===1?"Third":(e as any).stage===2?"Sixth":(e as any).stage===3?"Ninth":(e as any).stage===4?"Twelfth":"-"}</div>
                   </div>
                 </div>
                 {canEditExams ? (
@@ -203,9 +204,9 @@ export default async function ExaminationPage() {
             <label className="text-sm font-medium text-gray-700">{ur ? "مہینہ" : "Month"}</label>
             <select name="month" defaultValue="" className="w-full border rounded-lg px-3 py-2.5">
               <option value="" disabled>{ur ? "مہینہ منتخب کریں" : "Select month"}</option>
-              <option value="1">First</option>
-              <option value="4">Fourth</option>
-              <option value="8">Eighth</option>
+              <option value="3">Third</option>
+              <option value="6">Sixth</option>
+              <option value="9">Ninth</option>
               <option value="12">Twelfth</option>
             </select>
           </div>
@@ -242,7 +243,7 @@ export default async function ExaminationPage() {
                   <div className="text-xs text-gray-500 mt-0.5">{e.subject || "Nazra Quran & Basic Islamic Studies"}</div>
                 </td>
                 <td className="p-3 text-center font-medium text-gray-800">{(e as any).stage ?? "-"}</td>
-                <td className="p-3 text-center text-gray-700">{(e as any).stage===1?"First":(e as any).stage===2?"Fourth":(e as any).stage===3?"Eighth":(e as any).stage===4?"Twelfth":"-"}</td>
+                <td className="p-3 text-center text-gray-700">{(e as any).stage===1?"Third":(e as any).stage===2?"Sixth":(e as any).stage===3?"Ninth":(e as any).stage===4?"Twelfth":"-"}</td>
                 <td className="p-3 text-center text-xs">{(e as any).hasWritten !== false ? (ur ? "تحریری" : "Written") : ""}{(e as any).hasWritten !== false && (e as any).hasOral !== false ? " + " : ""}{(e as any).hasOral !== false ? (ur ? "زبانی" : "Oral") : ""}</td>
                 <td className="p-3 text-center">{formatDateDMY(e.examDate)}</td>
                 <td className="p-3 text-center">{e._count.students}</td>

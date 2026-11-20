@@ -4,31 +4,7 @@
 
 ---
 
-## 1) SMS / WhatsApp Actual Sending (حقیقی اطلاعات)
-
-### موجودہ حالت
-- Settings میں SMS/WhatsApp کی status/guidance موجود ہے۔
-- **فی الحال خودکار ارسال فعال نہیں** (provider config نہیں ہے)۔
-
-### مجھے آپ سے کیا چاہیے
-براہ کرم یہ تفصیلات بتائیں/فراہم کریں:
-1. **Provider کا انتخاب:** کون سی سروس استعمال کرنی ہے؟ (مثال: Twilio, Meta WhatsApp Cloud API, کسی local SMS gateway وغیرہ)
-2. **SMS کے لیے:** API key/token/secret (جو بھی provider مانگے), Sender ID / From number, account SID یا endpoint (اگر درکار ہو)
-3. **WhatsApp کے لیے:** WhatsApp Business number / sender, access token, phone number ID / WABA details (provider کے مطابق)
-4. **Templates / پیغامات:** کون سے مواقع پر پیغام جائے؟ (مثال: فیس یاددہانی، فیس وصولی، نتیجہ جاری، داخلہ/رجسٹریشن) اور ہر ایک کا متن/template نام
-5. **ٹیسٹ نمبر:** ایک test mobile/WhatsApp نمبر تاکہ محفوظ طریقے سے ٹیسٹ کیا جا سکے
-
-### میں کیا کر سکتا ہوں (آپ کی تفصیلات ملنے کے بعد)
-- Provider کے مطابق server-side integration (`src/lib/notifications.ts` کو مکمل/implement)  
-- Env vars / Vercel settings میں محفوظ config کا استعمال  
-- منتخب events پر اطلاع بھیجنے کی wiring + audit/log entries  
-- Settings میں configuration/test status بہتر کرنا
-
-> نوٹ: credentials کبھی کوڈ میں hardcode نہیں کی جائیں گی؛ یہ Vercel/Environment Variables میں رکھنی ہوں گی۔
-
----
-
-## 2) Fully Automated DB Backup / PITR (ڈیٹابیس بیک اپ)
+## 1) Fully Automated DB Backup / PITR (ڈیٹابیس بیک اپ)
 
 ### موجودہ حالت
 - Database: **Supabase Postgres (ap-southeast-1, Singapore)**
@@ -49,7 +25,7 @@
 
 ---
 
-## 3) Full RBAC - Extra Roles/Permissions (اضافی کردار و اجازتیں)
+## 2) Full RBAC - Extra Roles/Permissions (اضافی کردار و اجازتیں)
 
 ### موجودہ حالت
 - موجودہ roles: **ADMIN**, **PARENT** (parent صرف اپنے بچے کے ریکارڈ تک محدود)
@@ -76,7 +52,7 @@
 
 ---
 
-## 4) Certificate Template Editor / Custom Reports
+## 3) Certificate Template Editor / Custom Reports
 
 ### موجودہ حالت
 - Annual اور Nazra Completion certificates، print/offline verification موجود
@@ -92,7 +68,7 @@
 
 ---
 
-## 5) Production / Real-Device QA (فائنل تصدیق)
+## 4) Production / Real-Device QA (فائنل تصدیق)
 
 Deploy کے بعد **Ctrl+F5** کریں اور live data پر یہ چیک کریں:
 
