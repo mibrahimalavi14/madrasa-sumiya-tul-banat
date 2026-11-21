@@ -49,6 +49,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
             ["/students/attention", lang === "ur" ? "توجہ درکار طلبہ" : "Needs Attention", "⚠️"],
             ["/examination", tr.examination, "📝"],
             ["/results", tr.results, "📊"],
+            ["/results?view=annual", lang === "ur" ? "سالانہ نتیجہ" : "Annual Result", "🏆"],
             ["/results/stage-performance", lang === "ur" ? "مرحلہ وار کارکردگی" : "Stage Performance", "📈"],
             ["/certificates", tr.certificates, "🎓"],
           ] as [string, string, string][],
