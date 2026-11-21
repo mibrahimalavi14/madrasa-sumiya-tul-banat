@@ -74,12 +74,13 @@ async function saveAllWritten(formData: FormData) {
   revalidatePath("/results");
 }
 
-export default async function ResultsPage({ searchParams }: { searchParams: Promise<{ examId?: string; view?: string; q?: string }> }) {
+export default async function ResultsPage({ searchParams }: { searchParams: Promise<{ examId?: string; view?: string; q?: string; locked?: string }> }) {
   const user = await getAuthUser();
   const session = await getCurrentSession();
   const lang = await getLang();
   const ur = lang === "ur";
   const sp = await searchParams;
+  const lockedExamView = sp.locked === "1" && !!sp.examId;
   if (user?.role === "PARENT") {
     if (!user.parentStudentId) return <p>{ur ? "کوئی منسلک طالب علم نہیں۔" : "No linked student."}</p>;
     const [results, enrolls] = await Promise.all([
@@ -228,24 +229,34 @@ export default async function ResultsPage({ searchParams }: { searchParams: Prom
           <details className="relative"><summary className="list-none cursor-pointer text-sm bg-gray-700 hover:bg-gray-800 text-white px-3 py-1.5 rounded-lg">{ur ? "CSV ایکسپورٹ ▾" : "Export CSV ▾"}</summary><div className="absolute right-0 mt-2 w-64 bg-white text-gray-800 border rounded-xl shadow-lg p-3 z-20"><form action="/api/export/results" method="get" className="space-y-2 text-sm"><div className="font-semibold text-emerald-900">{ur?"کالم منتخب کریں":"Select columns"}</div><div className="grid grid-cols-2 gap-1">{[["exam","Exam"],["stage","Stage"],["admissionNo","Admission"],["rollNo","Roll No"],["name","Name"],["obtained","Obtained"],["total","Total"],["percentage","%"],["grade","Grade"],["status","Status"],["position","Position"]].map(([k,l])=><label key={k} className="flex items-center gap-1"><input type="checkbox" name="columns" value={k} defaultChecked /><span>{l}</span></label>)}</div><div className="flex gap-2 pt-1"><button className="bg-emerald-800 text-white px-3 py-1.5 rounded-lg text-xs">{ur?"ایکسپورٹ":"Export"}</button><a href="/api/export/results" className="px-3 py-1.5 rounded-lg text-xs border">{ur?"تمام":"All"}</a></div></form></div></details>
         </div>
       </div>
-      <form className="bg-white rounded-xl shadow-sm border border-emerald-100 p-4 flex gap-3 items-end flex-wrap">
-        <div className="flex flex-col gap-1.5">
-          <label className="inline-flex items-center gap-2 text-sm font-semibold text-emerald-900 bg-emerald-50 border border-emerald-200 px-3 py-1.5 rounded-lg w-fit">
-            <span className="h-2 w-2 rounded-full bg-emerald-600"></span>
-            {ur ? "امتحان منتخب کریں" : "Select Exam"}
-          </label>
-          <select
-            name="examId"
-            defaultValue={examId}
-            className="min-w-[280px] border border-emerald-200 rounded-lg px-3 py-2.5 bg-white text-gray-800 shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-200 focus:border-emerald-400"
-          >
-            {exams.map(e => <option key={e.id} value={e.id}>{examDisplayName(e)}</option>)}
-          </select>
+      {lockedExamView ? (
+        <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4 flex items-center justify-between gap-3 flex-wrap">
+          <div className="text-sm text-emerald-900"><b>{ur ? "منتخب امتحان:" : "Selected Exam:"}</b> {exam ? examDisplayName(exam) : "-"}</div>
+          <div className="flex gap-2 flex-wrap">
+            <Link href="/results/stage-performance" className="text-sm border border-emerald-300 text-emerald-800 px-3 py-1.5 rounded-lg bg-white">{ur ? "مرحلہ وار کارکردگی" : "Stage Performance"}</Link>
+            <Link href="/results" className="text-sm border border-emerald-300 text-emerald-800 px-3 py-1.5 rounded-lg bg-white">{ur ? "تمام نتائج" : "All Results"}</Link>
+          </div>
         </div>
-        <button className="bg-emerald-800 hover:bg-emerald-900 text-white px-5 py-2.5 rounded-lg font-medium shadow-sm">
-          {ur ? "نتیجہ دیکھیں" : "View Result"}
-        </button>
-      </form>
+      ) : (
+        <form className="bg-white rounded-xl shadow-sm border border-emerald-100 p-4 flex gap-3 items-end flex-wrap">
+          <div className="flex flex-col gap-1.5">
+            <label className="inline-flex items-center gap-2 text-sm font-semibold text-emerald-900 bg-emerald-50 border border-emerald-200 px-3 py-1.5 rounded-lg w-fit">
+              <span className="h-2 w-2 rounded-full bg-emerald-600"></span>
+              {ur ? "امتحان منتخب کریں" : "Select Exam"}
+            </label>
+            <select
+              name="examId"
+              defaultValue={examId}
+              className="min-w-[280px] border border-emerald-200 rounded-lg px-3 py-2.5 bg-white text-gray-800 shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-200 focus:border-emerald-400"
+            >
+              {exams.map(e => <option key={e.id} value={e.id}>{examDisplayName(e)}</option>)}
+            </select>
+          </div>
+          <button className="bg-emerald-800 hover:bg-emerald-900 text-white px-5 py-2.5 rounded-lg font-medium shadow-sm">
+            {ur ? "نتیجہ دیکھیں" : "View Result"}
+          </button>
+        </form>
+      )}
       {exam && <>
         <div className="flex items-center justify-end no-print">
           <Link href={`/results/exam-report?examId=${exam.id}`} className="text-sm bg-emerald-700 hover:bg-emerald-800 text-white px-4 py-2 rounded-lg font-medium">{ur ? "امتحان رپورٹ (میرٹ/پاس فیل) پرنٹ" : "Print Exam Report (Merit/Pass-Fail)"}</Link>

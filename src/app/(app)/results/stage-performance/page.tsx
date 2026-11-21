@@ -98,7 +98,7 @@ export default async function StagePerformancePage() {
             <div className="flex justify-between text-xs text-gray-600 mt-2"><span>{ur ? "اوسط" : "Avg"}: {s.total ? s.avg.toFixed(1) : "-"}%</span><span>{ur ? "پاس" : "Pass"}: {s.total ? s.pass : 0}/{s.total}</span></div>
             <div className="flex justify-between text-xs text-gray-500 mt-1"><span>{ur ? "تحریری" : "Written"}: {s.hasWritten ? s.writtenAvg.toFixed(1)+"%" : "-"}</span><span>{ur ? "زبانی" : "Oral"}: {s.hasOral ? s.oralAvg.toFixed(1)+"%" : "-"}</span></div>
             {s.absent > 0 && <div className="text-xs text-amber-700 mt-1">{ur ? "غیر حاضر/رخصت" : "Absent/Leave"}: {s.absent}</div>}
-            <Link href={s.examId ? `/results?examId=${s.examId}` : "/results"} className="text-xs text-blue-700 underline mt-2 inline-block">{ur ? "تفصیلی نتائج" : "Detailed Results"}</Link>
+            <Link href={s.examId ? `/results?examId=${s.examId}&locked=1` : "/results"} className="text-xs text-blue-700 underline mt-2 inline-block">{ur ? "تفصیلی نتائج" : "Detailed Results"}</Link>
           </div>
         ))}
       </div>
