@@ -7,6 +7,7 @@ type Section = { title: string; items: Item[] };
 
 export default function SidebarNav({ sections }: { sections: Section[] }) {
   const pathname = usePathname();
+  const allHrefs = sections.flatMap(s => s.items.map(i => i[0]));
   return (
     <nav className="flex-1 space-y-4 mt-1 overflow-auto pr-1">
       {sections.map((section, idx) => (
@@ -18,7 +19,10 @@ export default function SidebarNav({ sections }: { sections: Section[] }) {
           </div>
           <div className="space-y-1.5">
             {section.items.map(([href, label, icon]) => {
-              const active = pathname === href || (href !== "/dashboard" && pathname.startsWith(href));
+              const exact = pathname === href;
+              const prefix = href !== "/dashboard" && pathname.startsWith(href + "/");
+              const better = prefix && allHrefs.some(h => h !== href && h.startsWith(href + "/") && (pathname === h || pathname.startsWith(h + "/")));
+              const active = exact || (prefix && !better);
               return (
                 <Link
                   key={href}
