@@ -330,8 +330,11 @@ export default async function ResultsPage({ searchParams }: { searchParams: Prom
           </form>
         </div>}
         {!canEditResults && !lockedExamView && <div className="bg-blue-50 border border-blue-200 text-blue-900 rounded-xl p-4 text-sm">{ur ? "تحریری نمبر درج کرنے/محفوظ کرنے کی اجازت صرف ایڈمن کو ہے۔ آپ نتائج صرف دیکھ/پرنٹ/ایکسپورٹ کر سکتے ہیں۔" : "Entering/saving written marks is Admin-only. You can view, print, and export results."}</div>}
-        <div className="bg-white rounded-xl shadow p-4 overflow-auto">
-          <h2 className={`font-semibold mt-0 mb-2 ${ur ? "font-urdu" : ""}`} dir={ur?"rtl":"ltr"}>{ur ? "تمام محفوظ نتائج" : "All Saved Results"} - {examDisplayName(exam)}</h2>
+        <div className="bg-white rounded-2xl shadow-sm border border-emerald-100 p-4 overflow-auto">
+          <div className="flex items-center justify-between gap-2 flex-wrap mb-3">
+            <h2 className={`font-semibold text-emerald-950 ${ur ? "font-urdu" : ""}`} dir={ur?"rtl":"ltr"}>{lockedExamView ? (ur ? "اس مرحلے کے تفصیلی نتائج" : "Stage Result Details") : (ur ? "تمام محفوظ نتائج" : "All Saved Results")} - {examDisplayName(exam)}</h2>
+            {lockedExamView && <span className="text-xs bg-indigo-50 text-indigo-700 border border-indigo-100 px-2 py-1 rounded-full">{ur ? "صرف دیکھیں" : "View only"}</span>}
+          </div>
           <ResultsTable results={results} ur={ur} rollMap={Object.fromEntries(rollMap)} />
         </div>
       </>}

@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { getCurrentSession } from "@/lib/session";
 import { getAuthUser } from "@/lib/auth";
 import { getLang } from "@/lib/lang";
+import { formatDateDMY } from "@/lib/utils";
 
 export default async function StagePerformancePage() {
   const user = await getAuthUser();
@@ -91,14 +92,17 @@ export default async function StagePerformancePage() {
 
       <div className="grid md:grid-cols-2 xl:grid-cols-4 gap-4">
         {stages.map((s) => (
-          <div key={s.stage} className="bg-white rounded-2xl shadow-sm border border-blue-100 p-4">
-            <div className="text-xs text-gray-500">{ur ? "مرحلہ" : "Stage"} {s.stage}</div>
-            <div className={`font-semibold text-blue-900 mt-1 ${ur ? "font-urdu" : ""}`} dir={ur ? "rtl" : "ltr"}>{s.name}</div>
-            <div className="mt-3 h-2.5 bg-gray-100 rounded-full overflow-hidden"><div className="h-full bg-blue-600 rounded-full" style={{ width: `${Math.min(100, s.avg)}%` }} /></div>
+          <div key={s.stage} className="bg-white rounded-2xl shadow-sm border border-blue-100 p-4 hover:shadow-md transition-shadow">
+            <div className="flex items-center justify-between gap-2">
+              <div className="text-xs font-semibold text-blue-700 bg-blue-50 border border-blue-100 px-2 py-0.5 rounded-full">{ur ? "مرحلہ" : "Stage"} {s.stage}</div>
+              <div className="text-[11px] text-gray-500">{formatDateDMY(s.examDate)}</div>
+            </div>
+            <div className={`font-semibold text-blue-950 mt-2 ${ur ? "font-urdu" : ""}`} dir={ur ? "rtl" : "ltr"}>{s.name}</div>
+            <div className="mt-3 h-2.5 bg-gray-100 rounded-full overflow-hidden"><div className="h-full bg-gradient-to-r from-blue-600 to-indigo-500 rounded-full" style={{ width: `${Math.min(100, s.avg)}%` }} /></div>
             <div className="flex justify-between text-xs text-gray-600 mt-2"><span>{ur ? "اوسط" : "Avg"}: {s.total ? s.avg.toFixed(1) : "-"}%</span><span>{ur ? "پاس" : "Pass"}: {s.total ? s.pass : 0}/{s.total}</span></div>
             <div className="flex justify-between text-xs text-gray-500 mt-1"><span>{ur ? "تحریری" : "Written"}: {s.hasWritten ? s.writtenAvg.toFixed(1)+"%" : "-"}</span><span>{ur ? "زبانی" : "Oral"}: {s.hasOral ? s.oralAvg.toFixed(1)+"%" : "-"}</span></div>
-            {s.absent > 0 && <div className="text-xs text-amber-700 mt-1">{ur ? "غیر حاضر/رخصت" : "Absent/Leave"}: {s.absent}</div>}
-            <Link href={s.examId ? `/results?examId=${s.examId}&locked=1` : "/results"} className="text-xs text-blue-700 underline mt-2 inline-block">{ur ? "تفصیلی نتائج" : "Detailed Results"}</Link>
+            <div className="flex justify-between text-xs text-gray-500 mt-1"><span>{ur ? "منتخب" : "Selected"}: {s.selected}</span><span className={s.absent ? "text-amber-700" : ""}>{ur ? "غ/رخصت" : "A/L"}: {s.absent}</span></div>
+            <Link href={s.examId ? `/results?examId=${s.examId}&locked=1` : "/results"} className="mt-3 inline-flex items-center justify-center w-full text-sm bg-blue-700 hover:bg-blue-800 text-white px-3 py-2 rounded-lg font-medium">{ur ? "نتیجہ دیکھیں" : "View Result"}</Link>
           </div>
         ))}
       </div>
