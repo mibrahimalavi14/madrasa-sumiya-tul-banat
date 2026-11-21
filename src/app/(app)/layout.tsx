@@ -39,7 +39,6 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           title: lang === "ur" ? "جائزہ" : "Overview",
           items: [
             ["/dashboard", tr.dashboard, "🏠"],
-            ["/search", lang === "ur" ? "تلاش" : "Search", "🔍"],
             ...(isAdmin ? [["/sessions", tr.sessions, "📅"] as [string, string, string]] : []),
           ] as [string, string, string][],
         },
@@ -111,6 +110,16 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           <div className="font-medium text-[11px] leading-snug">{current ? `${current.name} • ${current.status}` : tr.noActiveSession}</div>
         </div>
       </div>
+
+      {isStaff && (
+        <form action="/search" method="get" className="mb-4">
+          <label className="block text-[11px] uppercase tracking-wider text-emerald-300/80 font-semibold mb-1.5">{lang === "ur" ? "گلوبل تلاش" : "Global Search"}</label>
+          <div className="flex gap-2">
+            <input name="q" placeholder={lang === "ur" ? "طالبہ، رسید، امتحان..." : "Student, receipt, exam..."} className="w-full rounded-lg bg-white/10 border border-emerald-700/50 px-3 py-2 text-sm text-white placeholder:text-emerald-200/60 focus:outline-none focus:ring-2 focus:ring-emerald-400/40" />
+            <button className="shrink-0 rounded-lg bg-amber-400/20 border border-amber-300/30 px-3 py-2 text-sm hover:bg-amber-400/30" aria-label={lang === "ur" ? "تلاش" : "Search"}>🔍</button>
+          </div>
+        </form>
+      )}
 
       <SidebarNav sections={sections} />
 
