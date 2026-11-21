@@ -223,21 +223,34 @@ export default async function ResultsPage({ searchParams }: { searchParams: Prom
   const resMap = new Map(results.map(r=>[r.studentId,r]));
   return (
     <div className="space-y-4 theme-results">
-      <div className="flex items-center justify-between flex-wrap gap-2">
-        <h1 className="text-2xl font-bold text-emerald-900">{ur ? "نتائج (محفوظ شدہ)" : "Results (All Saved)"}</h1>
-        <div className="flex gap-2 flex-wrap">
-          <details className="relative"><summary className="list-none cursor-pointer text-sm bg-gray-700 hover:bg-gray-800 text-white px-3 py-1.5 rounded-lg">{ur ? "CSV ایکسپورٹ ▾" : "Export CSV ▾"}</summary><div className="absolute right-0 mt-2 w-64 bg-white text-gray-800 border rounded-xl shadow-lg p-3 z-20"><form action="/api/export/results" method="get" className="space-y-2 text-sm"><div className="font-semibold text-emerald-900">{ur?"کالم منتخب کریں":"Select columns"}</div><div className="grid grid-cols-2 gap-1">{[["exam","Exam"],["stage","Stage"],["admissionNo","Admission"],["rollNo","Roll No"],["name","Name"],["obtained","Obtained"],["total","Total"],["percentage","%"],["grade","Grade"],["status","Status"],["position","Position"]].map(([k,l])=><label key={k} className="flex items-center gap-1"><input type="checkbox" name="columns" value={k} defaultChecked /><span>{l}</span></label>)}</div><div className="flex gap-2 pt-1"><button className="bg-emerald-800 text-white px-3 py-1.5 rounded-lg text-xs">{ur?"ایکسپورٹ":"Export"}</button><a href="/api/export/results" className="px-3 py-1.5 rounded-lg text-xs border">{ur?"تمام":"All"}</a></div></form></div></details>
-        </div>
-      </div>
-      {lockedExamView ? (
-        <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4 flex items-center justify-between gap-3 flex-wrap">
-          <div className="text-sm text-emerald-900"><b>{ur ? "منتخب امتحان:" : "Selected Exam:"}</b> {exam ? examDisplayName(exam) : "-"}</div>
-          <div className="flex gap-2 flex-wrap">
-            <Link href="/results/stage-performance" className="text-sm border border-emerald-300 text-emerald-800 px-3 py-1.5 rounded-lg bg-white">{ur ? "مرحلہ وار کارکردگی" : "Stage Performance"}</Link>
-            <Link href="/results" className="text-sm border border-emerald-300 text-emerald-800 px-3 py-1.5 rounded-lg bg-white">{ur ? "تمام نتائج" : "All Results"}</Link>
+      {(() => {
+        const total = results.length;
+        const pass = results.filter((r: any) => String(r.status).toLowerCase() === "pass").length;
+        const fail = total - pass;
+        const absent = results.filter((r: any) => r.remarks === "ABSENT" || r.remarks === "LEAVE").length;
+        const avg = total ? results.reduce((s: number, r: any) => s + Number(r.percentage || 0), 0) / total : 0;
+        return (
+          <>
+      <div className={`rounded-2xl p-5 shadow-sm border ${lockedExamView ? "bg-gradient-to-r from-indigo-700 via-blue-700 to-sky-600 text-white border-indigo-300/30" : "bg-gradient-to-r from-emerald-800 to-teal-700 text-white border-emerald-200"}`}>
+        <div className="flex items-start justify-between gap-3 flex-wrap">
+          <div>
+            <div className={`text-xs uppercase tracking-wider font-semibold mb-1 ${lockedExamView ? "text-blue-100" : "text-emerald-100"}`}>{lockedExamView ? (ur ? "مرحلہ وار نتیجہ" : "Stage Result View") : (ur ? "نتائج" : "Results")}</div>
+            <h1 className="text-2xl font-bold">{lockedExamView ? (exam ? examDisplayName(exam) : (ur ? "نتیجہ" : "Result")) : (ur ? "نتائج (محفوظ شدہ)" : "Results (All Saved)")}</h1>
+            <p className={`text-sm mt-1 ${lockedExamView ? "text-blue-100" : "text-emerald-100"}`}>{lockedExamView ? (ur ? "یہ صرف منتخب مرحلے کی تفصیلی کارکردگی ہے۔" : "Detailed performance for the selected stage only.") : (ur ? "امتحان منتخب کریں، نمبر درج کریں، اور محفوظ نتائج دیکھیں۔" : "Select exam, enter marks, and view saved results.")}</p>
+          </div>
+          <div className="flex gap-2 flex-wrap no-print">
+            {lockedExamView && <Link href="/results/stage-performance" className="text-sm bg-white/15 hover:bg-white/25 border border-white/30 text-white px-3 py-1.5 rounded-lg">{ur ? "← مرحلہ وار کارکردگی" : "← Stage Performance"}</Link>}
+            {lockedExamView && <Link href="/results" className="text-sm bg-white/15 hover:bg-white/25 border border-white/30 text-white px-3 py-1.5 rounded-lg">{ur ? "تمام نتائج" : "All Results"}</Link>}
+            <details className="relative"><summary className="list-none cursor-pointer text-sm bg-white/15 hover:bg-white/25 border border-white/30 text-white px-3 py-1.5 rounded-lg">{ur ? "CSV ایکسپورٹ ▾" : "Export CSV ▾"}</summary><div className="absolute right-0 mt-2 w-64 bg-white text-gray-800 border rounded-xl shadow-lg p-3 z-20"><form action="/api/export/results" method="get" className="space-y-2 text-sm"><div className="font-semibold text-emerald-900">{ur?"کالم منتخب کریں":"Select columns"}</div><div className="grid grid-cols-2 gap-1">{[["exam","Exam"],["stage","Stage"],["admissionNo","Admission"],["rollNo","Roll No"],["name","Name"],["obtained","Obtained"],["total","Total"],["percentage","%"],["grade","Grade"],["status","Status"],["position","Position"]].map(([k,l])=><label key={k} className="flex items-center gap-1"><input type="checkbox" name="columns" value={k} defaultChecked /><span>{l}</span></label>)}</div><div className="flex gap-2 pt-1"><button className="bg-emerald-800 text-white px-3 py-1.5 rounded-lg text-xs">{ur?"ایکسپورٹ":"Export"}</button><a href="/api/export/results" className="px-3 py-1.5 rounded-lg text-xs border">{ur?"تمام":"All"}</a></div></form></div></details>
           </div>
         </div>
-      ) : (
+        {exam && <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 mt-4">
+          {[{l:ur?"کل نتائج":"Results",v:total},{l:ur?"اوسط":"Avg %",v:total?avg.toFixed(1)+"%":"-"},{l:ur?"پاس":"Pass",v:pass},{l:ur?"فیل":"Fail",v:fail},{l:ur?"غیر حاضر/رخصت":"Absent/Leave",v:absent}].map((s)=> (
+            <div key={s.l} className="bg-white/10 border border-white/15 rounded-xl px-3 py-2"><div className="text-[11px] opacity-80">{s.l}</div><div className="text-lg font-bold">{s.v}</div></div>
+          ))}
+        </div>}
+      </div>
+      {!lockedExamView && (
         <form className="bg-white rounded-xl shadow-sm border border-emerald-100 p-4 flex gap-3 items-end flex-wrap">
           <div className="flex flex-col gap-1.5">
             <label className="inline-flex items-center gap-2 text-sm font-semibold text-emerald-900 bg-emerald-50 border border-emerald-200 px-3 py-1.5 rounded-lg w-fit">
@@ -257,11 +270,14 @@ export default async function ResultsPage({ searchParams }: { searchParams: Prom
           </button>
         </form>
       )}
+          </>
+        );
+      })()}
       {exam && <>
         <div className="flex items-center justify-end no-print">
           <Link href={`/results/exam-report?examId=${exam.id}`} className="text-sm bg-emerald-700 hover:bg-emerald-800 text-white px-4 py-2 rounded-lg font-medium">{ur ? "امتحان رپورٹ (میرٹ/پاس فیل) پرنٹ" : "Print Exam Report (Merit/Pass-Fail)"}</Link>
         </div>
-        {canEditResults && <div className="bg-white rounded-xl shadow p-4 overflow-auto">
+        {canEditResults && !lockedExamView && <div className="bg-white rounded-xl shadow p-4 overflow-auto">
           <div className="flex items-center justify-between gap-3 flex-wrap mb-2">
             <div>
               <h2 className="font-semibold">{ur ? "تحریری نمبر درج کریں (بلک/گرڈ)" : "Enter Written Marks (Bulk/Grid)"}</h2>
@@ -313,7 +329,7 @@ export default async function ResultsPage({ searchParams }: { searchParams: Prom
             {exam.students.length > 0 && <div className="mt-3 flex justify-end"><button className="bg-emerald-800 hover:bg-emerald-900 text-white px-4 py-2 rounded-lg font-medium">{ur ? "سب محفوظ کریں (Save All)" : "Save All"}</button></div>}
           </form>
         </div>}
-        {!canEditResults && <div className="bg-blue-50 border border-blue-200 text-blue-900 rounded-xl p-4 text-sm">{ur ? "تحریری نمبر درج کرنے/محفوظ کرنے کی اجازت صرف ایڈمن کو ہے۔ آپ نتائج صرف دیکھ/پرنٹ/ایکسپورٹ کر سکتے ہیں۔" : "Entering/saving written marks is Admin-only. You can view, print, and export results."}</div>}
+        {!canEditResults && !lockedExamView && <div className="bg-blue-50 border border-blue-200 text-blue-900 rounded-xl p-4 text-sm">{ur ? "تحریری نمبر درج کرنے/محفوظ کرنے کی اجازت صرف ایڈمن کو ہے۔ آپ نتائج صرف دیکھ/پرنٹ/ایکسپورٹ کر سکتے ہیں۔" : "Entering/saving written marks is Admin-only. You can view, print, and export results."}</div>}
         <div className="bg-white rounded-xl shadow p-4 overflow-auto">
           <h2 className={`font-semibold mt-0 mb-2 ${ur ? "font-urdu" : ""}`} dir={ur?"rtl":"ltr"}>{ur ? "تمام محفوظ نتائج" : "All Saved Results"} - {examDisplayName(exam)}</h2>
           <ResultsTable results={results} ur={ur} rollMap={Object.fromEntries(rollMap)} />
