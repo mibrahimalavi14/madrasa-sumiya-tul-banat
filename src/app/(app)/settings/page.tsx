@@ -265,23 +265,7 @@ export default async function SettingsPage() {
         </div>
       </div>
 
-      <div className="bg-white rounded-2xl shadow-sm border border-emerald-100/80 p-5">
-        <h2 className="font-semibold mb-2 text-emerald-900">{ur ? "مزید بقیہ کام (آپ کے input/design درکار)" : "Additional Remaining Items (need your input/design)"}</h2>
-        <div className="grid md:grid-cols-3 gap-3 text-sm">
-          <div className="rounded-xl border border-emerald-100 p-4 bg-emerald-50/20">
-            <div className="font-semibold text-emerald-900 mb-1">{ur ? "RBAC (مزید roles)" : "RBAC (more roles)"}</div>
-            <p className="text-gray-700 text-xs leading-5">{ur ? "Accountant role: Fees مکمل رسائی، باقی ماڈیولز (Students/Exams/Results/Certificates) صرف دیکھنے/پرنٹ/ایکسپورٹ کے لیے؛ Sessions/Settings/Audit صرف Admin۔ اگر Teacher/Viewer وغیرہ یا تبدیلی چاہیے تو بتائیں۔" : "Accountant role: full access to Fees, view/print/export only for Students/Exams/Results/Certificates; Sessions/Settings/Audit Admin-only. Tell me if you want Teacher/Viewer or different permissions."}</p>
-          </div>
-          <div className="rounded-xl border border-emerald-100 p-4 bg-emerald-50/20">
-            <div className="font-semibold text-emerald-900 mb-1">{ur ? "Certificate Template / Custom Reports" : "Certificate Template / Custom Reports"}</div>
-            <p className="text-gray-700 text-xs leading-5">{ur ? "اگر نیا certificate design/editor یا مخصوص report format چاہیے تو sample/layout/fields بھیجیں۔ موجودہ data کے مطابق custom print/report بنا سکتا ہوں۔" : "If you want a new certificate design/editor or specific report format, share sample/layout/fields. I can build custom print/reports from existing data."}</p>
-          </div>
-          <div className="rounded-xl border border-emerald-100 p-4 bg-emerald-50/20">
-            <div className="font-semibold text-emerald-900 mb-1">{ur ? "Production QA" : "Production QA"}</div>
-            <p className="text-gray-700 text-xs leading-5">{ur ? "Deploy کے بعد live data پر final testing آپ کی طرف سے ضروری ہے۔ مکمل checklist docs/REMAINING-SETUP.md میں شامل ہے؛ مسئلہ ہو تو page + steps + screenshot/error بھیجیں۔" : "After deploy, final testing on live data is required from your side. Full checklist is in docs/REMAINING-SETUP.md; if issues appear, send page + steps + screenshot/error."}</p>
-          </div>
-        </div>
-      </div>
+
     </div>
   );
 }
