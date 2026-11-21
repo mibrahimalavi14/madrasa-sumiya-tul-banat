@@ -75,6 +75,7 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
   let certsByType: any[] = [];
   let recentCerts: any[] = [];
   let monthFeeTrendRows: any[] = [];
+  let trendMonths: Array<{ month: number; year: number; label: string }> = [];
 
   if (session) {
     const sStart = session.startDate ? new Date(session.startDate) : null;
@@ -91,12 +92,21 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
     const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     const tomorrowStart = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
     const shownIdx2 = y * 12 + (m - 1);
-    const trendMonths: Array<{ month: number; year: number; label: string }> = [];
-    for (let i = 5; i >= 0; i--) {
-      const idx = shownIdx2 - i;
-      const tm = (idx % 12 + 12) % 12 + 1;
-      const ty = Math.floor((idx - (tm - 1)) / 12);
-      trendMonths.push({ month: tm, year: ty, label: `${tm}/${String(ty).slice(-2)}` });
+    if (sStart && sEnd) {
+      const startIdx = sStart.getFullYear() * 12 + sStart.getMonth();
+      const endIdx = sEnd.getFullYear() * 12 + sEnd.getMonth();
+      for (let idx = startIdx; idx <= endIdx; idx++) {
+        const tm = (idx % 12 + 12) % 12 + 1;
+        const ty = Math.floor((idx - (tm - 1)) / 12);
+        trendMonths.push({ month: tm, year: ty, label: `${tm}/${String(ty).slice(-2)}` });
+      }
+    } else {
+      for (let i = 5; i >= 0; i--) {
+        const idx = shownIdx2 - i;
+        const tm = (idx % 12 + 12) % 12 + 1;
+        const ty = Math.floor((idx - (tm - 1)) / 12);
+        trendMonths.push({ month: tm, year: ty, label: `${tm}/${String(ty).slice(-2)}` });
+      }
     }
     const trendOr = trendMonths.map(t => ({ month: t.month, year: t.year }));
 
@@ -229,13 +239,6 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
     return due > 0 && paid < due;
   }).map((f: any) => f.studentId));
 
-  const trendMonths: Array<{ month: number; year: number; label: string }> = [];
-  for (let i = 5; i >= 0; i--) {
-    const idx = shownIdx - i;
-    const tm = (idx % 12 + 12) % 12 + 1;
-    const ty = Math.floor((idx - (tm - 1)) / 12);
-    trendMonths.push({ month: tm, year: ty, label: `${tm}/${String(ty).slice(-2)}` });
-  }
   const feeTrend = trendMonths.map(t => {
     const rows = monthFeeTrendRows.filter((r: any) => r.month === t.month && r.year === t.year);
     const collected = rows.reduce((s: number, f: any) => s + (Number(f.paidAmount ?? 0) > 0 ? Number(f.paidAmount ?? 0) : (f.isPaid ? Number(f.amount || 0) : 0)), 0);
