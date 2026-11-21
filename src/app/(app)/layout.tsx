@@ -39,6 +39,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           title: lang === "ur" ? "جائزہ" : "Overview",
           items: [
             ["/dashboard", tr.dashboard, "🏠"],
+            ["/search", lang === "ur" ? "تلاش" : "Search", "🔍"],
             ...(isAdmin ? [["/sessions", tr.sessions, "📅"] as [string, string, string]] : []),
           ] as [string, string, string][],
         },
@@ -128,6 +129,8 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       menuLabel={lang === "ur" ? "مینو" : "Menu"}
       closeLabel={lang === "ur" ? "بند کریں" : "Close"}
       brandTitle="Madrasa Sumiya-tul-Banat"
+      searchPlaceholder={lang === "ur" ? "طالبہ، رسید، امتحان، سرٹیفکیٹ تلاش کریں..." : "Search student, receipt, exam, certificate..."}
+      searchLabel={lang === "ur" ? "تلاش" : "Search"}
     >
       {!current && isStaff && (
         <div className="mb-5 bg-amber-50 border border-amber-300 text-amber-900 p-4 rounded-xl shadow-sm">

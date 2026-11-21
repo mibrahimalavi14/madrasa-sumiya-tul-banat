@@ -6,12 +6,13 @@ import { getLang } from "@/lib/lang";
 import { t } from "@/lib/i18n";
 import Logo from "@/components/Logo";
 
-export default async function Dashboard() {
+export default async function Dashboard({ searchParams }: { searchParams: Promise<{ month?: string; year?: string }> }) {
   const user = await getAuthUser();
   const session = await getCurrentSession();
   const lang = await getLang();
   const ur = lang === "ur";
   const tr = t[lang];
+  const sp = await searchParams;
 
   if (user?.role === "PARENT") {
     const student = user.parentStudentId ? await prisma.student.findUnique({
@@ -60,8 +61,10 @@ export default async function Dashboard() {
   const now = new Date();
   const actualM = now.getMonth() + 1;
   const actualY = now.getFullYear();
-  let m = actualM;
-  let y = actualY;
+  const reqM = Number(sp.month);
+  const reqY = Number(sp.year);
+  let m = Number.isFinite(reqM) && reqM >= 1 && reqM <= 12 ? reqM : actualM;
+  let y = Number.isFinite(reqY) && reqY >= 2000 && reqY <= 2100 ? reqY : actualY;
 
   let students = 0, activeStudents = 0, examsCount = 0, examsConducted = 0, feeGroups: any[] = [], resultsCount = 0, certsCount = 0;
   let recentEnrolls: any[] = [], recentExams: any[] = [], recentResults: any[] = [];
@@ -327,7 +330,19 @@ export default async function Dashboard() {
 
       <div className="grid lg:grid-cols-3 gap-5">
         <div className="bg-white rounded-2xl shadow-sm border border-emerald-100 p-5 lg:col-span-2">
-          <div className="flex items-center justify-between mb-3"><h2 className="font-semibold text-lg text-emerald-950">{ur ? "فیس خلاصہ (مزید واضح)" : "Fee Summary (Detailed)"}</h2><Link href="/fees" className="text-sm text-emerald-700 underline">{ur ? "فیس کھولیں" : "Open Fees"}</Link></div>
+          <div className="flex items-center justify-between gap-3 flex-wrap mb-3">
+            <h2 className="font-semibold text-lg text-emerald-950">{ur ? "فیس خلاصہ (مزید واضح)" : "Fee Summary (Detailed)"}</h2>
+            <div className="flex items-center gap-2 flex-wrap">
+              <form className="flex items-center gap-2 flex-wrap">
+                <label className="text-xs text-gray-500">{ur ? "مہینہ" : "Month"}</label>
+                <input name="month" type="number" min={1} max={12} defaultValue={m} className="w-20 border rounded px-2 py-1 text-sm" />
+                <label className="text-xs text-gray-500">{ur ? "سال" : "Year"}</label>
+                <input name="year" type="number" min={2000} max={2100} defaultValue={y} className="w-24 border rounded px-2 py-1 text-sm" />
+                <button className="bg-emerald-800 text-white px-3 py-1 rounded text-sm">{ur ? "فلٹر" : "Filter"}</button>
+              </form>
+              <Link href="/fees" className="text-sm text-emerald-700 underline">{ur ? "فیس کھولیں" : "Open Fees"}</Link>
+            </div>
+          </div>
           <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-3">
             <div className="rounded-xl border border-emerald-100 p-4 bg-emerald-50/30"><div className="text-xs text-gray-500">{ur ? "اس ماہ کل واجب" : "Total Due (Month)"}</div><div className="text-xl font-bold text-emerald-900">{fmtRs(monthDueTotal)}</div></div>
             <div className="rounded-xl border border-emerald-100 p-4 bg-emerald-50/30"><div className="text-xs text-gray-500">{ur ? "اس ماہ وصول" : "Collected (Month)"}</div><div className="text-xl font-bold text-emerald-900">{fmtRs(monthCollected)}</div></div>

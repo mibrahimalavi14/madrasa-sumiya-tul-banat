@@ -9,11 +9,13 @@ function csvEscape(v: any) {
   return s;
 }
 
-export async function GET() {
+export async function GET(req: Request) {
   const user = await getAuthUser();
   if (!user || (user.role !== "ADMIN" && user.role !== "ACCOUNTANT")) return NextResponse.json({ error: "UNAUTHORIZED" }, { status: 401 });
   const session = await getCurrentSession();
   if (!session) return NextResponse.json({ error: "NO_SESSION" }, { status: 400 });
+  const { searchParams } = new URL(req.url);
+  const colsParam = [...searchParams.getAll("columns"), ...(searchParams.get("columns") || "").split(",")].map(s => s.trim()).filter(Boolean);
 
   const [results, enrolls] = await Promise.all([
     prisma.result.findMany({
@@ -25,11 +27,24 @@ export async function GET() {
   ]);
   const rollMap = new Map(enrolls.map(e => [e.studentId, e.rollNo]));
 
-  const header = ["Session","Exam","Stage","Admission No","Roll No","Name","Obtained","Total","Percentage","Grade","Status","Position"];
-  const rows = results.map((r: any) => [
-    session.name, r.exam?.name, r.exam?.stage ?? "", r.student?.admissionNo, rollMap.get(r.studentId) ?? "", r.student?.nameEn,
-    r.totalObtained ?? "", r.totalMarks ?? "", r.percentage != null ? Number(r.percentage).toFixed(2) : "", r.grade ?? "", r.status ?? "", r.position ?? ""
-  ]);
+  const allCols: { key: string; label: string; get: (r: any) => any }[] = [
+    { key: "session", label: "Session", get: () => session.name },
+    { key: "exam", label: "Exam", get: r => r.exam?.name },
+    { key: "stage", label: "Stage", get: r => r.exam?.stage ?? "" },
+    { key: "admissionNo", label: "Admission No", get: r => r.student?.admissionNo },
+    { key: "rollNo", label: "Roll No", get: r => rollMap.get(r.studentId) ?? "" },
+    { key: "name", label: "Name", get: r => r.student?.nameEn },
+    { key: "obtained", label: "Obtained", get: r => r.totalObtained ?? "" },
+    { key: "total", label: "Total", get: r => r.totalMarks ?? "" },
+    { key: "percentage", label: "Percentage", get: r => r.percentage != null ? Number(r.percentage).toFixed(2) : "" },
+    { key: "grade", label: "Grade", get: r => r.grade ?? "" },
+    { key: "status", label: "Status", get: r => r.status ?? "" },
+    { key: "position", label: "Position", get: r => r.position ?? "" },
+  ];
+  const cols = colsParam.length ? allCols.filter(c => colsParam.includes(c.key)) : allCols;
+  const useCols = cols.length ? cols : allCols;
+  const header = useCols.map(c => c.label);
+  const rows = results.map((r: any) => useCols.map(c => c.get(r)));
   const csv = "\uFEFF" + [header, ...rows].map(r => r.map(csvEscape).join(",")).join("\n");
   return new NextResponse(csv, {
     headers: {

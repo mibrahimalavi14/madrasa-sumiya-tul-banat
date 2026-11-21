@@ -21,7 +21,7 @@ export default async function StagePerformancePage() {
     }),
     prisma.result.findMany({
       where: { exam: { sessionId: session.id } },
-      select: { percentage: true, status: true, totalObtained: true, totalMarks: true, exam: { select: { stage: true } } },
+      select: { percentage: true, status: true, totalObtained: true, totalMarks: true, writtenObtained: true, writtenTotal: true, oralObtained: true, oralTotal: true, remarks: true, exam: { select: { stage: true } } },
     }),
   ]);
 
@@ -32,16 +32,19 @@ export default async function StagePerformancePage() {
     const total = rows.length;
     const pass = rows.filter((r: any) => String(r.status).toLowerCase() === "pass").length;
     const fail = total - pass;
+    const absent = rows.filter((r: any) => r.remarks === "ABSENT" || r.remarks === "LEAVE").length;
     const avg = total ? rows.reduce((s: number, r: any) => s + Number(r.percentage || 0), 0) / total : 0;
-    const avgObt = total ? rows.reduce((s: number, r: any) => s + Number(r.totalObtained || 0), 0) / total : 0;
-    const avgTotal = total ? rows.reduce((s: number, r: any) => s + Number(r.totalMarks || 0), 0) / total : 0;
+    const writtenRows = rows.filter((r: any) => Number(r.writtenTotal || 0) > 0);
+    const oralRows = rows.filter((r: any) => Number(r.oralTotal || 0) > 0);
+    const writtenAvg = writtenRows.length ? writtenRows.reduce((s: number, r: any) => s + ((Number(r.writtenObtained || 0) / Number(r.writtenTotal || 1)) * 100), 0) / writtenRows.length : 0;
+    const oralAvg = oralRows.length ? oralRows.reduce((s: number, r: any) => s + ((Number(r.oralObtained || 0) / Number(r.oralTotal || 1)) * 100), 0) / oralRows.length : 0;
     return {
       stage,
       name: ur ? (examNameUr[stage] || exam?.name || `Stage ${stage}`) : (exam?.name || `Stage ${stage}`),
       examDate: exam?.examDate,
       selected: exam?._count?.students ?? 0,
       saved: exam?._count?.results ?? total,
-      total, pass, fail, avg, avgObt, avgTotal,
+      total, pass, fail, absent, avg, writtenAvg, oralAvg, hasWritten: writtenRows.length > 0, hasOral: oralRows.length > 0,
     };
   });
 
@@ -57,29 +60,30 @@ export default async function StagePerformancePage() {
           <thead className="bg-blue-50 text-blue-950"><tr>
             <th className="p-2 text-center">{ur ? "مرحلہ" : "Stage"}</th>
             <th className="p-2 text-left">{ur ? "امتحان" : "Exam"}</th>
-            <th className="p-2 text-center">{ur ? "منتخب طلبہ" : "Selected"}</th>
+            <th className="p-2 text-center">{ur ? "منتخب" : "Selected"}</th>
             <th className="p-2 text-center">{ur ? "نتائج" : "Results"}</th>
             <th className="p-2 text-center">{ur ? "اوسط %" : "Avg %"}</th>
+            <th className="p-2 text-center">{ur ? "تحریری اوسط" : "Written Avg"}</th>
+            <th className="p-2 text-center">{ur ? "زبانی اوسط" : "Oral Avg"}</th>
             <th className="p-2 text-center">{ur ? "پاس" : "Pass"}</th>
             <th className="p-2 text-center">{ur ? "فیل" : "Fail"}</th>
-            <th className="p-2 text-center">{ur ? "پاس %" : "Pass %"}</th>
+            <th className="p-2 text-center">{ur ? "غیر حاضر/رخصت" : "Absent/Leave"}</th>
           </tr></thead>
           <tbody>
-            {stages.map((s) => {
-              const passPct = s.total ? (s.pass / s.total) * 100 : 0;
-              return (
-                <tr key={s.stage} className="border-t">
-                  <td className="p-2 text-center font-semibold">{s.stage}</td>
-                  <td className={`p-2 ${ur ? "font-urdu" : ""}`} dir={ur ? "rtl" : "ltr"}>{s.name}</td>
-                  <td className="p-2 text-center">{s.selected}</td>
-                  <td className="p-2 text-center">{s.total}</td>
-                  <td className="p-2 text-center font-medium">{s.total ? s.avg.toFixed(2) : "-"}</td>
-                  <td className="p-2 text-center text-emerald-700 font-medium">{s.total ? s.pass : "-"}</td>
-                  <td className="p-2 text-center text-red-700 font-medium">{s.total ? s.fail : "-"}</td>
-                  <td className="p-2 text-center">{s.total ? `${passPct.toFixed(1)}%` : "-"}</td>
-                </tr>
-              );
-            })}
+            {stages.map((s) => (
+              <tr key={s.stage} className="border-t">
+                <td className="p-2 text-center font-semibold">{s.stage}</td>
+                <td className={`p-2 ${ur ? "font-urdu" : ""}`} dir={ur ? "rtl" : "ltr"}>{s.name}</td>
+                <td className="p-2 text-center">{s.selected}</td>
+                <td className="p-2 text-center">{s.total}</td>
+                <td className="p-2 text-center font-medium">{s.total ? s.avg.toFixed(2) : "-"}</td>
+                <td className="p-2 text-center">{s.hasWritten ? s.writtenAvg.toFixed(1) + "%" : "-"}</td>
+                <td className="p-2 text-center">{s.hasOral ? s.oralAvg.toFixed(1) + "%" : "-"}</td>
+                <td className="p-2 text-center text-emerald-700 font-medium">{s.total ? s.pass : "-"}</td>
+                <td className="p-2 text-center text-red-700 font-medium">{s.total ? s.fail : "-"}</td>
+                <td className="p-2 text-center text-amber-700 font-medium">{s.total ? s.absent : "-"}</td>
+              </tr>
+            ))}
           </tbody>
         </table>
       </div>
@@ -91,6 +95,8 @@ export default async function StagePerformancePage() {
             <div className={`font-semibold text-blue-900 mt-1 ${ur ? "font-urdu" : ""}`} dir={ur ? "rtl" : "ltr"}>{s.name}</div>
             <div className="mt-3 h-2.5 bg-gray-100 rounded-full overflow-hidden"><div className="h-full bg-blue-600 rounded-full" style={{ width: `${Math.min(100, s.avg)}%` }} /></div>
             <div className="flex justify-between text-xs text-gray-600 mt-2"><span>{ur ? "اوسط" : "Avg"}: {s.total ? s.avg.toFixed(1) : "-"}%</span><span>{ur ? "پاس" : "Pass"}: {s.total ? s.pass : 0}/{s.total}</span></div>
+            <div className="flex justify-between text-xs text-gray-500 mt-1"><span>{ur ? "تحریری" : "Written"}: {s.hasWritten ? s.writtenAvg.toFixed(1)+"%" : "-"}</span><span>{ur ? "زبانی" : "Oral"}: {s.hasOral ? s.oralAvg.toFixed(1)+"%" : "-"}</span></div>
+            {s.absent > 0 && <div className="text-xs text-amber-700 mt-1">{ur ? "غیر حاضر/رخصت" : "Absent/Leave"}: {s.absent}</div>}
             <Link href="/results" className="text-xs text-blue-700 underline mt-2 inline-block">{ur ? "تفصیلی نتائج" : "Detailed Results"}</Link>
           </div>
         ))}

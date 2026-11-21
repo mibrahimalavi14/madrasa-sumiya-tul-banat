@@ -11,6 +11,8 @@ export default function AppShell({
   menuLabel,
   closeLabel,
   brandTitle,
+  searchPlaceholder,
+  searchLabel,
 }: {
   sidebar: React.ReactNode;
   children: React.ReactNode;
@@ -18,6 +20,8 @@ export default function AppShell({
   menuLabel: string;
   closeLabel: string;
   brandTitle: string;
+  searchPlaceholder?: string;
+  searchLabel?: string;
 }) {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
@@ -71,7 +75,19 @@ export default function AppShell({
         <div className="flex-1 min-h-0 flex flex-col overflow-hidden">{sidebar}</div>
       </aside>
 
-      <main className="flex-1 min-w-0 p-4 sm:p-6 md:p-8 overflow-auto">{children}</main>
+      <main className="flex-1 min-w-0 overflow-auto">
+        <div className="sticky top-0 z-30 bg-white/90 backdrop-blur border-b border-emerald-100 px-4 sm:px-6 md:px-8 py-3 no-print">
+          <form action="/search" method="get" className="flex items-center gap-2 max-w-xl">
+            <input
+              name="q"
+              placeholder={searchPlaceholder || "Search..."}
+              className="w-full border border-emerald-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-200"
+            />
+            <button className="bg-emerald-800 hover:bg-emerald-900 text-white px-3 py-2 rounded-lg text-sm font-medium shrink-0">{searchLabel || "Search"}</button>
+          </form>
+        </div>
+        <div className="p-4 sm:p-6 md:p-8">{children}</div>
+      </main>
     </div>
   );
 }

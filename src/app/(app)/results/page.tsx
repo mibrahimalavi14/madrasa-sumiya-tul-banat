@@ -13,15 +13,20 @@ async function saveWritten(formData: FormData) {
   const user = await getAuthUser(); if (user?.role !== "ADMIN") throw new Error("UNAUTHORIZED");
   const session = await getCurrentSession(); if (!session || session.status !== "ACTIVE") throw new Error("SESSION_NOT_ACTIVE");
   const examId = String(formData.get("examId")); const studentId = String(formData.get("studentId"));
-  const writtenObtained = Number(formData.get("writtenObtained")||0); const writtenTotal = Number(formData.get("writtenTotal")||0);
+  const att = String(formData.get("attendance") || "PRESENT").toUpperCase();
+  const isAbsent = att === "ABSENT" || att === "LEAVE";
+  const writtenObtained = isAbsent ? 0 : Number(formData.get("writtenObtained")||0);
+  const writtenTotal = isAbsent ? 0 : Number(formData.get("writtenTotal")||0);
   const existing = await prisma.result.findUnique({ where: { examId_studentId: { examId, studentId } } });
-  const oralObt = existing?.oralObtained ?? 0; const oralTot = existing?.oralTotal ?? 0;
+  const oralObt = isAbsent ? 0 : (existing?.oralObtained ?? 0);
+  const oralTot = isAbsent ? 0 : (existing?.oralTotal ?? 0);
   const totalObt = writtenObtained + oralObt; const totalMarks = writtenTotal + oralTot;
   const pct = totalMarks > 0 ? (totalObt/totalMarks)*100 : 0; const g = gradeFromPercentage(pct);
+  const remarks = isAbsent ? att : null;
   const saved = await prisma.result.upsert({
     where: { examId_studentId: { examId, studentId } },
-    update: { writtenObtained, writtenTotal, oralObtained: oralObt, oralTotal: oralTot, totalObtained: totalObt, totalMarks, percentage: pct, grade: g.grade, status: g.status },
-    create: { examId, studentId, writtenObtained, writtenTotal, oralObtained: oralObt, oralTotal: oralTot, totalObtained: totalObt, totalMarks, percentage: pct, grade: g.grade, status: g.status },
+    update: { writtenObtained, writtenTotal, oralObtained: oralObt, oralTotal: oralTot, totalObtained: totalObt, totalMarks, percentage: pct, grade: g.grade, status: g.status, remarks },
+    create: { examId, studentId, writtenObtained, writtenTotal, oralObtained: oralObt, oralTotal: oralTot, totalObtained: totalObt, totalMarks, percentage: pct, grade: g.grade, status: g.status, remarks },
   });
   await logAudit({ actorUserId: user.id, actorLabel: user.username || user.name, action: "RESULT_SAVE_WRITTEN", entityType: "Result", entityId: saved.id, details: JSON.stringify({ examId, studentId, writtenObtained, writtenTotal, totalObtained: totalObt, totalMarks, percentage: Number(pct.toFixed(2)), grade: g.grade, status: g.status, sessionId: session.id }) });
   const results = await prisma.result.findMany({ where: { examId }, select: { id: true, percentage: true, position: true } });
@@ -35,6 +40,37 @@ async function saveWritten(formData: FormData) {
   if (updates.length) {
     await prisma.$transaction(updates.map(u => prisma.result.update({ where: { id: u.id }, data: { position: u.position } })));
   }
+  revalidatePath("/results");
+}
+
+async function saveAllWritten(formData: FormData) {
+  "use server";
+  const user = await getAuthUser(); if (user?.role !== "ADMIN") throw new Error("UNAUTHORIZED");
+  const session = await getCurrentSession(); if (!session || session.status !== "ACTIVE") throw new Error("SESSION_NOT_ACTIVE");
+  const examId = String(formData.get("examId"));
+  const studentIds = formData.getAll("studentIds").map(String);
+  for (const studentId of studentIds) {
+    const att = String(formData.get(`attendance__${studentId}`) || "PRESENT").toUpperCase();
+    const isAbsent = att === "ABSENT" || att === "LEAVE";
+    const writtenObtained = isAbsent ? 0 : Number(formData.get(`writtenObtained__${studentId}`) || 0);
+    const writtenTotal = isAbsent ? 0 : Number(formData.get(`writtenTotal__${studentId}`) || 0);
+    const existing = await prisma.result.findUnique({ where: { examId_studentId: { examId, studentId } } });
+    const oralObt = isAbsent ? 0 : (existing?.oralObtained ?? 0);
+    const oralTot = isAbsent ? 0 : (existing?.oralTotal ?? 0);
+    const totalObt = writtenObtained + oralObt; const totalMarks = writtenTotal + oralTot;
+    const pct = totalMarks > 0 ? (totalObt / totalMarks) * 100 : 0; const g = gradeFromPercentage(pct);
+    const remarks = isAbsent ? att : null;
+    await prisma.result.upsert({
+      where: { examId_studentId: { examId, studentId } },
+      update: { writtenObtained, writtenTotal, oralObtained: oralObt, oralTotal: oralTot, totalObtained: totalObt, totalMarks, percentage: pct, grade: g.grade, status: g.status, remarks },
+      create: { examId, studentId, writtenObtained, writtenTotal, oralObtained: oralObt, oralTotal: oralTot, totalObtained: totalObt, totalMarks, percentage: pct, grade: g.grade, status: g.status, remarks },
+    });
+  }
+  const results = await prisma.result.findMany({ where: { examId }, select: { id: true, percentage: true, position: true } });
+  const posMap = calculatePositions(results.map(r => ({ id: r.id, percentage: r.percentage })));
+  const updates = results.map(r => ({ id: r.id, position: posMap.get(r.id) ?? null })).filter(u => (results.find(r => r.id === u.id)?.position ?? null) !== u.position);
+  if (updates.length) await prisma.$transaction(updates.map(u => prisma.result.update({ where: { id: u.id }, data: { position: u.position } })));
+  await logAudit({ actorUserId: user.id, actorLabel: user.username || user.name, action: "RESULT_SAVE_WRITTEN_BULK", entityType: "Exam", entityId: examId, details: JSON.stringify({ count: studentIds.length }) });
   revalidatePath("/results");
 }
 
@@ -124,7 +160,7 @@ export default async function ResultsPage({ searchParams }: { searchParams: Prom
       <div className="space-y-5 theme-results">
         <div className="flex items-center justify-between flex-wrap gap-2">
           <h1 className="text-2xl font-bold text-emerald-900">{ur ? "سالانہ مجموعی نتیجہ" : "Annual Results"}</h1>
-          <div className="flex gap-2 flex-wrap"><Link href="/results" className="text-sm border px-3 py-1.5 rounded-lg">{ur ? "امتحان وار نتائج" : "Exam-wise Results"}</Link><Link href="/results/annual-report" className="text-sm bg-emerald-700 hover:bg-emerald-800 text-white px-3 py-1.5 rounded-lg">{ur ? "سالانہ رپورٹ پرنٹ" : "Print Annual Report"}</Link><a href="/api/export/results" className="text-sm bg-gray-700 hover:bg-gray-800 text-white px-3 py-1.5 rounded-lg">{ur ? "CSV ایکسپورٹ" : "Export CSV"}</a><Link href="/examination" className="text-sm border px-3 py-1.5 rounded-lg">{ur ? "امتحانات" : "Exams"}</Link></div>
+          <div className="flex gap-2 flex-wrap"><Link href="/results" className="text-sm border px-3 py-1.5 rounded-lg">{ur ? "امتحان وار نتائج" : "Exam-wise Results"}</Link><Link href="/results/annual-report" className="text-sm bg-emerald-700 hover:bg-emerald-800 text-white px-3 py-1.5 rounded-lg">{ur ? "سالانہ رپورٹ پرنٹ" : "Print Annual Report"}</Link><details className="relative"><summary className="list-none cursor-pointer text-sm bg-gray-700 hover:bg-gray-800 text-white px-3 py-1.5 rounded-lg">{ur ? "CSV ایکسپورٹ ▾" : "Export CSV ▾"}</summary><div className="absolute right-0 mt-2 w-64 bg-white text-gray-800 border rounded-xl shadow-lg p-3 z-20"><form action="/api/export/results" method="get" className="space-y-2 text-sm"><div className="font-semibold text-emerald-900">{ur?"کالم منتخب کریں":"Select columns"}</div><div className="grid grid-cols-2 gap-1">{[["exam","Exam"],["stage","Stage"],["admissionNo","Admission"],["rollNo","Roll No"],["name","Name"],["obtained","Obtained"],["total","Total"],["percentage","%"],["grade","Grade"],["status","Status"],["position","Position"]].map(([k,l])=><label key={k} className="flex items-center gap-1"><input type="checkbox" name="columns" value={k} defaultChecked /><span>{l}</span></label>)}</div><div className="flex gap-2 pt-1"><button className="bg-emerald-800 text-white px-3 py-1.5 rounded-lg text-xs">{ur?"ایکسپورٹ":"Export"}</button><a href="/api/export/results" className="px-3 py-1.5 rounded-lg text-xs border">{ur?"تمام":"All"}</a></div></form></div></details><Link href="/examination" className="text-sm border px-3 py-1.5 rounded-lg">{ur ? "امتحانات" : "Exams"}</Link></div>
         </div>
         <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4 text-sm text-emerald-900 space-y-1">
           <div className="font-semibold">{ur ? "سالانہ مجموعی نتیجہ" : "Annual Combined Result"}</div>
@@ -179,7 +215,7 @@ export default async function ResultsPage({ searchParams }: { searchParams: Prom
     select: { id: true, name: true, stage: true, sessionId: true, students: { select: { studentId: true, student: { select: { id: true, nameEn: true } } } } },
   }) : null;
   const [results, enrolls] = examId ? await Promise.all([
-    prisma.result.findMany({ where: { examId }, select: { id: true, studentId: true, writtenObtained: true, writtenTotal: true, oralObtained: true, oralTotal: true, totalObtained: true, totalMarks: true, percentage: true, grade: true, status: true, position: true, student: { select: { nameEn: true } }, exam: { select: { name: true, stage: true } } }, orderBy: [{ position: "asc" }, { percentage: "desc" }] }),
+    prisma.result.findMany({ where: { examId }, select: { id: true, studentId: true, writtenObtained: true, writtenTotal: true, oralObtained: true, oralTotal: true, totalObtained: true, totalMarks: true, percentage: true, grade: true, status: true, position: true, remarks: true, student: { select: { nameEn: true } }, exam: { select: { name: true, stage: true } } }, orderBy: [{ position: "asc" }, { percentage: "desc" }] }),
     exam ? prisma.studentEnrollment.findMany({ where: { sessionId: exam.sessionId }, select: { studentId: true, rollNo: true } }) : Promise.resolve([] as any[]),
   ]) : [[], [] as any[]];
   const rollMap = new Map(enrolls.map(e=>[e.studentId,e.rollNo]));
@@ -189,7 +225,7 @@ export default async function ResultsPage({ searchParams }: { searchParams: Prom
       <div className="flex items-center justify-between flex-wrap gap-2">
         <h1 className="text-2xl font-bold text-emerald-900">{ur ? "نتائج (محفوظ شدہ)" : "Results (All Saved)"}</h1>
         <div className="flex gap-2 flex-wrap">
-          <a href="/api/export/results" className="text-sm bg-gray-700 hover:bg-gray-800 text-white px-3 py-1.5 rounded-lg">{ur ? "CSV ایکسپورٹ" : "Export CSV"}</a>
+          <details className="relative"><summary className="list-none cursor-pointer text-sm bg-gray-700 hover:bg-gray-800 text-white px-3 py-1.5 rounded-lg">{ur ? "CSV ایکسپورٹ ▾" : "Export CSV ▾"}</summary><div className="absolute right-0 mt-2 w-64 bg-white text-gray-800 border rounded-xl shadow-lg p-3 z-20"><form action="/api/export/results" method="get" className="space-y-2 text-sm"><div className="font-semibold text-emerald-900">{ur?"کالم منتخب کریں":"Select columns"}</div><div className="grid grid-cols-2 gap-1">{[["exam","Exam"],["stage","Stage"],["admissionNo","Admission"],["rollNo","Roll No"],["name","Name"],["obtained","Obtained"],["total","Total"],["percentage","%"],["grade","Grade"],["status","Status"],["position","Position"]].map(([k,l])=><label key={k} className="flex items-center gap-1"><input type="checkbox" name="columns" value={k} defaultChecked /><span>{l}</span></label>)}</div><div className="flex gap-2 pt-1"><button className="bg-emerald-800 text-white px-3 py-1.5 rounded-lg text-xs">{ur?"ایکسپورٹ":"Export"}</button><a href="/api/export/results" className="px-3 py-1.5 rounded-lg text-xs border">{ur?"تمام":"All"}</a></div></form></div></details>
         </div>
       </div>
       <form className="bg-white rounded-xl shadow-sm border border-emerald-100 p-4 flex gap-3 items-end flex-wrap">
@@ -215,47 +251,56 @@ export default async function ResultsPage({ searchParams }: { searchParams: Prom
           <Link href={`/results/exam-report?examId=${exam.id}`} className="text-sm bg-emerald-700 hover:bg-emerald-800 text-white px-4 py-2 rounded-lg font-medium">{ur ? "امتحان رپورٹ (میرٹ/پاس فیل) پرنٹ" : "Print Exam Report (Merit/Pass-Fail)"}</Link>
         </div>
         {canEditResults && <div className="bg-white rounded-xl shadow p-4 overflow-auto">
-          <h2 className="font-semibold">{ur ? "تحریری نمبر درج کریں اور نتیجہ محفوظ کریں" : "Enter Written Marks & Save Results"}</h2>
-          <p className="text-xs text-gray-500 mt-1 mb-3">{ur ? "ہر طالب علم کے تحریری نمبر درج کریں؛ زبانی نمبر زبانی امتحان سے آتے ہیں۔ مجموعی نتیجہ، گریڈ، پاس/فیل اور پوزیشنیں خودکار محفوظ ہوں گی۔" : "Enter written marks per student; oral marks come from Oral Conduct. Combined result, grade, pass/fail and positions are calculated and saved."}</p>
-          <table className="w-full text-sm">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="p-2 text-center">{ur ? "رول نمبر" : "Roll No"}</th>
-                <th className="p-2 text-left">{ur ? "طالب علم کا نام" : "Student Name"}</th>
-                <th className="p-2 text-center">{ur ? "تحریری حاصل کردہ" : "Written Obtained"}</th>
-                <th className="p-2 text-center">{ur ? "تحریری کل" : "Written Total"}</th>
-                <th className="p-2 text-center">{ur ? "عمل" : "Action"}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {exam.students.map(es => {
-                const r = resMap.get(es.studentId);
-                const formId = `wm-${exam.id}-${es.studentId}`;
-                return (
-                  <tr key={es.studentId} className="border-t align-middle">
-                    <td className="p-2 text-center">
-                      <form id={formId} action={saveWritten}>
-                        <input type="hidden" name="examId" value={exam.id} />
-                        <input type="hidden" name="studentId" value={es.studentId} />
-                      </form>
-                      {rollMap.get(es.studentId) || "-"}
-                    </td>
-                    <td className="p-2 text-left">{es.student.nameEn}</td>
-                    <td className="p-2 text-center">
-                      <input form={formId} name="writtenObtained" type="number" step="0.5" defaultValue={r?.writtenObtained ?? ""} className="border rounded px-2 py-1.5 w-24 text-center" placeholder={ur ? "حاصل" : "Obt"} />
-                    </td>
-                    <td className="p-2 text-center">
-                      <input form={formId} name="writtenTotal" type="number" step="0.5" defaultValue={r?.writtenTotal ?? ""} className="border rounded px-2 py-1.5 w-24 text-center" placeholder={ur ? "کل" : "Total"} />
-                    </td>
-                    <td className="p-2 text-center">
-                      <button form={formId} className="bg-emerald-800 text-white px-3 py-1.5 rounded">{ur ? "محفوظ کریں" : "Save"}</button>
-                    </td>
-                  </tr>
-                );
-              })}
-              {exam.students.length === 0 && <tr><td colSpan={5} className="p-4 text-center text-gray-500">{ur ? "پہلے اس امتحان کے لیے طلبہ منتخب کریں۔" : "Select students for this exam first."}</td></tr>}
-            </tbody>
-          </table>
+          <div className="flex items-center justify-between gap-3 flex-wrap mb-2">
+            <div>
+              <h2 className="font-semibold">{ur ? "تحریری نمبر درج کریں (بلک/گرڈ)" : "Enter Written Marks (Bulk/Grid)"}</h2>
+              <p className="text-xs text-gray-500 mt-1">{ur ? "تمام طلبہ کے نمبر ایک ساتھ بھریں، غیر حاضر/رخصت منتخب کریں، پھر Save All کریں۔ زبانی نمبر زبانی امتحان سے آتے ہیں۔" : "Fill marks for all students, mark Absent/Leave where needed, then Save All. Oral marks come from Oral Conduct."}</p>
+            </div>
+          </div>
+          <form action={saveAllWritten}>
+            <input type="hidden" name="examId" value={exam.id} />
+            <table className="w-full text-sm">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="p-2 text-center">{ur ? "رول نمبر" : "Roll No"}</th>
+                  <th className="p-2 text-left">{ur ? "طالب علم کا نام" : "Student Name"}</th>
+                  <th className="p-2 text-center">{ur ? "حاضری" : "Attendance"}</th>
+                  <th className="p-2 text-center">{ur ? "تحریری حاصل کردہ" : "Written Obtained"}</th>
+                  <th className="p-2 text-center">{ur ? "تحریری کل" : "Written Total"}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {exam.students.map(es => {
+                  const r = resMap.get(es.studentId);
+                  const att = (r as any)?.remarks === "ABSENT" ? "ABSENT" : (r as any)?.remarks === "LEAVE" ? "LEAVE" : "PRESENT";
+                  return (
+                    <tr key={es.studentId} className="border-t align-middle">
+                      <td className="p-2 text-center">
+                        <input type="hidden" name="studentIds" value={es.studentId} />
+                        {rollMap.get(es.studentId) || "-"}
+                      </td>
+                      <td className="p-2 text-left">{es.student.nameEn}</td>
+                      <td className="p-2 text-center">
+                        <select name={`attendance__${es.studentId}`} defaultValue={att} className="border rounded px-2 py-1.5 text-sm">
+                          <option value="PRESENT">{ur ? "حاضر" : "Present"}</option>
+                          <option value="ABSENT">{ur ? "غیر حاضر" : "Absent"}</option>
+                          <option value="LEAVE">{ur ? "رخصت" : "Leave"}</option>
+                        </select>
+                      </td>
+                      <td className="p-2 text-center">
+                        <input name={`writtenObtained__${es.studentId}`} type="number" step="0.5" defaultValue={r?.writtenObtained ?? ""} className="border rounded px-2 py-1.5 w-24 text-center" placeholder={ur ? "حاصل" : "Obt"} />
+                      </td>
+                      <td className="p-2 text-center">
+                        <input name={`writtenTotal__${es.studentId}`} type="number" step="0.5" defaultValue={r?.writtenTotal ?? ""} className="border rounded px-2 py-1.5 w-24 text-center" placeholder={ur ? "کل" : "Total"} />
+                      </td>
+                    </tr>
+                  );
+                })}
+                {exam.students.length === 0 && <tr><td colSpan={5} className="p-4 text-center text-gray-500">{ur ? "پہلے اس امتحان کے لیے طلبہ منتخب کریں۔" : "Select students for this exam first."}</td></tr>}
+              </tbody>
+            </table>
+            {exam.students.length > 0 && <div className="mt-3 flex justify-end"><button className="bg-emerald-800 hover:bg-emerald-900 text-white px-4 py-2 rounded-lg font-medium">{ur ? "سب محفوظ کریں (Save All)" : "Save All"}</button></div>}
+          </form>
         </div>}
         {!canEditResults && <div className="bg-blue-50 border border-blue-200 text-blue-900 rounded-xl p-4 text-sm">{ur ? "تحریری نمبر درج کرنے/محفوظ کرنے کی اجازت صرف ایڈمن کو ہے۔ آپ نتائج صرف دیکھ/پرنٹ/ایکسپورٹ کر سکتے ہیں۔" : "Entering/saving written marks is Admin-only. You can view, print, and export results."}</div>}
         <div className="bg-white rounded-xl shadow p-4 overflow-auto">
@@ -299,7 +344,7 @@ function ResultsTable({ results, ur = false, rollMap }: { results: any[]; ur?: b
               <td className="p-2 text-center">{r.totalObtained ?? "-"}/{r.totalMarks ?? "-"}</td>
               <td className="p-2 text-center">{r.percentage != null ? Number(r.percentage).toFixed(2) : "-"}</td>
               <td className="p-2 text-center font-semibold">{r.grade || "-"}</td>
-              <td className={`p-2 text-center ${r.status === "Pass" ? "text-emerald-700" : "text-red-700"}`}>{r.status || "-"}</td>
+              <td className={`p-2 text-center ${r.status === "Pass" ? "text-emerald-700" : "text-red-700"}`}>{(r.remarks === "ABSENT" || r.remarks === "LEAVE") ? (ur ? (r.remarks === "ABSENT" ? "غیر حاضر" : "رخصت") : r.remarks) : (r.status || "-")}</td>
             </tr>
           );
         })}

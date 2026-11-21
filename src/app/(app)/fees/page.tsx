@@ -217,7 +217,22 @@ export default async function FeesPage({ searchParams }: { searchParams: Promise
         <Link href="/fees/arrears" className="bg-red-700 hover:bg-red-800 text-white px-4 py-2 rounded-lg text-sm font-medium">{lang === "ur" ? "بقایا جات" : "Arrears"}</Link>
         <Link href={`/fees/defaulters?month=${month}&year=${year}`} className="bg-amber-600 hover:bg-amber-700 text-white px-4 py-2 rounded-lg text-sm font-medium">{lang === "ur" ? "باقی فیس کی فہرست" : "Defaulters List"}</Link>
         <Link href={`/fees/vouchers?month=${month}&year=${year}`} className="bg-teal-600 hover:bg-teal-700 text-white px-4 py-2 rounded-lg text-sm font-medium">{lang === "ur" ? "واؤچرز پرنٹ (سب)" : "Bulk Vouchers"}</Link>
-        <a href={`/api/export/fees?month=${month}&year=${year}`} className="bg-gray-700 hover:bg-gray-800 text-white px-4 py-2 rounded-lg text-sm font-medium">{lang === "ur" ? "CSV ایکسپورٹ" : "Export CSV"}</a>
+        <details className="relative">
+          <summary className="list-none cursor-pointer bg-gray-700 hover:bg-gray-800 text-white px-4 py-2 rounded-lg text-sm font-medium">{lang === "ur" ? "CSV ایکسپورٹ ▾" : "Export CSV ▾"}</summary>
+          <div className="absolute right-0 mt-2 w-64 bg-white text-gray-800 border border-emerald-100 rounded-xl shadow-lg p-3 z-20">
+            <form action="/api/export/fees" method="get" className="space-y-2 text-sm">
+              <input type="hidden" name="month" value={month} />
+              <input type="hidden" name="year" value={year} />
+              <div className="font-semibold text-emerald-900">{lang==="ur" ? "کالم منتخب کریں" : "Select columns"}</div>
+              <div className="grid grid-cols-2 gap-1">
+                {[["admissionNo","Admission"],["name","Name"],["month","Month"],["year","Year"],["due","Due"],["paid","Paid"],["balance","Balance"],["status","Status"],["paidAt","Paid Date"]].map(([k,l]) => (
+                  <label key={k} className="flex items-center gap-1"><input type="checkbox" name="columns" value={k} defaultChecked /> <span>{l}</span></label>
+                ))}
+              </div>
+              <div className="flex gap-2 pt-1"><button className="bg-emerald-800 text-white px-3 py-1.5 rounded-lg text-xs">{lang==="ur"?"ایکسپورٹ":"Export"}</button><a href={`/api/export/fees?month=${month}&year=${year}`} className="px-3 py-1.5 rounded-lg text-xs border">{lang==="ur"?"تمام":"All"}</a></div>
+            </form>
+          </div>
+        </details>
       </div>
       <div className="bg-white rounded-2xl shadow-sm overflow-auto border border-emerald-100/80">
         <div className="px-4 py-3 border-b border-emerald-100 bg-emerald-50/40 flex items-center justify-between gap-3 flex-wrap">

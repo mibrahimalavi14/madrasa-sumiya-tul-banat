@@ -17,6 +17,7 @@ export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
   const month = searchParams.get("month");
   const year = searchParams.get("year");
+  const colsParam = [...searchParams.getAll("columns"), ...(searchParams.get("columns") || "").split(",")].map(s => s.trim()).filter(Boolean);
 
   const where: any = { sessionId: session.id };
   if (month) where.month = Number(month);
@@ -31,7 +32,7 @@ export async function GET(req: Request) {
   const defaultAmount = Number((defaultAmountSettingSession || defaultAmountSettingGlobal)?.value || 0);
   const feeMap = new Map(fees.map((f: any) => [`${f.studentId}:${f.year}:${f.month}`, f]));
 
-  const rows: any[] = [];
+  const rowObjects: any[] = [];
   if (month && year) {
     const m = Number(month), y = Number(year);
     for (const en of enrolls as any[]) {
@@ -41,21 +42,35 @@ export async function GET(req: Request) {
       if (f?.isPaid && paidAmt <= 0) paidAmt = Number(f.amount || 0);
       const balance = Math.max(0, dueAmt - paidAmt);
       const status = f?.isPaid || (dueAmt>0 && paidAmt>=dueAmt) ? (f?.isLate ? "Late" : "Paid") : (paidAmt>0 ? "Partial" : "Unpaid");
-      rows.push([en.student.admissionNo, en.student.nameEn, session.name, m, y, dueAmt, paidAmt, balance, status, f?.paidAt ? new Date(f.paidAt).toISOString().slice(0,10) : ""]);
+      rowObjects.push({ admissionNo: en.student.admissionNo, name: en.student.nameEn, session: session.name, month: m, year: y, due: dueAmt, paid: paidAmt, balance, status, paidAt: f?.paidAt ? new Date(f.paidAt).toISOString().slice(0,10) : "" });
     }
   } else {
-    // export all fee records in session
     for (const f of fees as any[]) {
       const en = (enrolls as any[]).find(e => e.studentId === f.studentId);
       const paidAmt = Number(f.paidAmount ?? 0) > 0 ? Number(f.paidAmount ?? 0) : (f.isPaid ? Number(f.amount || 0) : 0);
       const dueAmt = Number(f.amount || 0);
       const balance = Math.max(0, dueAmt - paidAmt);
       const status = f.isPaid || (dueAmt>0 && paidAmt>=dueAmt) ? (f.isLate ? "Late" : "Paid") : (paidAmt>0 ? "Partial" : "Unpaid");
-      rows.push([en?.student?.admissionNo || "", en?.student?.nameEn || "", session.name, f.month, f.year, dueAmt, paidAmt, balance, status, f.paidAt ? new Date(f.paidAt).toISOString().slice(0,10) : ""]);
+      rowObjects.push({ admissionNo: en?.student?.admissionNo || "", name: en?.student?.nameEn || "", session: session.name, month: f.month, year: f.year, due: dueAmt, paid: paidAmt, balance, status, paidAt: f.paidAt ? new Date(f.paidAt).toISOString().slice(0,10) : "" });
     }
   }
 
-  const header = ["Admission No","Name","Session","Month","Year","Due","Paid","Balance","Status","Paid Date"];
+  const allCols: { key: string; label: string; get: (r: any) => any }[] = [
+    { key: "admissionNo", label: "Admission No", get: r => r.admissionNo },
+    { key: "name", label: "Name", get: r => r.name },
+    { key: "session", label: "Session", get: r => r.session },
+    { key: "month", label: "Month", get: r => r.month },
+    { key: "year", label: "Year", get: r => r.year },
+    { key: "due", label: "Due", get: r => r.due },
+    { key: "paid", label: "Paid", get: r => r.paid },
+    { key: "balance", label: "Balance", get: r => r.balance },
+    { key: "status", label: "Status", get: r => r.status },
+    { key: "paidAt", label: "Paid Date", get: r => r.paidAt },
+  ];
+  const cols = colsParam.length ? allCols.filter(c => colsParam.includes(c.key)) : allCols;
+  const useCols = cols.length ? cols : allCols;
+  const header = useCols.map(c => c.label);
+  const rows = rowObjects.map(r => useCols.map(c => c.get(r)));
   const csv = "\uFEFF" + [header, ...rows].map(r => r.map(csvEscape).join(",")).join("\n");
   const suffix = month && year ? `-${year}-${month}` : "-all";
   return new NextResponse(csv, {

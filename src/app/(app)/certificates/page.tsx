@@ -85,7 +85,18 @@ export default async function CertificatesPage({ searchParams }: { searchParams:
           <h1 className="text-2xl font-bold">{tr.certificates}</h1>
           <p className="text-sm text-amber-50 mt-1">{session.name} · {lang==="ur" ? `کل: ${total}` : `Total: ${total}`}</p>
         </div>
-        <a href={exportHref} className="no-print bg-white/15 hover:bg-white/25 border border-white/30 text-white px-4 py-2.5 rounded-xl font-semibold text-sm">{lang==="ur" ? "CSV ایکسپورٹ" : "Export CSV"}</a>
+        <details className="relative no-print">
+          <summary className="list-none cursor-pointer bg-white/15 hover:bg-white/25 border border-white/30 text-white px-4 py-2.5 rounded-xl font-semibold text-sm">{lang==="ur" ? "CSV ایکسپورٹ ▾" : "Export CSV ▾"}</summary>
+          <div className="absolute right-0 mt-2 w-64 bg-white text-gray-800 border border-amber-100 rounded-xl shadow-lg p-3 z-20">
+            <form action="/api/export/certificates" method="get" className="space-y-2 text-sm">
+              {q && <input type="hidden" name="q" value={q} />}
+              {typeFilter && <input type="hidden" name="type" value={typeFilter} />}
+              <div className="font-semibold text-amber-900">{lang==="ur"?"کالم منتخب کریں":"Select columns"}</div>
+              <div className="grid grid-cols-2 gap-1">{[["serialNo","Serial"],["admissionNo","Admission"],["nameEn","Name EN"],["type","Type"],["issueDate","Issue Date"],["session","Session"]].map(([k,l])=><label key={k} className="flex items-center gap-1"><input type="checkbox" name="columns" value={k} defaultChecked /><span>{l}</span></label>)}</div>
+              <div className="flex gap-2 pt-1"><button className="bg-amber-700 text-white px-3 py-1.5 rounded-lg text-xs">{lang==="ur"?"ایکسپورٹ":"Export"}</button><a href={exportHref} className="px-3 py-1.5 rounded-lg text-xs border">{lang==="ur"?"تمام":"All"}</a></div>
+            </form>
+          </div>
+        </details>
       </div>
 
       <div className="bg-white rounded-2xl shadow-sm border border-amber-100 p-4 space-y-4">
