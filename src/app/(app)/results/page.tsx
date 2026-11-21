@@ -189,7 +189,6 @@ export default async function ResultsPage({ searchParams }: { searchParams: Prom
       <div className="flex items-center justify-between flex-wrap gap-2">
         <h1 className="text-2xl font-bold text-emerald-900">{ur ? "نتائج (محفوظ شدہ)" : "Results (All Saved)"}</h1>
         <div className="flex gap-2 flex-wrap">
-          <Link href="/results?view=annual" className="text-sm bg-amber-50 text-amber-800 border border-amber-200 px-3 py-1.5 rounded-lg">{ur ? "سالانہ مجموعی نتیجہ / پوزیشن ہولڈرز" : "Annual Combined Result / Position Holders"}</Link>
           <a href="/api/export/results" className="text-sm bg-gray-700 hover:bg-gray-800 text-white px-3 py-1.5 rounded-lg">{ur ? "CSV ایکسپورٹ" : "Export CSV"}</a>
         </div>
       </div>
