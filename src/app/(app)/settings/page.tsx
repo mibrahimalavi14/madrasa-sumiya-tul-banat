@@ -259,6 +259,7 @@ export default async function SettingsPage() {
             </ul>
           </div>
           <div className="flex flex-wrap gap-2">
+            <Link href="/settings/backup" className="inline-flex px-3 py-2 rounded-lg bg-emerald-50 text-emerald-800 border border-emerald-200 hover:bg-emerald-100 text-sm">{ur ? "بیک اپ سینٹر کھولیں" : "Open Backup Center"}</Link>
             <Link href="/settings/audit" className="inline-flex px-3 py-2 rounded-lg bg-slate-50 text-slate-800 border border-slate-200 hover:bg-slate-100 text-sm">{ur ? "آڈٹ لاگ دیکھیں" : "View Audit Log"}</Link>
           </div>
         </div>
