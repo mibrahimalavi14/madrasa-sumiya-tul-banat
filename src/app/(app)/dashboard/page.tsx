@@ -72,6 +72,8 @@ export default async function Dashboard() {
   let certsByType: any[] = [];
   let recentCerts: any[] = [];
   let monthFeeTrendRows: any[] = [];
+  let recentFeePayments: any[] = [];
+  let allResultsForStats: any[] = [];
 
   if (session) {
     const sStart = session.startDate ? new Date(session.startDate) : null;
@@ -106,7 +108,7 @@ export default async function Dashboard() {
       prisma.certificate.count({ where: { sessionId: sid } }),
     ]);
 
-    [monthFeeRows, feeGroups, monthAgg, recentEnrolls, recentExams, recentResults, enrollmentsForSummary, recentAudit, certsByType, recentCerts, monthFeeTrendRows] = await Promise.all([
+    [monthFeeRows, feeGroups, monthAgg, recentEnrolls, recentExams, recentResults, enrollmentsForSummary, recentAudit, certsByType, recentCerts, monthFeeTrendRows, recentFeePayments, allResultsForStats] = await Promise.all([
       prisma.feePayment.findMany({ where: { sessionId: sid, month: m, year: y }, select: { studentId: true, amount: true, paidAmount: true, isPaid: true, isLate: true, updatedAt: true } }),
       prisma.feePayment.groupBy({ by: ["isPaid", "isLate"], where: { sessionId: sid }, _count: { _all: true } }),
       prisma.feePayment.aggregate({ where: { sessionId: sid, month: m, year: y }, _count: { _all: true } }),
@@ -144,6 +146,16 @@ export default async function Dashboard() {
         select: { id: true, type: true, serialNo: true, issueDate: true, student: { select: { admissionNo: true, nameEn: true } } },
       }),
       prisma.feePayment.findMany({ where: { sessionId: sid, OR: trendOr }, select: { month: true, year: true, amount: true, paidAmount: true, isPaid: true } }),
+      prisma.feePayment.findMany({
+        where: { sessionId: sid },
+        orderBy: { updatedAt: "desc" },
+        take: 6,
+        select: { id: true, month: true, year: true, amount: true, paidAmount: true, isPaid: true, isLate: true, student: { select: { admissionNo: true, nameEn: true } } },
+      }),
+      prisma.result.findMany({
+        where: { exam: { sessionId: sid } },
+        select: { percentage: true, status: true, exam: { select: { stage: true, name: true } } },
+      }),
     ]);
 
     monthPaidAgg = {
@@ -244,6 +256,28 @@ export default async function Dashboard() {
     fail: recentResults.filter((r: any) => String(r.status).toLowerCase() === "fail").length,
   };
   const maxClassCount = Math.max(1, ...classSummary.map(c => c.count));
+  const stagePerf = [1,2,3,4].map(stage => {
+    const rows = allResultsForStats.filter((r: any) => Number(r.exam?.stage) === stage);
+    const total = rows.length;
+    const pass = rows.filter((r: any) => String(r.status).toLowerCase() === "pass").length;
+    const fail = total - pass;
+    const avg = total ? rows.reduce((s: number, r: any) => s + Number(r.percentage || 0), 0) / total : 0;
+    return { stage, name: examDisplayName({ stage, name: examNameUr[stage] }), total, pass, fail, avg };
+  }).filter(s => s.total > 0 || examTracker.some((e: any) => Number(e.stage) === s.stage));
+  const attentionStudents = enrollmentsForSummary
+    .filter((e: any) => !e.rollNo || !e.student?.fatherName || !e.student?.phone || !e.student?.admissionClass)
+    .slice(0, 8)
+    .map((e: any) => ({
+      id: e.student?.id,
+      admissionNo: e.student?.admissionNo,
+      nameEn: e.student?.nameEn,
+      missing: [
+        !e.rollNo ? (ur ? "رول نمبر" : "Roll No") : null,
+        !e.student?.fatherName ? (ur ? "والد کا نام" : "Father Name") : null,
+        !e.student?.phone ? (ur ? "فون" : "Phone") : null,
+        !e.student?.admissionClass ? (ur ? "کلاس" : "Class") : null,
+      ].filter(Boolean).join(", "),
+    }));
 
   const cards = [
     [tr.activeSession, session ? session.name : tr.none, ur ? "موجودہ تعلیمی سال" : "Current academic year"],
@@ -470,6 +504,43 @@ export default async function Dashboard() {
             <Link href="/settings/backup" className="rounded-xl p-4 text-white font-medium bg-gradient-to-r from-slate-600 to-slate-700 hover:opacity-95 shadow-sm transition">{ur ? "بیک اپ سینٹر" : "Backup Center"} →</Link>
             <Link href="/settings/audit" className="rounded-xl p-4 text-white font-medium bg-gradient-to-r from-gray-600 to-gray-700 hover:opacity-95 shadow-sm transition">{ur ? "آڈٹ لاگ" : "Audit Log"} →</Link>
           </div>
+        </div>
+      </div>
+
+      <div className="grid lg:grid-cols-3 gap-5">
+        <div className="bg-white rounded-2xl shadow-sm border border-emerald-100 p-5 overflow-auto">
+          <h2 className="font-semibold text-lg text-emerald-950 mb-3">{ur ? "مرحلہ وار امتحانی کارکردگی" : "Stage-wise Exam Performance"}</h2>
+          <table className="w-full text-sm">
+            <thead className="bg-emerald-50"><tr><th className="p-2 text-left">{ur ? "مرحلہ" : "Stage"}</th><th className="p-2 text-center">{ur ? "اوسط %" : "Avg %"}</th><th className="p-2 text-center">{ur ? "پاس" : "Pass"}</th><th className="p-2 text-center">{ur ? "فیل" : "Fail"}</th></tr></thead>
+            <tbody>
+              {stagePerf.map((s: any) => (
+                <tr key={s.stage} className="border-t"><td className={`p-2 ${ur?"font-urdu":""}`} dir={ur?"rtl":"ltr"}>{s.name}</td><td className="p-2 text-center">{s.total ? s.avg.toFixed(1) : "-"}</td><td className="p-2 text-center text-emerald-700">{s.total ? s.pass : "-"}</td><td className="p-2 text-center text-red-700">{s.total ? s.fail : "-"}</td></tr>
+              ))}
+              {stagePerf.length === 0 && <tr><td colSpan={4} className="p-3 text-center text-gray-500">-</td></tr>}
+            </tbody>
+          </table>
+        </div>
+
+        <div className="bg-white rounded-2xl shadow-sm border border-emerald-100 p-5 overflow-auto">
+          <div className="flex items-center justify-between mb-3"><h2 className="font-semibold text-lg text-emerald-950">{ur ? "حالیہ فیس ادائیگیاں" : "Recent Fee Payments"}</h2><Link href="/fees" className="text-sm text-emerald-700 underline">{ur ? "فیس" : "Fees"}</Link></div>
+          <ul className="divide-y text-sm">
+            {recentFeePayments.map((f: any) => {
+              const due = Number(f.amount || 0); const paid = Number(f.paidAmount ?? 0) > 0 ? Number(f.paidAmount ?? 0) : (f.isPaid ? due : 0);
+              const status = paid >= due && due > 0 ? (f.isLate ? (ur?"تاخیر":"Late") : (ur?"ادا":"Paid")) : paid > 0 ? (ur?"جزوی":"Partial") : (ur?"باقی":"Pending");
+              return <li key={f.id} className="py-2 flex items-center justify-between gap-2"><div><div className="font-medium">{f.student?.admissionNo} - {f.student?.nameEn}</div><div className="text-xs text-gray-500">{f.month}/{f.year} • {fmtRs(paid)}/{fmtRs(due)}</div></div><span className={`text-xs px-2 py-0.5 rounded-full ${paid>=due && due>0 ? "bg-emerald-100 text-emerald-800" : paid>0 ? "bg-amber-100 text-amber-800" : "bg-red-100 text-red-800"}`}>{status}</span></li>;
+            })}
+            {recentFeePayments.length === 0 && <li className="py-2 text-gray-500">{ur ? "کوئی ریکارڈ نہیں۔" : "No records."}</li>}
+          </ul>
+        </div>
+
+        <div className="bg-white rounded-2xl shadow-sm border border-emerald-100 p-5 overflow-auto">
+          <h2 className="font-semibold text-lg text-emerald-950 mb-3">{ur ? "توجہ درکار طلبہ" : "Students Needing Attention"}</h2>
+          <ul className="divide-y text-sm">
+            {attentionStudents.map((s: any) => (
+              <li key={s.id} className="py-2"><div className="font-medium">{s.admissionNo} - {s.nameEn}</div><div className="text-xs text-amber-700">{ur ? "missing: " : "Missing: "}{s.missing}</div></li>
+            ))}
+            {attentionStudents.length === 0 && <li className="py-2 text-gray-500">{ur ? "کوئی اہم معلومات missing نہیں۔" : "No missing essential info."}</li>}
+          </ul>
         </div>
       </div>
 
