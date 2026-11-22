@@ -202,12 +202,19 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
 
   const sessionStart = session?.startDate ? new Date(session.startDate) : null;
   const sessionEnd = session?.endDate ? new Date(session.endDate) : null;
-  const daysToSessionEnd = sessionEnd ? Math.ceil((sessionEnd.getTime() - Date.now()) / (1000 * 60 * 60 * 24)) : null;
+  const nowMs = Date.now();
+  const daysToSessionEnd = sessionEnd ? Math.ceil((sessionEnd.getTime() - nowMs) / (1000 * 60 * 60 * 24)) : null;
   const sessionTotalDays = sessionStart && sessionEnd ? Math.max(1, Math.ceil((sessionEnd.getTime() - sessionStart.getTime()) / (1000 * 60 * 60 * 24))) : null;
-  const sessionDaysPassed = sessionStart ? Math.min(sessionTotalDays ?? 0, Math.max(0, Math.ceil((Date.now() - sessionStart.getTime()) / (1000 * 60 * 60 * 24)))) : null;
-  const sessionDaysRemaining = sessionEnd ? Math.max(0, Math.ceil((sessionEnd.getTime() - Date.now()) / (1000 * 60 * 60 * 24))) : null;
-  const sessionProgressPct = sessionTotalDays && sessionDaysPassed != null ? Math.min(100, Math.round((sessionDaysPassed / sessionTotalDays) * 100)) : 0;
-  const sessionEndingSoon = daysToSessionEnd != null && daysToSessionEnd >= 0 && daysToSessionEnd <= 30;
+  const sessionHasStarted = sessionStart ? nowMs >= sessionStart.getTime() : true;
+  const sessionHasEnded = sessionEnd ? nowMs > sessionEnd.getTime() : false;
+  const sessionDaysPassed = sessionStart
+    ? (!sessionHasStarted ? 0 : Math.min(sessionTotalDays ?? 0, Math.max(0, Math.ceil((nowMs - sessionStart.getTime()) / (1000 * 60 * 60 * 24)))))
+    : null;
+  const sessionDaysRemaining = sessionEnd
+    ? (!sessionHasStarted ? (sessionTotalDays ?? Math.max(0, Math.ceil((sessionEnd.getTime() - (sessionStart?.getTime() ?? nowMs)) / (1000 * 60 * 60 * 24)))) : Math.max(0, Math.ceil((sessionEnd.getTime() - nowMs) / (1000 * 60 * 60 * 24))))
+    : null;
+  const sessionProgressPct = !sessionHasStarted ? 0 : (sessionTotalDays && sessionDaysPassed != null ? Math.min(100, Math.round((sessionDaysPassed / sessionTotalDays) * 100)) : 0);
+  const sessionEndingSoon = sessionHasStarted && !sessionHasEnded && daysToSessionEnd != null && daysToSessionEnd >= 0 && daysToSessionEnd <= 30;
 
   const statusCounts = { ACTIVE: 0, LEFT: 0, REGISTERED: 0, OTHER: 0 } as Record<string, number>;
   const classCounts = new Map<string, number>();
@@ -364,7 +371,7 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
               <div className="flex justify-between"><span className="text-gray-500">{ur ? "گزرے دن" : "Days Passed"}</span><span className="font-medium">{sessionDaysPassed ?? "-"}</span></div>
               <div className="flex justify-between"><span className="text-gray-500">{ur ? "باقی دن" : "Days Remaining"}</span><span className="font-medium">{sessionDaysRemaining ?? "-"}</span></div>
               <div className="h-3 bg-gray-100 rounded-full overflow-hidden"><div className="h-full bg-emerald-600 rounded-full" style={{ width: `${sessionProgressPct}%` }} /></div>
-              <div className="text-xs text-gray-500">{sessionProgressPct}% {ur ? "مکمل" : "complete"}</div>
+              <div className="text-xs text-gray-500">{sessionProgressPct}% {ur ? "مکمل" : "complete"}{!sessionHasStarted ? <span className="ml-2 text-amber-700 font-medium">• {ur ? "سیشن ابھی شروع نہیں ہوا" : "Session not started yet"}</span> : null}</div>
             </div>
           ) : <p className="text-sm text-gray-500">{ur ? "کوئی فعال سیشن نہیں۔" : "No active session."}</p>}
         </div>
