@@ -1,5 +1,7 @@
 import type { NextConfig } from "next";
 
+process.env.TZ = process.env.TZ || "Asia/Karachi";
+
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
