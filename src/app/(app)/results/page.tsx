@@ -18,8 +18,8 @@ async function saveWritten(formData: FormData) {
   const writtenObtained = isAbsent ? 0 : Number(formData.get("writtenObtained")||0);
   const writtenTotal = isAbsent ? 0 : Number(formData.get("writtenTotal")||0);
   const existing = await prisma.result.findUnique({ where: { examId_studentId: { examId, studentId } } });
-  const oralObt = isAbsent ? 0 : (existing?.oralObtained ?? 0);
-  const oralTot = isAbsent ? 0 : (existing?.oralTotal ?? 0);
+  const oralObt = isAbsent ? 0 : (formData.get("oralObtained") != null && String(formData.get("oralObtained")).trim() !== "" ? Number(formData.get("oralObtained")||0) : (existing?.oralObtained ?? 0));
+  const oralTot = isAbsent ? 0 : (formData.get("oralTotal") != null && String(formData.get("oralTotal")).trim() !== "" ? Number(formData.get("oralTotal")||0) : (existing?.oralTotal ?? 0));
   const totalObt = writtenObtained + oralObt; const totalMarks = writtenTotal + oralTot;
   const pct = totalMarks > 0 ? (totalObt/totalMarks)*100 : 0; const g = gradeFromPercentage(pct);
   const remarks = isAbsent ? att : null;
@@ -55,8 +55,10 @@ async function saveAllWritten(formData: FormData) {
     const writtenObtained = isAbsent ? 0 : Number(formData.get(`writtenObtained__${studentId}`) || 0);
     const writtenTotal = isAbsent ? 0 : Number(formData.get(`writtenTotal__${studentId}`) || 0);
     const existing = await prisma.result.findUnique({ where: { examId_studentId: { examId, studentId } } });
-    const oralObt = isAbsent ? 0 : (existing?.oralObtained ?? 0);
-    const oralTot = isAbsent ? 0 : (existing?.oralTotal ?? 0);
+    const oralObtRaw = formData.get(`oralObtained__${studentId}`);
+    const oralTotRaw = formData.get(`oralTotal__${studentId}`);
+    const oralObt = isAbsent ? 0 : (oralObtRaw != null && String(oralObtRaw).trim() !== "" ? Number(oralObtRaw || 0) : (existing?.oralObtained ?? 0));
+    const oralTot = isAbsent ? 0 : (oralTotRaw != null && String(oralTotRaw).trim() !== "" ? Number(oralTotRaw || 0) : (existing?.oralTotal ?? 0));
     const totalObt = writtenObtained + oralObt; const totalMarks = writtenTotal + oralTot;
     const pct = totalMarks > 0 ? (totalObt / totalMarks) * 100 : 0; const g = gradeFromPercentage(pct);
     const remarks = isAbsent ? att : null;
@@ -213,7 +215,7 @@ export default async function ResultsPage({ searchParams }: { searchParams: Prom
   const examId = sp.examId || exams[0]?.id;
   const exam = examId ? await prisma.exam.findUnique({
     where: { id: examId },
-    select: { id: true, name: true, stage: true, sessionId: true, students: { select: { studentId: true, student: { select: { id: true, nameEn: true } } } } },
+    select: { id: true, name: true, stage: true, hasOral: true, sessionId: true, students: { select: { studentId: true, student: { select: { id: true, nameEn: true } } } } },
   }) : null;
   const [results, enrolls] = examId ? await Promise.all([
     prisma.result.findMany({ where: { examId }, select: { id: true, studentId: true, writtenObtained: true, writtenTotal: true, oralObtained: true, oralTotal: true, totalObtained: true, totalMarks: true, percentage: true, grade: true, status: true, position: true, remarks: true, student: { select: { nameEn: true } }, exam: { select: { name: true, stage: true } } }, orderBy: [{ position: "asc" }, { percentage: "desc" }] }),
@@ -221,6 +223,7 @@ export default async function ResultsPage({ searchParams }: { searchParams: Prom
   ]) : [[], [] as any[]];
   const rollMap = new Map(enrolls.map(e=>[e.studentId,e.rollNo]));
   const resMap = new Map(results.map(r=>[r.studentId,r]));
+  const showOral = !!(exam && ((exam as any).hasOral === true || Number((exam as any).stage) >= 3));
   return (
     <div className="space-y-4 theme-results">
       {(() => {
@@ -298,8 +301,8 @@ export default async function ResultsPage({ searchParams }: { searchParams: Prom
         {canEditResults && !lockedExamView && <div className="bg-white rounded-xl shadow p-4 overflow-auto">
           <div className="flex items-center justify-between gap-3 flex-wrap mb-2">
             <div>
-              <h2 className="font-semibold">{ur ? "تحریری نمبر درج کریں (بلک/گرڈ)" : "Enter Written Marks (Bulk/Grid)"}</h2>
-              <p className="text-xs text-gray-500 mt-1">{ur ? "تمام طلبہ کے نمبر ایک ساتھ بھریں، غیر حاضر/رخصت منتخب کریں، پھر Save All کریں۔ زبانی نمبر زبانی امتحان سے آتے ہیں۔" : "Fill marks for all students, mark Absent/Leave where needed, then Save All. Oral marks come from Oral Conduct."}</p>
+              <h2 className="font-semibold">{ur ? (showOral ? "نمبر درج کریں (تحریری + زبانی)" : "تحریری نمبر درج کریں (بلک/گرڈ)") : (showOral ? "Enter Marks (Written + Oral)" : "Enter Written Marks (Bulk/Grid)")}</h2>
+              <p className="text-xs text-gray-500 mt-1">{ur ? (showOral ? "تمام طلبہ کے تحریری اور زبانی نمبر ایک ساتھ بھریں، غیر حاضر/رخصت منتخب کریں، پھر Save All کریں۔ باقی نتیجہ، فیصد، گریڈ اور پوزیشن خود بن جائے گی۔" : "تمام طلبہ کے نمبر ایک ساتھ بھریں، غیر حاضر/رخصت منتخب کریں، پھر Save All کریں۔ باقی نتیجہ، فیصد، گریڈ اور پوزیشن خود بن جائے گی۔") : (showOral ? "Fill written and oral marks for all students, mark Absent/Leave where needed, then Save All. Total, %, grade and position auto-calculate." : "Fill marks for all students, mark Absent/Leave where needed, then Save All. Total, %, grade and position auto-calculate.")}</p>
             </div>
           </div>
           <form action={saveAllWritten}>
@@ -310,8 +313,10 @@ export default async function ResultsPage({ searchParams }: { searchParams: Prom
                   <th className="p-2 text-center">{ur ? "رول نمبر" : "Roll No"}</th>
                   <th className="p-2 text-left">{ur ? "طالب علم کا نام" : "Student Name"}</th>
                   <th className="p-2 text-center">{ur ? "حاضری" : "Attendance"}</th>
-                  <th className="p-2 text-center">{ur ? "تحریری حاصل کردہ" : "Written Obtained"}</th>
+                  <th className="p-2 text-center">{ur ? "تحریری حاصل" : "Written Obt"}</th>
                   <th className="p-2 text-center">{ur ? "تحریری کل" : "Written Total"}</th>
+                  {showOral && <th className="p-2 text-center">{ur ? "زبانی حاصل" : "Oral Obt"}</th>}
+                  {showOral && <th className="p-2 text-center">{ur ? "زبانی کل" : "Oral Total"}</th>}
                 </tr>
               </thead>
               <tbody>
@@ -338,10 +343,12 @@ export default async function ResultsPage({ searchParams }: { searchParams: Prom
                       <td className="p-2 text-center">
                         <input name={`writtenTotal__${es.studentId}`} type="number" step="0.5" defaultValue={r?.writtenTotal ?? ""} className="border rounded px-2 py-1.5 w-24 text-center" placeholder={ur ? "کل" : "Total"} />
                       </td>
+                      {showOral && <td className="p-2 text-center"><input name={`oralObtained__${es.studentId}`} type="number" step="0.5" defaultValue={(r as any)?.oralObtained ?? ""} className="border rounded px-2 py-1.5 w-24 text-center" placeholder={ur ? "حاصل" : "Obt"} /></td>}
+                      {showOral && <td className="p-2 text-center"><input name={`oralTotal__${es.studentId}`} type="number" step="0.5" defaultValue={(r as any)?.oralTotal ?? ""} className="border rounded px-2 py-1.5 w-24 text-center" placeholder={ur ? "کل" : "Total"} /></td>}
                     </tr>
                   );
                 })}
-                {exam.students.length === 0 && <tr><td colSpan={5} className="p-4 text-center text-gray-500">{ur ? "پہلے اس امتحان کے لیے طلبہ منتخب کریں۔" : "Select students for this exam first."}</td></tr>}
+                {exam.students.length === 0 && <tr><td colSpan={showOral ? 7 : 5} className="p-4 text-center text-gray-500">{ur ? "پہلے اس امتحان کے لیے طلبہ منتخب کریں۔" : "Select students for this exam first."}</td></tr>}
               </tbody>
             </table>
             {exam.students.length > 0 && <div className="mt-3 flex justify-end"><button className="bg-emerald-800 hover:bg-emerald-900 text-white px-4 py-2 rounded-lg font-medium">{ur ? "سب محفوظ کریں (Save All)" : "Save All"}</button></div>}

@@ -83,7 +83,7 @@ export default async function ExamDetail({ params }: { params: Promise<{ id: str
           <h2 className="font-semibold mb-2">Oral Papers - 01,02,03</h2>
           <p className="text-xs text-gray-500 mb-2">Mazmoon: Nazra Quran & Basic Islamic Studies | Questions only (teacher reminder)</p>
           {oral.length === 0 ? <p className="text-sm text-gray-500">No oral papers in this exam.</p> : (
-            <ul className="space-y-2">{oral.map(p => (<li key={p.id} className="flex items-center justify-between border rounded p-2"><span>Code {p.paperCode} - {p.title||"Oral"}</span><span className="space-x-2 text-sm"><Link className="text-blue-700 underline" href={`/examination/${exam.id}/paper/${p.id}`}>Edit Questions</Link><Link className="text-emerald-700 underline" href={`/examination/${exam.id}/paper/${p.id}/print`}>Print (Teacher)</Link><Link className="text-amber-700 underline" href={`/examination/${exam.id}/oral/${p.id}`}>Conduct Oral & Marks</Link></span></li>))}</ul>
+            <ul className="space-y-2">{oral.map(p => (<li key={p.id} className="flex items-center justify-between border rounded p-2"><span>Code {p.paperCode} - {p.title||"Oral"}</span><span className="space-x-2 text-sm"><Link className="text-blue-700 underline" href={`/examination/${exam.id}/paper/${p.id}`}>Edit Questions</Link><Link className="text-emerald-700 underline" href={`/examination/${exam.id}/paper/${p.id}/print`}>Print (Teacher)</Link><span className="text-gray-500">زبانی نمبر Results میں درج کریں / Enter oral marks in Results</span></span></li>))}</ul>
           )}
         </div>
       </div>
