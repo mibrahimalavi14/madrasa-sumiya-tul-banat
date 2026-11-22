@@ -255,21 +255,20 @@ export default async function ResultsPage({ searchParams }: { searchParams: Prom
         </div>}
       </div>
       {!lockedExamView && (
-        <form className="bg-white rounded-xl shadow-sm border border-emerald-100 p-4 flex gap-3 items-end flex-wrap">
-          <div className="flex flex-col gap-1.5">
-            <label className="inline-flex items-center gap-2 text-sm font-semibold text-emerald-900 bg-emerald-50 border border-emerald-200 px-3 py-1.5 rounded-lg w-fit">
-              <span className="h-2 w-2 rounded-full bg-emerald-600"></span>
+        <form className="bg-white rounded-xl shadow-sm border border-emerald-100 px-3 py-3 flex gap-2 items-end flex-wrap">
+          <div className="flex flex-col gap-1">
+            <label className="text-xs font-medium text-emerald-800">
               {ur ? "امتحان منتخب کریں" : "Select Exam"}
             </label>
             <select
               name="examId"
               defaultValue={examId}
-              className="min-w-[280px] border border-emerald-200 rounded-lg px-3 py-2.5 bg-white text-gray-800 shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-200 focus:border-emerald-400"
+              className="min-w-[240px] border border-emerald-200 rounded-lg px-3 py-2 bg-white text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-emerald-200 focus:border-emerald-400"
             >
               {examWiseExams.map(e => <option key={e.id} value={e.id}>{examDisplayName(e)}</option>)}
             </select>
           </div>
-          <button className="bg-emerald-800 hover:bg-emerald-900 text-white px-5 py-2.5 rounded-lg font-medium shadow-sm">
+          <button className="bg-emerald-800 hover:bg-emerald-900 text-white px-4 py-2 rounded-lg text-sm font-medium">
             {ur ? "نتیجہ دیکھیں" : "View Result"}
           </button>
         </form>
