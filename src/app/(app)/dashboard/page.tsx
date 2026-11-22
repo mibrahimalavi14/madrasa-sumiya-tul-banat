@@ -27,30 +27,30 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
       <div className="space-y-5 theme-parent">
         <div className="bg-gradient-to-r from-teal-700 via-emerald-700 to-cyan-700 text-white rounded-2xl p-6 shadow-sm">
           <h1 className="text-2xl font-bold">{tr.parentDashboard}</h1>
-          <p className="text-sm text-teal-50 mt-1">{ur ? "Ã™Ë†Ã˜Â§Ã™â€žÃ˜Â¯Ã›Å’Ã™â€  Ã™Â¾Ã™Ë†Ã˜Â±Ã™Â¹Ã™â€ž Ã¢â‚¬â€ Ã˜Â§Ã™Â¾Ã™â€ Ã›â€™ Ã˜Â¨Ãšâ€ Ã›â€™ ÃšÂ©Ã˜Â§ Ã˜ÂªÃ˜Â¹Ã™â€žÃ›Å’Ã™â€¦Ã›Å’ Ã™Ë† Ã™â€¦Ã˜Â§Ã™â€žÃ›Å’ Ã˜Â±Ã›Å’ÃšÂ©Ã˜Â§Ã˜Â±ÃšË† Ã˜Â¯Ã›Å’ÃšÂ©ÃšÂ¾Ã›Å’ÃšÂº" : "Parent portal Ã¢â‚¬â€ view your childÃ¢â‚¬â„¢s academic and fee records"}</p>
+          <p className="text-sm text-teal-50 mt-1">{ur ? "والدین پورٹل — اپنے بچے کا تعلیمی و مالی ریکارڈ دیکھیں" : "Parent portal — view your child’s academic and fee records"}</p>
         </div>
         {!student ? <div className="bg-white rounded-2xl border border-amber-200 p-5 text-amber-900">{tr.noLinkedStudent}</div> : (
           <div className="grid md:grid-cols-2 gap-4">
             <div className="bg-white rounded-2xl shadow-sm border border-teal-100 p-5">
               <h2 className="font-semibold mb-3 text-teal-900">{tr.student}</h2>
               <div className="space-y-2 text-sm">
-                <div className="flex justify-between gap-3 border-b border-gray-100 pb-2"><span className="text-gray-500">{ur ? "Ã™â€ Ã˜Â§Ã™â€¦" : "Name"}</span><span className="font-semibold text-gray-900">{student.nameEn} {student.nameUr && <span className="font-urdu">({student.nameUr})</span>}</span></div>
+                <div className="flex justify-between gap-3 border-b border-gray-100 pb-2"><span className="text-gray-500">{ur ? "نام" : "Name"}</span><span className="font-semibold text-gray-900">{student.nameEn} {student.nameUr && <span className="font-urdu">({student.nameUr})</span>}</span></div>
                 <div className="flex justify-between gap-3 border-b border-gray-100 pb-2"><span className="text-gray-500">{tr.admissionNo}</span><span className="font-semibold">{student.admissionNo}</span></div>
                 <div className="flex justify-between gap-3"><span className="text-gray-500">Reg</span><span className="font-semibold">{student.registrationNo || "-"}</span></div>
               </div>
               <div className="mt-4 flex flex-wrap gap-2">
-                <Link href="/students" className="text-sm bg-teal-700 hover:bg-teal-800 text-white px-3 py-2 rounded-lg">{ur ? "Ã™â€¦ÃšÂ©Ã™â€¦Ã™â€ž Ã™Â¾Ã˜Â±Ã™Ë†Ã™ÂÃ˜Â§Ã˜Â¦Ã™â€ž" : "Full Profile"}</Link>
-                <Link href="/fees" className="text-sm border border-teal-200 text-teal-800 px-3 py-2 rounded-lg hover:bg-teal-50">{ur ? "Ã™ÂÃ›Å’Ã˜Â³ Ã˜ÂªÃ™ÂÃ˜ÂµÃ›Å’Ã™â€ž" : "Fees"}</Link>
-                <Link href="/results" className="text-sm border border-teal-200 text-teal-800 px-3 py-2 rounded-lg hover:bg-teal-50">{ur ? "Ã™â€ Ã˜ÂªÃ˜Â§Ã˜Â¦Ã˜Â¬" : "Results"}</Link>
+                <Link href="/students" className="text-sm bg-teal-700 hover:bg-teal-800 text-white px-3 py-2 rounded-lg">{ur ? "مکمل پروفائل" : "Full Profile"}</Link>
+                <Link href="/fees" className="text-sm border border-teal-200 text-teal-800 px-3 py-2 rounded-lg hover:bg-teal-50">{ur ? "فیس تفصیل" : "Fees"}</Link>
+                <Link href="/results" className="text-sm border border-teal-200 text-teal-800 px-3 py-2 rounded-lg hover:bg-teal-50">{ur ? "نتائج" : "Results"}</Link>
               </div>
             </div>
             <div className="bg-white rounded-2xl shadow-sm border border-teal-100 p-5">
               <h2 className="font-semibold mb-3 text-teal-900">{tr.recentFees}</h2>
-              {student.feePayments.length===0?<p className="text-sm text-gray-500">{tr.noRecords}</p>:<div className="overflow-auto"><table className="w-full text-sm"><thead><tr><th className="p-2 text-left">{tr.month}/{tr.year}</th><th className="p-2 text-center">{ur ? "Ã˜Â§Ã˜Â¯Ã˜Â§/Ã™Ë†Ã˜Â§Ã˜Â¬Ã˜Â¨" : "Paid/Due"}</th><th className="p-2 text-center">{tr.status}</th></tr></thead><tbody>{student.feePayments.map((f: any)=>{ const paidAmt = Number(f.paidAmount ?? 0) > 0 ? Number(f.paidAmount ?? 0) : (f.isPaid ? Number(f.amount||0) : 0); const dueAmt = Number(f.amount||0); const full = f.isPaid || (dueAmt>0 && paidAmt>=dueAmt); const partial = paidAmt>0 && paidAmt<dueAmt; const label = full ? (f.isLate?tr.late:tr.paid) : (partial ? (lang === "ur" ? "Ã˜Â¬Ã˜Â²Ã™Ë†Ã›Å’" : "Partial") : tr.unpaid); return (<tr key={f.id} className="border-t"><td className="p-2">{f.month}/{f.year}</td><td className="p-2 text-center">Rs {paidAmt}/{dueAmt}</td><td className="p-2 text-center"><span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-semibold ${full ? (f.isLate?"bg-amber-100 text-amber-800":"bg-emerald-100 text-emerald-800") : (partial?"bg-amber-100 text-amber-800":"bg-red-100 text-red-800")}`}>{label}</span></td></tr>); })}</tbody></table></div>}
+              {student.feePayments.length===0?<p className="text-sm text-gray-500">{tr.noRecords}</p>:<div className="overflow-auto"><table className="w-full text-sm"><thead><tr><th className="p-2 text-left">{tr.month}/{tr.year}</th><th className="p-2 text-center">{ur ? "ادا/واجب" : "Paid/Due"}</th><th className="p-2 text-center">{tr.status}</th></tr></thead><tbody>{student.feePayments.map((f: any)=>{ const paidAmt = Number(f.paidAmount ?? 0) > 0 ? Number(f.paidAmount ?? 0) : (f.isPaid ? Number(f.amount||0) : 0); const dueAmt = Number(f.amount||0); const full = f.isPaid || (dueAmt>0 && paidAmt>=dueAmt); const partial = paidAmt>0 && paidAmt<dueAmt; const label = full ? (f.isLate?tr.late:tr.paid) : (partial ? (lang === "ur" ? "جزوی" : "Partial") : tr.unpaid); return (<tr key={f.id} className="border-t"><td className="p-2">{f.month}/{f.year}</td><td className="p-2 text-center">Rs {paidAmt}/{dueAmt}</td><td className="p-2 text-center"><span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-semibold ${full ? (f.isLate?"bg-amber-100 text-amber-800":"bg-emerald-100 text-emerald-800") : (partial?"bg-amber-100 text-amber-800":"bg-red-100 text-red-800")}`}>{label}</span></td></tr>); })}</tbody></table></div>}
             </div>
             <div className="bg-white rounded-2xl shadow-sm border border-teal-100 p-5 md:col-span-2">
               <h2 className="font-semibold mb-3 text-teal-900">{tr.recentResults}</h2>
-              {student.results.length===0?<p className="text-sm text-gray-500">{tr.noResults}</p>:<div className="overflow-auto"><table className="w-full text-sm"><thead><tr><th className="p-2 text-center">%</th><th className="p-2 text-center">{ur ? "ÃšÂ¯Ã˜Â±Ã›Å’ÃšË†" : "Grade"}</th><th className="p-2 text-center">{ur ? "Ã˜Â­Ã›Å’Ã˜Â«Ã›Å’Ã˜Âª" : "Status"}</th><th className="p-2 text-center">{ur ? "Ã™Â¾Ã™Ë†Ã˜Â²Ã›Å’Ã˜Â´Ã™â€ " : "Position"}</th></tr></thead><tbody>{student.results.map(r=>(<tr key={r.id} className="border-t"><td className="p-2 text-center font-medium">{r.percentage?.toFixed(1)}%</td><td className="p-2 text-center font-semibold">{r.grade}</td><td className={`p-2 text-center ${r.status==="Pass"?"text-emerald-700":"text-red-700"}`}>{r.status}</td><td className="p-2 text-center">{r.position??"-"}</td></tr>))}</tbody></table></div>}
+              {student.results.length===0?<p className="text-sm text-gray-500">{tr.noResults}</p>:<div className="overflow-auto"><table className="w-full text-sm"><thead><tr><th className="p-2 text-center">%</th><th className="p-2 text-center">{ur ? "گریڈ" : "Grade"}</th><th className="p-2 text-center">{ur ? "حیثیت" : "Status"}</th><th className="p-2 text-center">{ur ? "پوزیشن" : "Position"}</th></tr></thead><tbody>{student.results.map(r=>(<tr key={r.id} className="border-t"><td className="p-2 text-center font-medium">{r.percentage?.toFixed(1)}%</td><td className="p-2 text-center font-semibold">{r.grade}</td><td className={`p-2 text-center ${r.status==="Pass"?"text-emerald-700":"text-red-700"}`}>{r.status}</td><td className="p-2 text-center">{r.position??"-"}</td></tr>))}</tbody></table></div>}
             </div>
           </div>
         )}
@@ -195,10 +195,10 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
   const actualIdx = actualY * 12 + (actualM - 1);
   const shownIdx = y * 12 + (m - 1);
   const feesMonthLabel = shownIdx === actualIdx
-    ? (ur ? "Ã˜Â§Ã˜Â³ Ã™â€¦Ã˜Â§Ã›Â ÃšÂ©Ã›Å’ Ã™ÂÃ›Å’Ã˜Â³" : "This Month Fees")
+    ? (ur ? "اس ماہ کی فیس" : "This Month Fees")
     : shownIdx < actualIdx
-      ? (ur ? "Ã™Â¾Ãšâ€ ÃšÂ¾Ã™â€žÃ›â€™ Ã™â€¦Ã›ÂÃ›Å’Ã™â€ Ã›â€™ ÃšÂ©Ã›Å’ Ã™ÂÃ›Å’Ã˜Â³" : "Last Month Fees")
-      : (ur ? "Ã˜Â§ÃšÂ¯Ã™â€žÃ›â€™ Ã™â€¦Ã›ÂÃ›Å’Ã™â€ Ã›â€™ ÃšÂ©Ã›Å’ Ã™ÂÃ›Å’Ã˜Â³" : "Next Month Fees");
+      ? (ur ? "پچھلے مہینے کی فیس" : "Last Month Fees")
+      : (ur ? "اگلے مہینے کی فیس" : "Next Month Fees");
 
   const sessionStart = session?.startDate ? new Date(session.startDate) : null;
   const sessionEnd = session?.endDate ? new Date(session.endDate) : null;
@@ -221,12 +221,12 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
   for (const e of enrollmentsForSummary) {
     const st = String(e.student?.status || "OTHER").toUpperCase();
     if (st in statusCounts) statusCounts[st] += 1; else statusCounts.OTHER += 1;
-    const cls = String(e.student?.admissionClass || (ur ? "Ã˜ÂºÃ›Å’Ã˜Â± Ã™â€¦Ã˜ÂªÃ˜Â¹Ã›Å’Ã™â€ " : "Unassigned")).trim() || (ur ? "Ã˜ÂºÃ›Å’Ã˜Â± Ã™â€¦Ã˜ÂªÃ˜Â¹Ã›Å’Ã™â€ " : "Unassigned");
+    const cls = String(e.student?.admissionClass || (ur ? "غیر متعین" : "Unassigned")).trim() || (ur ? "غیر متعین" : "Unassigned");
     classCounts.set(cls, (classCounts.get(cls) || 0) + 1);
   }
   const classSummary = [...classCounts.entries()].map(([name, count]) => ({ name, count })).sort((a,b)=>b.count-a.count || a.name.localeCompare(b.name)).slice(0, 8);
 
-  const examNameUr: Record<number, string> = { 1: "Ã˜Â§Ã˜Â¨Ã˜ÂªÃ˜Â¯Ã˜Â§Ã˜Â¦Ã›Å’ Ã˜ÂªÃ˜Â­Ã˜Â±Ã›Å’Ã˜Â±Ã›Å’ Ã˜Â§Ã™â€¦Ã˜ÂªÃ˜Â­Ã˜Â§Ã™â€ ", 2: "Ã˜Â´Ã˜Â´Ã™â€¦Ã˜Â§Ã›ÂÃ›Å’ Ã˜Â§Ã™â€¦Ã˜ÂªÃ˜Â­Ã˜Â§Ã™â€ ", 3: "Ã˜Â³Ã›Â Ã™â€¦Ã˜Â§Ã›ÂÃ›Å’ Ã˜Â§Ã™â€¦Ã˜ÂªÃ˜Â­Ã˜Â§Ã™â€ ", 4: "Ã˜Â³Ã˜Â§Ã™â€žÃ˜Â§Ã™â€ Ã›Â Ã˜Â§Ã™â€¦Ã˜ÂªÃ˜Â­Ã˜Â§Ã™â€ " };
+  const examNameUr: Record<number, string> = { 1: "ابتدائی تحریری امتحان", 2: "ششماہی امتحان", 3: "سہ ماہی امتحان", 4: "سالانہ امتحان" };
   const examDisplayName = (ex: any) => (ur && ex?.stage && examNameUr[Number(ex.stage)]) || ex?.name || "-";
   const examTracker = [...recentExams].sort((a:any,b:any)=>((a.stage??99)-(b.stage??99))).map((ex: any) => {
     const selected = ex._count?.students ?? 0;
@@ -248,17 +248,17 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
 
 
   const cards = [
-    [tr.activeSession, session ? session.name : tr.none, ur ? "Ã™â€¦Ã™Ë†Ã˜Â¬Ã™Ë†Ã˜Â¯Ã›Â Ã˜ÂªÃ˜Â¹Ã™â€žÃ›Å’Ã™â€¦Ã›Å’ Ã˜Â³Ã˜Â§Ã™â€ž" : "Current academic year"],
-    [tr.enrolledStudents, String(students), ur ? "Ã™â€¦Ã™Ë†Ã˜Â¬Ã™Ë†Ã˜Â¯Ã›Â Ã˜Â³Ã›Å’Ã˜Â´Ã™â€  Ã™â€¦Ã›Å’ÃšÂº" : "In current session"],
-    [ur ? "Ã™ÂÃ˜Â¹Ã˜Â§Ã™â€ž Ã˜Â·Ã™â€žÃ˜Â¨Ã›Â" : "Active Students", String(activeStudents), ur ? "Ã˜Â¬Ã™â€  ÃšÂ©Ã˜Â§ Ã˜Â§Ã˜Â³Ã™Â¹Ã›Å’Ã™Â¹Ã˜Â³ Ã™ÂÃ˜Â¹Ã˜Â§Ã™â€ž Ã›ÂÃ›â€™" : "Students with ACTIVE status"],
-    [ur ? "Ã˜Â§Ã™â€¦Ã˜ÂªÃ˜Â­Ã˜Â§Ã™â€ Ã›Å’ Ã™â€¦Ã˜Â±Ã˜Â§Ã˜Â­Ã™â€ž (Ã˜Â´Ã›Å’ÃšË†Ã™Ë†Ã™â€ž)" : "Exam Stages (Schedule)", String(examsCount), ur ? "Ã˜Â³Ã›Å’Ã˜Â´Ã™â€  ÃšÂ©Ã›â€™ Ã˜Â´Ã›Å’ÃšË†Ã™Ë†Ã™â€ž Ã˜Â´Ã˜Â¯Ã›Â/Ã™â€¦Ã™Ë†Ã˜Â¬Ã™Ë†Ã˜Â¯ Ã™â€¦Ã˜Â±Ã˜Â§Ã˜Â­Ã™â€ž" : "Scheduled/existing stages in session"],
-    [ur ? "Ã™â€žÃ›Å’Ã›â€™ ÃšÂ¯Ã˜Â¦Ã›â€™ Ã˜Â§Ã™â€¦Ã˜ÂªÃ˜Â­Ã˜Â§Ã™â€ Ã˜Â§Ã˜Âª" : "Exams Conducted", String(examsConducted), ur ? "Ã˜Â¬Ã™â€  ÃšÂ©Ã›â€™ Ã™â€ Ã˜ÂªÃ˜Â§Ã˜Â¦Ã˜Â¬ Ã™â€¦Ã˜Â­Ã™ÂÃ™Ë†Ã˜Â¸ Ã›ÂÃ›Å’ÃšÂº" : "Exams with saved results"],
-    [ur ? "Ã˜Â²Ã›Å’Ã˜Â± Ã˜Â§Ã™â€žÃ˜ÂªÃ™Ë†Ã˜Â§Ã˜Â¡ Ã˜Â§Ã™â€¦Ã˜ÂªÃ˜Â­Ã˜Â§Ã™â€ Ã˜Â§Ã˜Âª" : "Pending Exams", String(pendingExams), ur ? "Ã˜Â¬Ã™â€  ÃšÂ©Ã›â€™ Ã™â€ Ã˜ÂªÃ˜Â§Ã˜Â¦Ã˜Â¬ Ã˜Â§Ã˜Â¨ÃšÂ¾Ã›Å’ Ã™â€¦Ã˜Â­Ã™ÂÃ™Ë†Ã˜Â¸ Ã™â€ Ã›ÂÃ›Å’ÃšÂº" : "Stages with no saved results yet"],
-    [ur ? "Ã™â€ Ã˜ÂªÃ˜Â§Ã˜Â¦Ã˜Â¬ (Ã™â€¦Ã˜Â­Ã™ÂÃ™Ë†Ã˜Â¸)" : "Results (Saved)", String(resultsCount), ur ? "Ã™â€¦Ã˜Â­Ã™ÂÃ™Ë†Ã˜Â¸ Ã˜Â´Ã˜Â¯Ã›Â Ã™â€ Ã˜ÂªÃ˜Â§Ã˜Â¦Ã˜Â¬" : "Saved result entries"],
-    [tr.certificates, String(certsCount), ur ? "Ã˜Â¬Ã˜Â§Ã˜Â±Ã›Å’ Ã˜Â´Ã˜Â¯Ã›Â Ã˜Â³Ã˜Â±Ã™Â¹Ã›Å’Ã™ÂÃšÂ©Ã›Å’Ã™Â¹Ã˜Â³" : "Issued certificates"],
-    [tr.feesPaid, String(feesPaid), ur ? "Ã™Ë†Ã™â€šÃ˜Âª Ã™Â¾Ã˜Â± Ã˜Â§Ã˜Â¯Ã˜Â§Ã˜Â¦Ã›Å’ÃšÂ¯Ã›Å’Ã˜Â§ÃšÂº" : "On time payments"],
-    [tr.feesUnpaid, String(feesUnpaid), ur ? "Ã˜Â¨Ã˜Â§Ã™â€šÃ›Å’ Ã˜Â§Ã˜Â¯Ã˜Â§Ã˜Â¦Ã›Å’ÃšÂ¯Ã›Å’Ã˜Â§ÃšÂº" : "Pending"],
-    [tr.latePayments, String(lateFees), ur ? "7 Ã˜ÂªÃ˜Â§Ã˜Â±Ã›Å’Ã˜Â® ÃšÂ©Ã›â€™ Ã˜Â¨Ã˜Â¹Ã˜Â¯ Ã˜Â§Ã˜Â¯Ã˜Â§ Ã˜Â´Ã˜Â¯Ã›Â" : "Paid after 7th"],
+    [tr.activeSession, session ? session.name : tr.none, ur ? "موجودہ تعلیمی سال" : "Current academic year"],
+    [tr.enrolledStudents, String(students), ur ? "موجودہ سیشن میں" : "In current session"],
+    [ur ? "فعال طلبہ" : "Active Students", String(activeStudents), ur ? "جن کا اسٹیٹس فعال ہے" : "Students with ACTIVE status"],
+    [ur ? "امتحانی مراحل (شیڈول)" : "Exam Stages (Schedule)", String(examsCount), ur ? "سیشن کے شیڈول شدہ/موجود مراحل" : "Scheduled/existing stages in session"],
+    [ur ? "لیے گئے امتحانات" : "Exams Conducted", String(examsConducted), ur ? "جن کے نتائج محفوظ ہیں" : "Exams with saved results"],
+    [ur ? "زیر التواء امتحانات" : "Pending Exams", String(pendingExams), ur ? "جن کے نتائج ابھی محفوظ نہیں" : "Stages with no saved results yet"],
+    [ur ? "نتائج (محفوظ)" : "Results (Saved)", String(resultsCount), ur ? "محفوظ شدہ نتائج" : "Saved result entries"],
+    [tr.certificates, String(certsCount), ur ? "جاری شدہ سرٹیفکیٹس" : "Issued certificates"],
+    [tr.feesPaid, String(feesPaid), ur ? "وقت پر ادائیگیاں" : "On time payments"],
+    [tr.feesUnpaid, String(feesUnpaid), ur ? "باقی ادائیگیاں" : "Pending"],
+    [tr.latePayments, String(lateFees), ur ? "7 تاریخ کے بعد ادا شدہ" : "Paid after 7th"],
   ];
 
   const latestExam = [...(recentExams as any[])].sort((a,b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())[0];
@@ -271,13 +271,13 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
       {(sessionEndingSoon || pendingExams > 0 || (monthTotal - monthPaid) > 0) && (
         <div className="grid md:grid-cols-3 gap-3 no-print">
           {sessionEndingSoon && (
-            <div className="bg-amber-50 border border-amber-300 text-amber-900 rounded-xl p-4 text-sm"><b>{ur ? "Ã˜ÂªÃ™â€ Ã˜Â¨Ã›Å’Ã›Â:" : "Alert:"}</b> {ur ? `Ã˜Â³Ã›Å’Ã˜Â´Ã™â€  ${daysToSessionEnd} Ã˜Â¯Ã™â€  Ã™â€¦Ã›Å’ÃšÂº Ã˜Â®Ã˜ÂªÃ™â€¦ Ã›ÂÃ™Ë† Ã˜Â±Ã›ÂÃ˜Â§ Ã›ÂÃ›â€™Ã›â€` : `Session ends in ${daysToSessionEnd} day(s).`}</div>
+            <div className="bg-amber-50 border border-amber-300 text-amber-900 rounded-xl p-4 text-sm"><b>{ur ? "تنبیہ:" : "Alert:"}</b> {ur ? `سیشن ${daysToSessionEnd} دن میں ختم ہو رہا ہے۔` : `Session ends in ${daysToSessionEnd} day(s).`}</div>
           )}
           {pendingExams > 0 && (
-            <div className="bg-blue-50 border border-blue-300 text-blue-900 rounded-xl p-4 text-sm"><b>{ur ? "Ã›Å’Ã˜Â§Ã˜Â¯Ã˜Â¯Ã›ÂÃ˜Â§Ã™â€ Ã›Å’:" : "Reminder:"}</b> {ur ? `${pendingExams} Ã˜Â§Ã™â€¦Ã˜ÂªÃ˜Â­Ã˜Â§Ã™â€ Ã›Å’ Ã™â€¦Ã˜Â±Ã˜Â­Ã™â€žÃ›Â/Ã™â€¦Ã˜Â±Ã˜Â§Ã˜Â­Ã™â€ž ÃšÂ©Ã›â€™ Ã™â€ Ã˜ÂªÃ˜Â§Ã˜Â¦Ã˜Â¬ Ã˜Â¨Ã˜Â§Ã™â€šÃ›Å’ Ã›ÂÃ›Å’ÃšÂºÃ›â€` : `${pendingExams} exam stage(s) have pending results.`}</div>
+            <div className="bg-blue-50 border border-blue-300 text-blue-900 rounded-xl p-4 text-sm"><b>{ur ? "یاددہانی:" : "Reminder:"}</b> {ur ? `${pendingExams} امتحانی مرحلہ/مراحل کے نتائج باقی ہیں۔` : `${pendingExams} exam stage(s) have pending results.`}</div>
           )}
           {(monthTotal - monthPaid) > 0 && (
-            <div className="bg-red-50 border border-red-300 text-red-900 rounded-xl p-4 text-sm"><b>{ur ? "Ã™ÂÃ›Å’Ã˜Â³:" : "Fees:"}</b> {ur ? `${monthTotal - monthPaid} Ã˜Â·Ã™â€žÃ˜Â¨Ã›Â ÃšÂ©Ã›Å’ Ã˜Â§Ã˜Â³ Ã™â€¦Ã›ÂÃ›Å’Ã™â€ Ã›â€™ ÃšÂ©Ã›Å’ Ã™ÂÃ›Å’Ã˜Â³ Ã˜Â¨Ã˜Â§Ã™â€šÃ›Å’ Ã›ÂÃ›â€™Ã›â€` : `${monthTotal - monthPaid} student(s) have pending fees for this month.`}</div>
+            <div className="bg-red-50 border border-red-300 text-red-900 rounded-xl p-4 text-sm"><b>{ur ? "فیس:" : "Fees:"}</b> {ur ? `${monthTotal - monthPaid} طلبہ کی اس مہینے کی فیس باقی ہے۔` : `${monthTotal - monthPaid} student(s) have pending fees for this month.`}</div>
           )}
         </div>
       )}
@@ -289,7 +289,7 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
             <div className="shrink-0 hidden sm:block bg-white/10 rounded-2xl p-2"><Logo size={64} /></div>
             <div>
               <p className="text-emerald-100 text-sm">{tr.welcomeTo}</p>
-              <h1 className="text-2xl md:text-3xl font-extrabold mt-1">Madrasa Sumiya-tul-Banat <span className="font-urdu text-amber-200">Ã™â€¦Ã˜Â¯Ã˜Â±Ã˜Â³Ã›Â Ã˜Â³Ã™â€¦Ã›Å’Ã™â€˜Ã˜Â© Ã˜Â§Ã™â€žÃ˜Â¨Ã™â€ Ã˜Â§Ã˜Âª</span></h1>
+              <h1 className="text-2xl md:text-3xl font-extrabold mt-1">Madrasa Sumiya-tul-Banat <span className="font-urdu text-amber-200">مدرسہ سمیّة البنات</span></h1>
               <p className="text-emerald-100 mt-2 text-sm md:text-base">{tr.adminOverview}</p>
               {session && <div className="mt-3 inline-flex items-center gap-2 bg-white/15 border border-white/20 rounded-full px-3 py-1 text-sm">{tr.activeSession}: <b>{session.name}</b> ({session.status})</div>}
             </div>
@@ -297,12 +297,12 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
           <div className="bg-white/10 border border-white/20 rounded-2xl p-4 min-w-[240px]">
             <div className="text-xs text-emerald-100 uppercase tracking-wider">{feesMonthLabel}</div>
             <div className="text-lg font-bold mt-1">{m}/{y}</div>
-            <div className="text-sm mt-1">{ur ? "Ã˜Â§Ã˜Â¯Ã˜Â§ Ã˜Â´Ã˜Â¯Ã›Â" : "Paid"}: <b>{monthPaid}</b> / {monthTotal || 0}</div>
-            <div className="text-sm">{ur ? "Ã™Ë†Ã˜ÂµÃ™Ë†Ã™â€žÃ›Å’" : "Collected"}: <b>{fmtRs(monthCollected)}</b></div>
+            <div className="text-sm mt-1">{ur ? "ادا شدہ" : "Paid"}: <b>{monthPaid}</b> / {monthTotal || 0}</div>
+            <div className="text-sm">{ur ? "وصولی" : "Collected"}: <b>{fmtRs(monthCollected)}</b></div>
             <div className="mt-3 h-2.5 bg-white/20 rounded-full overflow-hidden">
               <div className="h-full bg-amber-300 rounded-full" style={{ width: `${monthTotal ? Math.round((monthPaid / monthTotal) * 100) : 0}%` }} />
             </div>
-            <div className="text-xs text-emerald-100 mt-1">{monthTotal ? Math.round((monthPaid / monthTotal) * 100) : 0}% {ur ? "Ã˜Â§Ã˜Â¯Ã˜Â§Ã˜Â¦Ã›Å’ÃšÂ¯Ã›Å’" : "paid"}</div>
+            <div className="text-xs text-emerald-100 mt-1">{monthTotal ? Math.round((monthPaid / monthTotal) * 100) : 0}% {ur ? "ادائیگی" : "paid"}</div>
           </div>
         </div>
       </div>
@@ -320,46 +320,46 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
       <div className="grid lg:grid-cols-3 gap-5">
         <div className="bg-white rounded-2xl shadow-sm border border-emerald-100 p-5 lg:col-span-2">
           <div className="flex items-center justify-between gap-3 flex-wrap mb-3">
-            <h2 className="font-semibold text-lg text-emerald-950">{ur ? "Ã™ÂÃ›Å’Ã˜Â³ Ã˜Â®Ã™â€žÃ˜Â§Ã˜ÂµÃ›Â (Ã™â€¦Ã˜Â²Ã›Å’Ã˜Â¯ Ã™Ë†Ã˜Â§Ã˜Â¶Ã˜Â­)" : "Fee Summary (Detailed)"}</h2>
+            <h2 className="font-semibold text-lg text-emerald-950">{ur ? "فیس خلاصہ (مزید واضح)" : "Fee Summary (Detailed)"}</h2>
             <div className="flex items-center gap-2 flex-wrap">
               <form className="flex items-center gap-2 flex-wrap">
-                <label className="text-xs text-gray-500">{ur ? "Ã™â€¦Ã›ÂÃ›Å’Ã™â€ Ã›Â" : "Month"}</label>
+                <label className="text-xs text-gray-500">{ur ? "مہینہ" : "Month"}</label>
                 <input name="month" type="number" min={1} max={12} defaultValue={m} className="w-20 border rounded px-2 py-1 text-sm" />
-                <label className="text-xs text-gray-500">{ur ? "Ã˜Â³Ã˜Â§Ã™â€ž" : "Year"}</label>
+                <label className="text-xs text-gray-500">{ur ? "سال" : "Year"}</label>
                 <input name="year" type="number" min={2000} max={2100} defaultValue={y} className="w-24 border rounded px-2 py-1 text-sm" />
-                <button className="bg-emerald-800 text-white px-3 py-1 rounded text-sm">{ur ? "Ã™ÂÃ™â€žÃ™Â¹Ã˜Â±" : "Filter"}</button>
+                <button className="bg-emerald-800 text-white px-3 py-1 rounded text-sm">{ur ? "فلٹر" : "Filter"}</button>
               </form>
-              <Link href="/fees" className="text-sm text-emerald-700 underline">{ur ? "Ã™ÂÃ›Å’Ã˜Â³ ÃšÂ©ÃšÂ¾Ã™Ë†Ã™â€žÃ›Å’ÃšÂº" : "Open Fees"}</Link>
+              <Link href="/fees" className="text-sm text-emerald-700 underline">{ur ? "فیس کھولیں" : "Open Fees"}</Link>
             </div>
           </div>
           <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-3">
-            <div className="rounded-xl border border-emerald-100 p-4 bg-emerald-50/30"><div className="text-xs text-gray-500">{ur ? "Ã˜Â§Ã˜Â³ Ã™â€¦Ã˜Â§Ã›Â ÃšÂ©Ã™â€ž Ã™Ë†Ã˜Â§Ã˜Â¬Ã˜Â¨" : "Total Due (Month)"}</div><div className="text-xl font-bold text-emerald-900">{fmtRs(monthDueTotal)}</div></div>
-            <div className="rounded-xl border border-emerald-100 p-4 bg-emerald-50/30"><div className="text-xs text-gray-500">{ur ? "Ã˜Â§Ã˜Â³ Ã™â€¦Ã˜Â§Ã›Â Ã™Ë†Ã˜ÂµÃ™Ë†Ã™â€ž" : "Collected (Month)"}</div><div className="text-xl font-bold text-emerald-900">{fmtRs(monthCollected)}</div></div>
-            <div className="rounded-xl border border-amber-100 p-4 bg-amber-50/30"><div className="text-xs text-gray-500">{ur ? "Ã˜Â§Ã˜Â³ Ã™â€¦Ã˜Â§Ã›Â Ã˜Â¨Ã˜Â§Ã™â€šÃ›Å’" : "Pending Amount (Month)"}</div><div className="text-xl font-bold text-amber-900">{fmtRs(monthPendingAmount)}</div></div>
-            <div className="rounded-xl border border-blue-100 p-4 bg-blue-50/30"><div className="text-xs text-gray-500">{ur ? "Ã˜Â¢Ã˜Â¬ ÃšÂ©Ã›Å’ Ã™Ë†Ã˜ÂµÃ™Ë†Ã™â€žÃ›Å’" : "Today's Collection"}</div><div className="text-xl font-bold text-blue-900">{fmtRs(todayCollection)}</div></div>
-            <div className="rounded-xl border border-orange-100 p-4 bg-orange-50/30"><div className="text-xs text-gray-500">{ur ? "Partial Ã˜Â·Ã™â€žÃ˜Â¨Ã›Â" : "Partial Students"}</div><div className="text-xl font-bold text-orange-900">{monthPartialCount}</div></div>
-            <div className="rounded-xl border border-red-100 p-4 bg-red-50/30"><div className="text-xs text-gray-500">{ur ? "Pending Ã˜Â·Ã™â€žÃ˜Â¨Ã›Â" : "Pending Students"}</div><div className="text-xl font-bold text-red-900">{monthPendingCount}</div></div>
+            <div className="rounded-xl border border-emerald-100 p-4 bg-emerald-50/30"><div className="text-xs text-gray-500">{ur ? "اس ماہ کل واجب" : "Total Due (Month)"}</div><div className="text-xl font-bold text-emerald-900">{fmtRs(monthDueTotal)}</div></div>
+            <div className="rounded-xl border border-emerald-100 p-4 bg-emerald-50/30"><div className="text-xs text-gray-500">{ur ? "اس ماہ وصول" : "Collected (Month)"}</div><div className="text-xl font-bold text-emerald-900">{fmtRs(monthCollected)}</div></div>
+            <div className="rounded-xl border border-amber-100 p-4 bg-amber-50/30"><div className="text-xs text-gray-500">{ur ? "اس ماہ باقی" : "Pending Amount (Month)"}</div><div className="text-xl font-bold text-amber-900">{fmtRs(monthPendingAmount)}</div></div>
+            <div className="rounded-xl border border-blue-100 p-4 bg-blue-50/30"><div className="text-xs text-gray-500">{ur ? "آج کی وصولی" : "Today's Collection"}</div><div className="text-xl font-bold text-blue-900">{fmtRs(todayCollection)}</div></div>
+            <div className="rounded-xl border border-orange-100 p-4 bg-orange-50/30"><div className="text-xs text-gray-500">{ur ? "Partial طلبہ" : "Partial Students"}</div><div className="text-xl font-bold text-orange-900">{monthPartialCount}</div></div>
+            <div className="rounded-xl border border-red-100 p-4 bg-red-50/30"><div className="text-xs text-gray-500">{ur ? "Pending طلبہ" : "Pending Students"}</div><div className="text-xl font-bold text-red-900">{monthPendingCount}</div></div>
           </div>
         </div>
         <div className="bg-white rounded-2xl shadow-sm border border-emerald-100 p-5">
-          <h2 className="font-semibold text-lg text-emerald-950 mb-3">{ur ? "Ã˜Â³Ã›Å’Ã˜Â´Ã™â€  Ã™Â¾Ã›Å’Ã˜Â´ Ã˜Â±Ã™ÂÃ˜Âª" : "Session Progress"}</h2>
+          <h2 className="font-semibold text-lg text-emerald-950 mb-3">{ur ? "سیشن پیش رفت" : "Session Progress"}</h2>
           {session ? (
             <div className="space-y-3 text-sm">
-              <div className="flex justify-between"><span className="text-gray-500">{ur ? "Ã˜Â´Ã˜Â±Ã™Ë†Ã˜Â¹" : "Start"}</span><span className="font-medium">{fmtDate(session.startDate)}</span></div>
-              <div className="flex justify-between"><span className="text-gray-500">{ur ? "Ã˜Â§Ã˜Â®Ã˜ÂªÃ˜ÂªÃ˜Â§Ã™â€¦" : "End"}</span><span className="font-medium">{fmtDate(session.endDate)}</span></div>
-              <div className="flex justify-between"><span className="text-gray-500">{ur ? "ÃšÂ¯Ã˜Â²Ã˜Â±Ã›â€™ Ã˜Â¯Ã™â€ " : "Days Passed"}</span><span className="font-medium">{sessionDaysPassed ?? "-"}</span></div>
-              <div className="flex justify-between"><span className="text-gray-500">{ur ? "Ã˜Â¨Ã˜Â§Ã™â€šÃ›Å’ Ã˜Â¯Ã™â€ " : "Days Remaining"}</span><span className="font-medium">{sessionDaysRemaining ?? "-"}</span></div>
+              <div className="flex justify-between"><span className="text-gray-500">{ur ? "شروع" : "Start"}</span><span className="font-medium">{fmtDate(session.startDate)}</span></div>
+              <div className="flex justify-between"><span className="text-gray-500">{ur ? "اختتام" : "End"}</span><span className="font-medium">{fmtDate(session.endDate)}</span></div>
+              <div className="flex justify-between"><span className="text-gray-500">{ur ? "گزرے دن" : "Days Passed"}</span><span className="font-medium">{sessionDaysPassed ?? "-"}</span></div>
+              <div className="flex justify-between"><span className="text-gray-500">{ur ? "باقی دن" : "Days Remaining"}</span><span className="font-medium">{sessionDaysRemaining ?? "-"}</span></div>
               <div className="h-3 bg-gray-100 rounded-full overflow-hidden"><div className="h-full bg-emerald-600 rounded-full" style={{ width: `${sessionProgressPct}%` }} /></div>
-              <div className="text-xs text-gray-500">{sessionProgressPct}% {ur ? "Ã™â€¦ÃšÂ©Ã™â€¦Ã™â€ž" : "complete"}{!sessionHasStarted ? <span className="ml-2 text-amber-700 font-medium">Ã¢â‚¬Â¢ {ur ? "Ã˜Â³Ã›Å’Ã˜Â´Ã™â€  Ã˜Â§Ã˜Â¨ÃšÂ¾Ã›Å’ Ã˜Â´Ã˜Â±Ã™Ë†Ã˜Â¹ Ã™â€ Ã›ÂÃ›Å’ÃšÂº Ã›ÂÃ™Ë†Ã˜Â§" : "Session not started yet"}</span> : null}</div>
+              <div className="text-xs text-gray-500">{sessionProgressPct}% {ur ? "مکمل" : "complete"}{!sessionHasStarted ? <span className="ml-2 text-amber-700 font-medium">• {ur ? "سیشن ابھی شروع نہیں ہوا" : "Session not started yet"}</span> : null}</div>
             </div>
-          ) : <p className="text-sm text-gray-500">{ur ? "ÃšÂ©Ã™Ë†Ã˜Â¦Ã›Å’ Ã™ÂÃ˜Â¹Ã˜Â§Ã™â€ž Ã˜Â³Ã›Å’Ã˜Â´Ã™â€  Ã™â€ Ã›ÂÃ›Å’ÃšÂºÃ›â€" : "No active session."}</p>}
+          ) : <p className="text-sm text-gray-500">{ur ? "کوئی فعال سیشن نہیں۔" : "No active session."}</p>}
         </div>
       </div>
 
       <div className="bg-white rounded-2xl shadow-sm border border-emerald-100 p-5 overflow-auto">
-        <div className="flex items-center justify-between mb-3"><h2 className="font-semibold text-lg text-emerald-950">{ur ? "Ã˜Â§Ã™â€¦Ã˜ÂªÃ˜Â­Ã˜Â§Ã™â€ Ã›Å’ Ã˜Â´Ã›Å’ÃšË†Ã™Ë†Ã™â€ž / Ã˜Â­Ã˜Â§Ã™â€žÃ˜Âª" : "Exam Schedule / Status"}</h2><Link href="/examination" className="text-sm text-emerald-700 underline">{ur ? "Ã˜Â§Ã™â€¦Ã˜ÂªÃ˜Â­Ã˜Â§Ã™â€ Ã˜Â§Ã˜Âª" : "Exams"}</Link></div>
+        <div className="flex items-center justify-between mb-3"><h2 className="font-semibold text-lg text-emerald-950">{ur ? "امتحانی شیڈول / حالت" : "Exam Schedule / Status"}</h2><Link href="/examination" className="text-sm text-emerald-700 underline">{ur ? "امتحانات" : "Exams"}</Link></div>
         <table className="w-full text-sm">
-          <thead className="bg-emerald-50"><tr><th className="p-2 text-left">{ur ? "Ã™â€¦Ã˜Â±Ã˜Â­Ã™â€žÃ›Â" : "Stage"}</th><th className="p-2 text-left">{ur ? "Ã˜Â§Ã™â€¦Ã˜ÂªÃ˜Â­Ã˜Â§Ã™â€ " : "Exam"}</th><th className="p-2 text-center">{ur ? "Ã˜ÂªÃ˜Â§Ã˜Â±Ã›Å’Ã˜Â®" : "Date"}</th><th className="p-2 text-center">{ur ? "Ã™â€¦Ã™â€ Ã˜ÂªÃ˜Â®Ã˜Â¨ Ã˜Â·Ã™â€žÃ˜Â¨Ã›Â" : "Selected"}</th><th className="p-2 text-center">{ur ? "Ã™â€ Ã˜ÂªÃ˜Â§Ã˜Â¦Ã˜Â¬ Ã™â€¦Ã˜Â­Ã™ÂÃ™Ë†Ã˜Â¸" : "Results Saved"}</th><th className="p-2 text-center">{ur ? "Ã˜Â­Ã˜Â§Ã™â€žÃ˜Âª" : "Status"}</th></tr></thead>
+          <thead className="bg-emerald-50"><tr><th className="p-2 text-left">{ur ? "مرحلہ" : "Stage"}</th><th className="p-2 text-left">{ur ? "امتحان" : "Exam"}</th><th className="p-2 text-center">{ur ? "تاریخ" : "Date"}</th><th className="p-2 text-center">{ur ? "منتخب طلبہ" : "Selected"}</th><th className="p-2 text-center">{ur ? "نتائج محفوظ" : "Results Saved"}</th><th className="p-2 text-center">{ur ? "حالت" : "Status"}</th></tr></thead>
           <tbody>
             {examTracker.map((ex: any) => (
               <tr key={ex.id} className="border-t">
@@ -368,52 +368,52 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
                 <td className="p-2 text-center">{fmtDate(ex.examDate)}</td>
                 <td className="p-2 text-center">{ex.selected}</td>
                 <td className="p-2 text-center">{ex.saved}</td>
-                <td className="p-2 text-center"><span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-semibold ${ex.pending ? "bg-amber-100 text-amber-800" : "bg-emerald-100 text-emerald-800"}`}>{ex.pending ? (ur ? "Ã˜Â¨Ã˜Â§Ã™â€šÃ›Å’" : "Pending") : (ur ? "Ã™â€¦Ã˜Â­Ã™ÂÃ™Ë†Ã˜Â¸" : "Saved")}</span></td>
+                <td className="p-2 text-center"><span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-semibold ${ex.pending ? "bg-amber-100 text-amber-800" : "bg-emerald-100 text-emerald-800"}`}>{ex.pending ? (ur ? "باقی" : "Pending") : (ur ? "محفوظ" : "Saved")}</span></td>
               </tr>
             ))}
-            {examTracker.length === 0 && <tr><td colSpan={6} className="p-4 text-center text-gray-500">{ur ? "ÃšÂ©Ã™Ë†Ã˜Â¦Ã›Å’ Ã˜Â§Ã™â€¦Ã˜ÂªÃ˜Â­Ã˜Â§Ã™â€  Ã™â€ Ã›ÂÃ›Å’ÃšÂºÃ›â€" : "No exams."}</td></tr>}
+            {examTracker.length === 0 && <tr><td colSpan={6} className="p-4 text-center text-gray-500">{ur ? "کوئی امتحان نہیں۔" : "No exams."}</td></tr>}
           </tbody>
         </table>
       </div>
 
       <div className="grid lg:grid-cols-2 gap-5">
         <div className="bg-white rounded-2xl shadow-sm border border-emerald-100 p-5">
-          <h2 className="font-semibold text-lg text-emerald-950 mb-3">{ur ? "ÃšÂ©Ã™â€žÃ˜Â§Ã˜Â³ / Ã˜Â­Ã›Å’Ã˜Â«Ã›Å’Ã˜Âª Ã™Ë†Ã˜Â§Ã˜Â± Ã˜Â·Ã™â€žÃ˜Â¨Ã›Â Ã˜Â®Ã™â€žÃ˜Â§Ã˜ÂµÃ›Â" : "Class / Status-wise Student Summary"}</h2>
+          <h2 className="font-semibold text-lg text-emerald-950 mb-3">{ur ? "کلاس / حیثیت وار طلبہ خلاصہ" : "Class / Status-wise Student Summary"}</h2>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-4">
             {Object.entries(statusCounts).filter(([k])=>k!=="OTHER" || statusCounts.OTHER>0).map(([k,v]) => (
               <div key={k} className="rounded-lg border border-emerald-100 p-3 text-center"><div className="text-xs text-gray-500">{k}</div><div className="text-lg font-bold text-emerald-900">{v}</div></div>
             ))}
           </div>
           <div className="overflow-auto">
-            <table className="w-full text-sm"><thead className="bg-emerald-50"><tr><th className="p-2 text-left">{ur ? "ÃšÂ©Ã™â€žÃ˜Â§Ã˜Â³" : "Class"}</th><th className="p-2 text-center">{ur ? "Ã˜ÂªÃ˜Â¹Ã˜Â¯Ã˜Â§Ã˜Â¯" : "Count"}</th></tr></thead>
+            <table className="w-full text-sm"><thead className="bg-emerald-50"><tr><th className="p-2 text-left">{ur ? "کلاس" : "Class"}</th><th className="p-2 text-center">{ur ? "تعداد" : "Count"}</th></tr></thead>
               <tbody>{classSummary.map(c => <tr key={c.name} className="border-t"><td className="p-2">{c.name}</td><td className="p-2 text-center font-medium">{c.count}</td></tr>)}{classSummary.length===0 && <tr><td colSpan={2} className="p-3 text-center text-gray-500">-</td></tr>}</tbody>
             </table>
           </div>
         </div>
 
         <div className="bg-white rounded-2xl shadow-sm border border-emerald-100 p-5">
-          <div className="flex items-center justify-between mb-3"><h2 className="font-semibold text-lg text-emerald-950">{ur ? "Ã˜Â³Ã˜Â±Ã™Â¹Ã›Å’Ã™ÂÃšÂ©Ã›Å’Ã™Â¹Ã˜Â³ Ã˜Â®Ã™â€žÃ˜Â§Ã˜ÂµÃ›Â" : "Certificates Summary"}</h2><Link href="/certificates" className="text-sm text-emerald-700 underline">{ur ? "Ã˜Â³Ã˜Â±Ã™Â¹Ã›Å’Ã™ÂÃšÂ©Ã›Å’Ã™Â¹Ã˜Â³" : "Certificates"}</Link></div>
+          <div className="flex items-center justify-between mb-3"><h2 className="font-semibold text-lg text-emerald-950">{ur ? "سرٹیفکیٹس خلاصہ" : "Certificates Summary"}</h2><Link href="/certificates" className="text-sm text-emerald-700 underline">{ur ? "سرٹیفکیٹس" : "Certificates"}</Link></div>
           <div className="grid grid-cols-3 gap-2 mb-4">
-            <div className="rounded-lg border border-emerald-100 p-3 text-center"><div className="text-xs text-gray-500">{ur ? "ÃšÂ©Ã™â€ž" : "Total"}</div><div className="text-lg font-bold text-emerald-900">{certsCount}</div></div>
+            <div className="rounded-lg border border-emerald-100 p-3 text-center"><div className="text-xs text-gray-500">{ur ? "کل" : "Total"}</div><div className="text-lg font-bold text-emerald-900">{certsCount}</div></div>
             <div className="rounded-lg border border-emerald-100 p-3 text-center"><div className="text-xs text-gray-500">Annual</div><div className="text-lg font-bold text-emerald-900">{certAnnual}</div></div>
             <div className="rounded-lg border border-emerald-100 p-3 text-center"><div className="text-xs text-gray-500">Nazra</div><div className="text-lg font-bold text-emerald-900">{certNazra}</div></div>
           </div>
           <ul className="divide-y text-sm">
             {recentCerts.map((c: any) => (
-              <li key={c.id} className="py-2 flex items-center justify-between gap-2"><div><div className="font-medium">{c.student?.admissionNo} - {c.student?.nameEn}</div><div className="text-xs text-gray-500">{c.type}{c.serialNo ? ` Ã¢â‚¬Â¢ ${c.serialNo}` : ""}</div></div><div className="text-xs text-gray-500">{fmtDate(c.issueDate)}</div></li>
+              <li key={c.id} className="py-2 flex items-center justify-between gap-2"><div><div className="font-medium">{c.student?.admissionNo} - {c.student?.nameEn}</div><div className="text-xs text-gray-500">{c.type}{c.serialNo ? ` • ${c.serialNo}` : ""}</div></div><div className="text-xs text-gray-500">{fmtDate(c.issueDate)}</div></li>
             ))}
-            {recentCerts.length === 0 && <li className="py-2 text-gray-500">{ur ? "ÃšÂ©Ã™Ë†Ã˜Â¦Ã›Å’ Ã˜Â³Ã˜Â±Ã™Â¹Ã›Å’Ã™ÂÃšÂ©Ã›Å’Ã™Â¹ Ã˜Â¬Ã˜Â§Ã˜Â±Ã›Å’ Ã™â€ Ã›ÂÃ›Å’ÃšÂº Ã›ÂÃ™Ë†Ã˜Â§Ã›â€" : "No certificates issued."}</li>}
+            {recentCerts.length === 0 && <li className="py-2 text-gray-500">{ur ? "کوئی سرٹیفکیٹ جاری نہیں ہوا۔" : "No certificates issued."}</li>}
           </ul>
         </div>
       </div>
 
       <div className="bg-white rounded-2xl shadow-sm border border-emerald-100 p-5">
-        <h2 className="font-semibold text-lg text-emerald-950 mb-3">{ur ? "Ã˜Â²Ã›Å’Ã˜Â± Ã˜Â§Ã™â€žÃ˜ÂªÃ™Ë†Ã˜Â§Ã˜Â¡ ÃšÂ©Ã˜Â§Ã™â€¦ (Pending Tasks)" : "Pending Tasks Panel"}</h2>
+        <h2 className="font-semibold text-lg text-emerald-950 mb-3">{ur ? "زیر التواء کام (Pending Tasks)" : "Pending Tasks Panel"}</h2>
         <div className="grid md:grid-cols-2 xl:grid-cols-4 gap-3">
-          <div className="rounded-xl border border-amber-100 bg-amber-50/30 p-4"><div className="text-sm font-semibold text-amber-900">{ur ? "Ã™â€ Ã˜ÂªÃ˜Â§Ã˜Â¦Ã˜Â¬ Ã˜Â¨Ã˜Â§Ã™â€šÃ›Å’ Ã˜Â§Ã™â€¦Ã˜ÂªÃ˜Â­Ã˜Â§Ã™â€ Ã˜Â§Ã˜Âª" : "Exams with Pending Results"}</div><div className="text-2xl font-bold text-amber-900 mt-1">{examTracker.filter(e=>e.pending).length}</div><div className="text-xs text-amber-800 mt-1">{examTracker.filter(e=>e.pending).map(e=>examDisplayName(e)).slice(0,3).join(", ") || (ur?"ÃšÂ©Ã™Ë†Ã˜Â¦Ã›Å’ Ã™â€ Ã›ÂÃ›Å’ÃšÂº":"None")}</div></div>
-          <div className="rounded-xl border border-red-100 bg-red-50/30 p-4"><div className="text-sm font-semibold text-red-900">{ur ? "Ã˜Â§Ã˜Â³ Ã™â€¦Ã˜Â§Ã›Â Ã™ÂÃ›Å’Ã˜Â³ Ã˜Â¨Ã˜Â§Ã™â€šÃ›Å’ Ã˜Â·Ã™â€žÃ˜Â¨Ã›Â" : "Students with Pending Fees (Month)"}</div><div className="text-2xl font-bold text-red-900 mt-1">{pendingFeeStudentIds.size}</div><Link href="/fees/defaulters" className="text-xs text-red-800 underline mt-1 inline-block">{ur ? "Defaulters Ã˜Â¯Ã›Å’ÃšÂ©ÃšÂ¾Ã›Å’ÃšÂº" : "View defaulters"}</Link></div>
-          <div className="rounded-xl border border-blue-100 bg-blue-50/30 p-4"><div className="text-sm font-semibold text-blue-900">{ur ? "Ã˜Â±Ã™Ë†Ã™â€ž Ã™â€ Ã™â€¦Ã˜Â¨Ã˜Â± missing" : "Missing Roll No"}</div><div className="text-2xl font-bold text-blue-900 mt-1">{missingRollStudents.length}</div><div className="text-xs text-blue-800 mt-1">{missingRollStudents.slice(0,3).map((s:any)=>s.admissionNo).join(", ") || (ur?"ÃšÂ©Ã™Ë†Ã˜Â¦Ã›Å’ Ã™â€ Ã›ÂÃ›Å’ÃšÂº":"None")}</div></div>
-          <div className="rounded-xl border border-slate-100 bg-slate-50/40 p-4"><div className="text-sm font-semibold text-slate-900">{ur ? "Ã˜Â¨Ã™â€ Ã›Å’Ã˜Â§Ã˜Â¯Ã›Å’ Ã™â€¦Ã˜Â¹Ã™â€žÃ™Ë†Ã™â€¦Ã˜Â§Ã˜Âª missing" : "Missing Essential Info"}</div><div className="text-2xl font-bold text-slate-900 mt-1">{missingInfoStudents.length}</div><div className="text-xs text-slate-700 mt-1">{ur ? "Ã™Ë†Ã˜Â§Ã™â€žÃ˜Â¯ ÃšÂ©Ã˜Â§ Ã™â€ Ã˜Â§Ã™â€¦/ÃšÂ©Ã™â€žÃ˜Â§Ã˜Â³ Ãšâ€ Ã›Å’ÃšÂ© ÃšÂ©Ã˜Â±Ã›Å’ÃšÂº" : "Check father name/class"}</div></div>
+          <div className="rounded-xl border border-amber-100 bg-amber-50/30 p-4"><div className="text-sm font-semibold text-amber-900">{ur ? "نتائج باقی امتحانات" : "Exams with Pending Results"}</div><div className="text-2xl font-bold text-amber-900 mt-1">{examTracker.filter(e=>e.pending).length}</div><div className="text-xs text-amber-800 mt-1">{examTracker.filter(e=>e.pending).map(e=>examDisplayName(e)).slice(0,3).join(", ") || (ur?"کوئی نہیں":"None")}</div></div>
+          <div className="rounded-xl border border-red-100 bg-red-50/30 p-4"><div className="text-sm font-semibold text-red-900">{ur ? "اس ماہ فیس باقی طلبہ" : "Students with Pending Fees (Month)"}</div><div className="text-2xl font-bold text-red-900 mt-1">{pendingFeeStudentIds.size}</div><Link href="/fees/defaulters" className="text-xs text-red-800 underline mt-1 inline-block">{ur ? "Defaulters دیکھیں" : "View defaulters"}</Link></div>
+          <div className="rounded-xl border border-blue-100 bg-blue-50/30 p-4"><div className="text-sm font-semibold text-blue-900">{ur ? "رول نمبر missing" : "Missing Roll No"}</div><div className="text-2xl font-bold text-blue-900 mt-1">{missingRollStudents.length}</div><div className="text-xs text-blue-800 mt-1">{missingRollStudents.slice(0,3).map((s:any)=>s.admissionNo).join(", ") || (ur?"کوئی نہیں":"None")}</div></div>
+          <div className="rounded-xl border border-slate-100 bg-slate-50/40 p-4"><div className="text-sm font-semibold text-slate-900">{ur ? "بنیادی معلومات missing" : "Missing Essential Info"}</div><div className="text-2xl font-bold text-slate-900 mt-1">{missingInfoStudents.length}</div><div className="text-xs text-slate-700 mt-1">{ur ? "والد کا نام/کلاس چیک کریں" : "Check father name/class"}</div></div>
         </div>
       </div>
 
