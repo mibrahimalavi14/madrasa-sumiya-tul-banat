@@ -1,9 +1,10 @@
 ﻿"use client";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
+import { useState } from "react";
 
 type Item = [string, string, string];
-type Section = { title: string; items: Item[] };
+type Section = { title: string; items: Item[]; collapsible?: boolean };
 
 export default function SidebarNav({ sections }: { sections: Section[] }) {
   const pathname = usePathname();
@@ -11,25 +12,46 @@ export default function SidebarNav({ sections }: { sections: Section[] }) {
   const search = searchParams.toString();
   const fullPath = search ? `${pathname}?${search}` : pathname;
   const allHrefs = sections.flatMap(s => s.items.map(i => i[0]));
+
+  const isActive = (href: string) => {
+    const [hrefPath, hrefQuery] = href.split("?");
+    const exact = hrefQuery ? fullPath === href || (pathname === hrefPath && searchParams.toString() === hrefQuery) : pathname === hrefPath;
+    const prefix = !hrefQuery && hrefPath !== "/dashboard" && pathname.startsWith(hrefPath + "/");
+    const better = prefix && allHrefs.some(h => {
+      const [hp] = h.split("?");
+      return h !== href && hp.startsWith(hrefPath + "/") && (pathname === hp || pathname.startsWith(hp + "/"));
+    });
+    return exact || (prefix && !better);
+  };
+
+  const [openMap, setOpenMap] = useState<Record<number, boolean>>(() => {
+    const init: Record<number, boolean> = {};
+    sections.forEach((s, i) => { if (s.collapsible) init[i] = s.items.some(([href]) => isActive(href)); });
+    return init;
+  });
+
   return (
     <nav className="flex-1 space-y-4 mt-1 overflow-auto pr-1">
-      {sections.map((section, idx) => (
+      {sections.map((section, idx) => {
+        const collapsed = !!section.collapsible && !openMap[idx];
+        return (
         <div key={idx}>
-          <div className="px-2 mb-1.5 flex items-center gap-2">
-            <span className="h-px flex-1 bg-gradient-to-r from-transparent via-emerald-600/50 to-transparent" />
-            <span className="text-[10px] uppercase tracking-[0.18em] text-amber-200/80 font-semibold whitespace-nowrap">{section.title}</span>
-            <span className="h-px flex-1 bg-gradient-to-r from-transparent via-emerald-600/50 to-transparent" />
-          </div>
-          <div className="space-y-1.5">
+          {section.collapsible ? (
+            <button type="button" onClick={() => setOpenMap(m => ({ ...m, [idx]: !m[idx] }))} className="w-full px-2 mb-1.5 flex items-center gap-2 group">
+              <span className="h-px flex-1 bg-gradient-to-r from-transparent via-emerald-600/50 to-transparent" />
+              <span className="text-[10px] uppercase tracking-[0.18em] text-amber-200/80 font-semibold whitespace-nowrap">{section.title} {collapsed ? "▸" : "▾"}</span>
+              <span className="h-px flex-1 bg-gradient-to-r from-transparent via-emerald-600/50 to-transparent" />
+            </button>
+          ) : (
+            <div className="px-2 mb-1.5 flex items-center gap-2">
+              <span className="h-px flex-1 bg-gradient-to-r from-transparent via-emerald-600/50 to-transparent" />
+              <span className="text-[10px] uppercase tracking-[0.18em] text-amber-200/80 font-semibold whitespace-nowrap">{section.title}</span>
+              <span className="h-px flex-1 bg-gradient-to-r from-transparent via-emerald-600/50 to-transparent" />
+            </div>
+          )}
+          {!collapsed && <div className="space-y-1.5">
             {section.items.map(([href, label, icon]) => {
-              const [hrefPath, hrefQuery] = href.split("?");
-              const exact = hrefQuery ? fullPath === href || pathname === hrefPath && searchParams.toString() === hrefQuery : pathname === hrefPath;
-              const prefix = !hrefQuery && hrefPath !== "/dashboard" && pathname.startsWith(hrefPath + "/");
-              const better = prefix && allHrefs.some(h => {
-                const [hp] = h.split("?");
-                return h !== href && hp.startsWith(hrefPath + "/") && (pathname === hp || pathname.startsWith(hp + "/"));
-              });
-              const active = exact || (prefix && !better);
+              const active = isActive(href);
               return (
                 <Link
                   key={href}
@@ -46,9 +68,9 @@ export default function SidebarNav({ sections }: { sections: Section[] }) {
                 </Link>
               );
             })}
-          </div>
+          </div>}
         </div>
-      ))}
+      )})}
     </nav>
   );
 }
