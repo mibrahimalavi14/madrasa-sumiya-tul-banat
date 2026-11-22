@@ -46,8 +46,11 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           title: lang === "ur" ? "تعلیم و امتحانات" : "Academics",
           items: [
             ["/students", tr.students, "👩‍🎓"],
+            ["/students/attention", lang === "ur" ? "توجہ درکار طلبہ" : "Needs Attention", "⚠️"],
             ["/examination", tr.examination, "📝"],
             ["/results", tr.results, "📊"],
+            ["/results?view=annual", lang === "ur" ? "سالانہ نتیجہ" : "Annual Result", "🏆"],
+            ["/results/stage-performance", lang === "ur" ? "مرحلہ وار کارکردگی" : "Stage Performance", "📈"],
             ["/certificates", tr.certificates, "🎓"],
           ] as [string, string, string][],
         },
@@ -55,17 +58,8 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           title: lang === "ur" ? (isAdmin ? "مالیات و نظام" : "مالیات") : (isAdmin ? "Finance & System" : "Finance"),
           items: [
             ["/fees", tr.fees, "💳"],
-            ...(isAdmin ? [["/settings", tr.settings, "⚙️"] as [string, string, string]] : []),
-          ] as [string, string, string][],
-        },
-        {
-          title: lang === "ur" ? "مزید" : "More",
-          collapsible: true,
-          items: [
-            ["/students/attention", lang === "ur" ? "توجہ درکار طلبہ" : "Needs Attention", "⚠️"],
-            ["/results?view=annual", lang === "ur" ? "سالانہ نتیجہ" : "Annual Result", "🏆"],
-            ["/results/stage-performance", lang === "ur" ? "مرحلہ وار کارکردگی" : "Stage Performance", "📈"],
             ["/fees/payments", lang === "ur" ? "حالیہ ادائیگیاں" : "Recent Payments", "🧾"],
+            ...(isAdmin ? [["/settings", tr.settings, "⚙️"] as [string, string, string]] : []),
           ] as [string, string, string][],
         },
       ]
