@@ -435,12 +435,28 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
         <div className="bg-white rounded-2xl shadow-sm border border-emerald-100 p-5">
           <h2 className="font-semibold text-lg text-emerald-950 mb-3">{ur ? "ماہ وار فیس وصولی" : "Monthly Fee Collection"}</h2>
           <div className="space-y-2">
-            {feeTrend.map(f => (
+            {feeTrend.slice(0, 6).map(f => (
               <div key={f.label} className="text-sm">
                 <div className="flex justify-between mb-1"><span>{f.label}</span><span className="text-gray-600">{fmtRs(f.collected)}</span></div>
                 <div className="h-2.5 bg-gray-100 rounded-full overflow-hidden"><div className="h-full bg-emerald-600 rounded-full" style={{ width: `${Math.round((f.collected / feeTrendMax) * 100)}%` }} /></div>
               </div>
             ))}
+            {feeTrend.length > 6 && (
+              <details className="group">
+                <summary className="cursor-pointer text-sm text-emerald-700 font-medium hover:underline list-none flex items-center gap-1 py-1">
+                  <span className="group-open:hidden">{ur ? `مزید ${feeTrend.length - 6} مہینے دکھائیں ▾` : `Show ${feeTrend.length - 6} more months ▾`}</span>
+                  <span className="hidden group-open:inline">{ur ? "کم دکھائیں ▴" : "Show less ▴"}</span>
+                </summary>
+                <div className="space-y-2 mt-2">
+                  {feeTrend.slice(6).map(f => (
+                    <div key={f.label} className="text-sm">
+                      <div className="flex justify-between mb-1"><span>{f.label}</span><span className="text-gray-600">{fmtRs(f.collected)}</span></div>
+                      <div className="h-2.5 bg-gray-100 rounded-full overflow-hidden"><div className="h-full bg-emerald-600 rounded-full" style={{ width: `${Math.round((f.collected / feeTrendMax) * 100)}%` }} /></div>
+                    </div>
+                  ))}
+                </div>
+              </details>
+            )}
           </div>
         </div>
         <div className="bg-white rounded-2xl shadow-sm border border-emerald-100 p-5">
@@ -469,9 +485,17 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
           <div className="flex items-center justify-between mb-3"><h2 className="font-semibold text-lg text-emerald-950">{ur ? "حالیہ سرگرمی (Audit)" : "Recent Activity (Audit)"}</h2><Link href="/settings/audit" className="text-sm text-emerald-700 underline">{ur ? "آڈٹ لاگ" : "Audit Log"}</Link></div>
           {user?.role !== "ADMIN" ? <p className="text-sm text-gray-500">{ur ? "تفصیلی آڈٹ لاگ صرف ایڈمن کے لیے ہے۔" : "Detailed audit log is Admin-only."}</p> : (
             <ul className="divide-y text-sm">
-              {recentAudit.map((a: any) => (
+              {recentAudit.slice(0, 4).map((a: any) => (
                 <li key={a.id} className="py-2.5"><div className="font-medium text-gray-900">{a.action}</div><div className="text-xs text-gray-500">{a.actorLabel || "-"}{a.entityType ? ` • ${a.entityType}` : ""} • {fmtDate(a.createdAt)}</div></li>
               ))}
+              {recentAudit.length > 4 && (
+                <li className="py-1">
+                  <details className="group">
+                    <summary className="cursor-pointer text-emerald-700 font-medium hover:underline list-none py-1"><span className="group-open:hidden">{ur ? `مزید ${recentAudit.length - 4} دکھائیں ▾` : `Show ${recentAudit.length - 4} more ▾`}</span><span className="hidden group-open:inline">{ur ? "کم دکھائیں ▴" : "Show less ▴"}</span></summary>
+                    <ul className="divide-y">{recentAudit.slice(4).map((a: any) => (<li key={a.id} className="py-2.5"><div className="font-medium text-gray-900">{a.action}</div><div className="text-xs text-gray-500">{a.actorLabel || "-"}{a.entityType ? ` • ${a.entityType}` : ""} • {fmtDate(a.createdAt)}</div></li>))}</ul>
+                  </details>
+                </li>
+              )}
               {recentAudit.length === 0 && <li className="py-2 text-gray-500">{ur ? "کوئی سرگرمی نہیں۔" : "No recent activity."}</li>}
             </ul>
           )}
@@ -499,7 +523,7 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
           </div>
           {recentEnrolls.length === 0 ? <p className="text-sm text-gray-500">{ur ? "کوئی ریکارڈ نہیں۔" : "No records."}</p> : (
             <ul className="divide-y">
-              {recentEnrolls.map((e: any) => (
+              {recentEnrolls.slice(0, 4).map((e: any) => (
                 <li key={e.id} className="py-2.5 flex items-center justify-between gap-3">
                   <div>
                     <div className="font-medium text-gray-900">{e.student.admissionNo} - {e.student.nameEn}</div>
@@ -508,6 +532,14 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
                   <Link href={`/students/${e.student.id}`} className="text-sm text-emerald-700 underline">{ur ? "پروفائل" : "Profile"}</Link>
                 </li>
               ))}
+              {recentEnrolls.length > 4 && (
+                <li className="py-1">
+                  <details className="group">
+                    <summary className="cursor-pointer text-emerald-700 font-medium hover:underline list-none py-1"><span className="group-open:hidden">{ur ? `مزید ${recentEnrolls.length - 4} دکھائیں ▾` : `Show ${recentEnrolls.length - 4} more ▾`}</span><span className="hidden group-open:inline">{ur ? "کم دکھائیں ▴" : "Show less ▴"}</span></summary>
+                    <ul className="divide-y">{recentEnrolls.slice(4).map((e: any) => (<li key={e.id} className="py-2.5 flex items-center justify-between gap-3"><div><div className="font-medium text-gray-900">{e.student.admissionNo} - {e.student.nameEn}</div><div className="text-xs text-gray-500">{e.student.admissionClass || "-"} {e.rollNo ? `• Roll: ${e.rollNo}` : ""}</div></div><Link href={`/students/${e.student.id}`} className="text-sm text-emerald-700 underline">{ur ? "پروفائل" : "Profile"}</Link></li>))}</ul>
+                  </details>
+                </li>
+              )}
             </ul>
           )}
         </div>
