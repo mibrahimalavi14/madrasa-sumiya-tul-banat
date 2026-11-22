@@ -27,7 +27,7 @@ export default async function StagePerformancePage() {
   ]);
 
   const examNameUr: Record<number, string> = { 1: "ابتدائی تحریری امتحان", 2: "ششماہی امتحان", 3: "سہ ماہی امتحان", 4: "سالانہ امتحان" };
-  const stages = [1, 2, 3, 4].map((stage) => {
+  const stages = [1, 2, 3].map((stage) => {
     const exam = exams.find((e: any) => Number(e.stage) === stage);
     const rows = results.filter((r: any) => Number(r.exam?.stage) === stage);
     const total = rows.length;
@@ -60,7 +60,7 @@ export default async function StagePerformancePage() {
     <div className="space-y-5 theme-results">
       <div className="bg-gradient-to-r from-blue-700 to-indigo-700 text-white rounded-2xl p-5 shadow-sm">
         <h1 className="text-2xl font-bold">{ur ? "مرحلہ وار امتحانی کارکردگی" : "Stage-wise Exam Performance"}</h1>
-        <p className="text-sm text-blue-100 mt-1">{ur ? "چاروں امتحانی مراحل کی کارکردگی کا خلاصہ" : "Performance summary across all four exam stages"}</p>
+        <p className="text-sm text-blue-100 mt-1">{ur ? "پہلے تین امتحانی مراحل کی کارکردگی کا خلاصہ (سالانہ نتیجہ الگ سیکشن میں)" : "Performance summary for the first three stages (Annual Result is in its own section)"}</p>
       </div>
 
       <div className="bg-white rounded-2xl shadow-sm border border-blue-100 p-5 overflow-auto">

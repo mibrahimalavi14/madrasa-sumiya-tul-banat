@@ -105,6 +105,7 @@ export default async function ResultsPage({ searchParams }: { searchParams: Prom
   const canEditResults = user?.role === "ADMIN";
   const examsRaw = await prisma.exam.findMany({ where: { sessionId: session.id }, orderBy: { createdAt: "asc" } });
   const exams = [...examsRaw].sort((a, b) => ((a as any).stage ?? 99) - ((b as any).stage ?? 99) || a.createdAt.getTime() - b.createdAt.getTime());
+  const examWiseExams = exams.filter(e => Number((e as any).stage) !== 4);
   const examNameUr: Record<number, string> = { 1: "ابتدائی تحریری امتحان", 2: "ششماہی امتحان", 3: "سہ ماہی امتحان", 4: "سالانہ امتحان" };
   const examDisplayName = (e: any) => (ur && e?.stage && examNameUr[Number(e.stage)]) || e?.name || "-";
   const view = sp.view === "annual" ? "annual" : "exam";
@@ -212,7 +213,7 @@ export default async function ResultsPage({ searchParams }: { searchParams: Prom
     );
   }
 
-  const examId = sp.examId || exams[0]?.id;
+  const examId = sp.examId || examWiseExams[0]?.id || exams[0]?.id;
   const exam = examId ? await prisma.exam.findUnique({
     where: { id: examId },
     select: { id: true, name: true, stage: true, hasOral: true, sessionId: true, students: { select: { studentId: true, student: { select: { id: true, nameEn: true } } } } },
@@ -265,7 +266,7 @@ export default async function ResultsPage({ searchParams }: { searchParams: Prom
               defaultValue={examId}
               className="min-w-[280px] border border-emerald-200 rounded-lg px-3 py-2.5 bg-white text-gray-800 shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-200 focus:border-emerald-400"
             >
-              {exams.map(e => <option key={e.id} value={e.id}>{examDisplayName(e)}</option>)}
+              {examWiseExams.map(e => <option key={e.id} value={e.id}>{examDisplayName(e)}</option>)}
             </select>
           </div>
           <button className="bg-emerald-800 hover:bg-emerald-900 text-white px-5 py-2.5 rounded-lg font-medium shadow-sm">
