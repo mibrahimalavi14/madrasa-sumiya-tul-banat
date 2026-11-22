@@ -63,6 +63,24 @@ export default async function ExamResultReportPage({ searchParams }: { searchPar
           <div className="border border-blue-100 rounded-lg p-3"><div className="text-xs text-gray-600">{ur ? "اوسط فیصد" : "Average %"}</div><div className="text-2xl font-extrabold text-blue-800">{avg.toFixed(2)}%</div></div>
         </div>
 
+        {(() => {
+          const top = results.filter((r: any) => r.position != null).slice(0, 3);
+          if (!top.length) return null;
+          return (
+            <div className="mb-5 border border-amber-200 bg-amber-50/40 rounded-lg p-3">
+              <h2 className="font-semibold text-amber-900 mb-2">{ur ? "ٹاپ پوزیشن ہولڈرز" : "Top Position Holders"}</h2>
+              <div className="grid sm:grid-cols-3 gap-2">
+                {top.map((r: any) => (
+                  <div key={r.id} className="bg-white border border-amber-100 rounded-lg p-2 text-sm">
+                    <div className="font-semibold text-amber-800">#{r.position}</div>
+                    <div>{r.student?.admissionNo} - {r.student?.nameEn}</div>
+                    <div className="text-xs text-gray-500">{Number(r.percentage || 0).toFixed(2)}% • {r.grade || "-"}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          );
+        })()}
         <h2 className="font-semibold text-emerald-900 mb-2">{ur ? "میرٹ لسٹ / تفصیلی نتائج" : "Merit List / Detailed Results"}</h2>
         <div className="overflow-auto border border-gray-200 rounded-lg">
           <table className="w-full text-sm">

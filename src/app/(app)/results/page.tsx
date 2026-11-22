@@ -277,6 +277,24 @@ export default async function ResultsPage({ searchParams }: { searchParams: Prom
         <div className="flex items-center justify-end no-print">
           <Link href={`/results/exam-report?examId=${exam.id}`} className="text-sm bg-emerald-700 hover:bg-emerald-800 text-white px-4 py-2 rounded-lg font-medium">{ur ? "امتحان رپورٹ (میرٹ/پاس فیل) پرنٹ" : "Print Exam Report (Merit/Pass-Fail)"}</Link>
         </div>
+        {(() => {
+          const top = [...results].filter((r: any) => r.position != null).sort((a: any,b: any)=>Number(a.position)-Number(b.position)).slice(0,3);
+          if (top.length === 0) return null;
+          return (
+            <div className="bg-gradient-to-r from-amber-50 to-yellow-50 border border-amber-200 rounded-2xl p-4">
+              <h3 className="font-semibold text-amber-900 mb-3">{ur ? "ٹاپ پوزیشن ہولڈرز" : "Top Position Holders"}</h3>
+              <div className="grid sm:grid-cols-3 gap-3">
+                {top.map((r: any) => (
+                  <div key={r.id} className="bg-white border border-amber-100 rounded-xl p-3">
+                    <div className="text-xs text-amber-700 font-semibold">#{r.position}</div>
+                    <div className="font-medium text-gray-900 mt-1">{r.student?.admissionNo} - {r.student?.nameEn}</div>
+                    <div className="text-xs text-gray-500 mt-1">{Number(r.percentage || 0).toFixed(2)}% • {r.grade || "-"}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          );
+        })()}
         {canEditResults && !lockedExamView && <div className="bg-white rounded-xl shadow p-4 overflow-auto">
           <div className="flex items-center justify-between gap-3 flex-wrap mb-2">
             <div>

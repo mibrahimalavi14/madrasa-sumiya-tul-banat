@@ -22,7 +22,7 @@ export default async function StagePerformancePage() {
     }),
     prisma.result.findMany({
       where: { exam: { sessionId: session.id } },
-      select: { percentage: true, status: true, totalObtained: true, totalMarks: true, writtenObtained: true, writtenTotal: true, oralObtained: true, oralTotal: true, remarks: true, exam: { select: { stage: true } } },
+      select: { percentage: true, status: true, totalObtained: true, totalMarks: true, writtenObtained: true, writtenTotal: true, oralObtained: true, oralTotal: true, remarks: true, position: true, student: { select: { admissionNo: true, nameEn: true, nameUr: true } }, exam: { select: { stage: true } } },
     }),
   ]);
 
@@ -39,6 +39,11 @@ export default async function StagePerformancePage() {
     const oralRows = rows.filter((r: any) => Number(r.oralTotal || 0) > 0);
     const writtenAvg = writtenRows.length ? writtenRows.reduce((s: number, r: any) => s + ((Number(r.writtenObtained || 0) / Number(r.writtenTotal || 1)) * 100), 0) / writtenRows.length : 0;
     const oralAvg = oralRows.length ? oralRows.reduce((s: number, r: any) => s + ((Number(r.oralObtained || 0) / Number(r.oralTotal || 1)) * 100), 0) / oralRows.length : 0;
+    const topHolders = rows
+      .filter((r: any) => r.position != null)
+      .sort((a: any, b: any) => Number(a.position) - Number(b.position))
+      .slice(0, 3)
+      .map((r: any) => ({ position: r.position, name: r.student?.nameEn || "-", admissionNo: r.student?.admissionNo || "-", percentage: r.percentage }));
     return {
       stage,
       examId: exam?.id || null,
@@ -47,6 +52,7 @@ export default async function StagePerformancePage() {
       selected: exam?._count?.students ?? 0,
       saved: exam?._count?.results ?? total,
       total, pass, fail, absent, avg, writtenAvg, oralAvg, hasWritten: writtenRows.length > 0, hasOral: oralRows.length > 0,
+      topHolders,
     };
   });
 
@@ -102,6 +108,19 @@ export default async function StagePerformancePage() {
             <div className="flex justify-between text-xs text-gray-600 mt-2"><span>{ur ? "اوسط" : "Avg"}: {s.total ? s.avg.toFixed(1) : "-"}%</span><span>{ur ? "پاس" : "Pass"}: {s.total ? s.pass : 0}/{s.total}</span></div>
             <div className="flex justify-between text-xs text-gray-500 mt-1"><span>{ur ? "تحریری" : "Written"}: {s.hasWritten ? s.writtenAvg.toFixed(1)+"%" : "-"}</span><span>{ur ? "زبانی" : "Oral"}: {s.hasOral ? s.oralAvg.toFixed(1)+"%" : "-"}</span></div>
             <div className="flex justify-between text-xs text-gray-500 mt-1"><span>{ur ? "منتخب" : "Selected"}: {s.selected}</span><span className={s.absent ? "text-amber-700" : ""}>{ur ? "غ/رخصت" : "A/L"}: {s.absent}</span></div>
+            <div className="mt-3 border-t border-blue-100 pt-3">
+              <div className="text-xs font-semibold text-blue-900 mb-2">{ur ? "ٹاپ پوزیشن ہولڈرز" : "Top Position Holders"}</div>
+              {s.topHolders.length > 0 ? (
+                <ul className="space-y-1.5">
+                  {s.topHolders.map((h: any) => (
+                    <li key={h.position} className="flex items-center justify-between gap-2 text-xs">
+                      <span className="truncate"><span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-amber-100 text-amber-800 font-bold mr-1">{h.position}</span>{h.admissionNo} - {h.name}</span>
+                      <span className="text-gray-500 shrink-0">{Number(h.percentage || 0).toFixed(1)}%</span>
+                    </li>
+                  ))}
+                </ul>
+              ) : <p className="text-xs text-gray-400">{ur ? "ابھی پوزیشن دستیاب نہیں" : "No positions yet"}</p>}
+            </div>
             <Link href={s.examId ? `/results?examId=${s.examId}&locked=1` : "/results"} className="mt-3 inline-flex items-center justify-center w-full text-sm bg-blue-700 hover:bg-blue-800 text-white px-3 py-2 rounded-lg font-medium">{ur ? "نتیجہ دیکھیں" : "View Result"}</Link>
           </div>
         ))}
