@@ -10,13 +10,37 @@ import ScrollToTopOnError from "@/components/ScrollToTopOnError";
 import PhoneInput from "@/components/PhoneInput";
 import SuggestionInput from "@/components/SuggestionInput";
 import { logAudit } from "@/lib/audit";
+import { cookies } from "next/headers";
+
+const DRAFT_COOKIE = "student_new_draft";
+async function readDraft() {
+  try {
+    const jar = await cookies();
+    const raw = jar.get(DRAFT_COOKIE)?.value;
+    if (!raw) return null;
+    return JSON.parse(Buffer.from(raw, "base64url").toString("utf8"));
+  } catch { return null; }
+}
+async function saveDraft(formData: FormData) {
+  try {
+    const data: any = {};
+    for (const [k, v] of formData.entries()) {
+      if (k === "siblings") { (data.siblings ||= []).push(String(v)); continue; }
+      data[k] = String(v);
+    }
+    const raw = Buffer.from(JSON.stringify(data), "utf8").toString("base64url");
+    const jar = await cookies();
+    jar.set(DRAFT_COOKIE, raw, { path: "/students/new", httpOnly: true, sameSite: "lax", maxAge: 60 * 15 });
+  } catch {}
+}
+async function clearDraft() { try { const jar = await cookies(); jar.delete(DRAFT_COOKIE); } catch {} }
 
 async function createStudent(formData: FormData) {
   "use server";
   const user = await getAuthUser();
   if (user?.role !== "ADMIN") redirect("/login");
   const session = await getCurrentSession();
-  if (!session || session.status !== "ACTIVE") redirect("/students/new?error=session");
+  if (!session || session.status !== "ACTIVE") { await saveDraft(formData); redirect("/students/new?error=session"); }
   const count = await prisma.student.count();
   const admissionNo = String(formData.get("admissionNo") || "").trim();
   const registrationNo = formatRegNo(count + 1); // internal, not shown on admission form
@@ -40,14 +64,15 @@ async function createStudent(formData: FormData) {
   if (!phone) missing.push("Phone No");
   if (!address) missing.push("Address");
   if (missing.length) {
+    await saveDraft(formData);
     redirect(`/students/new?error=required&missing=${encodeURIComponent(missing.join(", "))}`);
   }
   if (rollNo) {
     const conflict = await prisma.studentEnrollment.findFirst({ where: { sessionId: session.id, rollNo } });
-    if (conflict) redirect("/students/new?error=roll");
+    if (conflict) { await saveDraft(formData); redirect("/students/new?error=roll"); }
   }
   const nameEn = String(formData.get("nameEn") || "").trim();
-  if (!nameEn) redirect("/students/new?error=required");
+  if (!nameEn) { await saveDraft(formData); redirect("/students/new?error=required"); }
   const dob = parseDateInput(formData.get("dob"));
   const enteredAgeText = String(formData.get("age") || "").trim();
   if (dob && enteredAgeText) {
@@ -59,6 +84,7 @@ async function createStudent(formData: FormData) {
       const m = now.getMonth() - dob.getMonth();
       if (m < 0 || (m === 0 && now.getDate() < dob.getDate())) dobYears--;
       if (dobYears >= 0 && dobYears <= 130 && enteredYears !== dobYears) {
+        await saveDraft(formData);
         redirect("/students/new?error=age");
       }
     }
@@ -95,6 +121,7 @@ async function createStudent(formData: FormData) {
       await prisma.studentEnrollment.create({ data: { studentId: student.id, sessionId: session.id, rollNo, rollLocked: !!rollNo, feeExempt, monthlyFee: feeExempt ? 0 : undefined } as any });
     } catch {
       await prisma.student.delete({ where: { id: student.id } }).catch(() => {});
+      await saveDraft(formData);
       redirect("/students/new?error=roll");
     }
     const siblingIds = Array.from(new Set(formData.getAll("siblings").map(String).filter(Boolean)));
@@ -106,11 +133,13 @@ async function createStudent(formData: FormData) {
       await prisma.sibling.createMany({ data: pairs, skipDuplicates: true });
     }
     await logAudit({ actorUserId: user.id, actorLabel: user.username || user.name, action: "STUDENT_CREATE", entityType: "Student", entityId: student.id, details: JSON.stringify({ admissionNo: student.admissionNo, nameEn: student.nameEn, sessionId: session.id }) });
+    await clearDraft();
     revalidatePath("/students");
     redirect("/students");
   } catch (e: any) {
     if (e?.digest?.startsWith?.("NEXT_REDIRECT")) throw e;
     console.error("createStudent failed", e);
+    await saveDraft(formData);
     redirect("/students/new?error=save");
   }
 }
@@ -119,6 +148,8 @@ export default async function NewStudent({ searchParams }: { searchParams?: Prom
   const user = await getAuthUser(); if (user?.role !== "ADMIN") redirect("/dashboard");
   const session = await getCurrentSession(); if (!session) return <p>Create an active session first.</p>;
   const sp = (await searchParams) || {};
+  const draft = sp.error ? await readDraft() : null;
+  if (!sp.error) await clearDraft();
   const [all, prev] = await Promise.all([
     prisma.student.findMany({ select: { id: true, admissionNo: true, nameEn: true }, orderBy: { admissionNo: "asc" } }),
     prisma.student.findMany({
@@ -176,12 +207,12 @@ export default async function NewStudent({ searchParams }: { searchParams?: Prom
           </div>
           <div className="grid md:grid-cols-4 gap-4">
             <div><label className="text-sm text-gray-700">Session / تعلیمی سیشن</label><input value={session.name} disabled className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2.5 bg-gray-50"/></div>
-            <div><label className="text-sm text-gray-700">Roll No / رول نمبر</label><input name="rollNo" required className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-emerald-200" placeholder="e.g. 1"/></div>
-            <div><label className="text-sm text-gray-700">Application No / درخواست نمبر</label><input name="applicationNo" required placeholder="e.g. MSB-01" className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-emerald-200"/></div>
-            <div><label className="text-sm text-gray-700">Admission No / داخلہ نمبر</label><input name="admissionNo" required placeholder="e.g. MSB-01" className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-emerald-200"/></div>
+            <div><label className="text-sm text-gray-700">Roll No / رول نمبر</label><input name="rollNo" required defaultValue={draft?.rollNo || ""} className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-emerald-200" placeholder="e.g. 1"/></div>
+            <div><label className="text-sm text-gray-700">Application No / درخواست نمبر</label><input name="applicationNo" required defaultValue={draft?.applicationNo || ""} placeholder="e.g. MSB-01" className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-emerald-200"/></div>
+            <div><label className="text-sm text-gray-700">Admission No / داخلہ نمبر</label><input name="admissionNo" required defaultValue={draft?.admissionNo || ""} placeholder="e.g. MSB-01" className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-emerald-200"/></div>
           </div>
           <div className="mt-4 flex items-start gap-3 p-3 rounded-xl border border-amber-200 bg-amber-50/60">
-            <input id="feeExempt" name="feeExempt" type="checkbox" className="mt-1 h-4 w-4" />
+            <input id="feeExempt" name="feeExempt" type="checkbox" defaultChecked={draft?.feeExempt === "on"} className="mt-1 h-4 w-4" />
             <label htmlFor="feeExempt" className="text-sm text-gray-800">
               <span className="font-medium">Fee Exempt / فیس معاف</span>
               <span className="block text-xs text-gray-600 mt-0.5">No fee will be collected from this student (admission/record will remain).</span>
@@ -195,18 +226,18 @@ export default async function NewStudent({ searchParams }: { searchParams?: Prom
             <h2 className="font-semibold text-emerald-900">Student Information / طالب/طالبہ کی معلومات</h2>
           </div>
           <div className="grid md:grid-cols-2 gap-4">
-            <div><label className="text-sm text-gray-700">Student Name (English) / طالب/طالبہ کا نام (انگریزی)</label><input name="nameEn" required placeholder="Student name in English" className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-emerald-200"/></div>
-            <div><label className="text-sm text-gray-700">Student Name (Urdu) / طالب/طالبہ کا نام (اردو)</label><input name="nameUr" dir="rtl" placeholder="طالب یا طالبہ کا نام اردو میں" className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2.5 font-urdu text-right focus:outline-none focus:ring-2 focus:ring-emerald-200"/></div>
+            <div><label className="text-sm text-gray-700">Student Name (English) / طالب/طالبہ کا نام (انگریزی)</label><input name="nameEn" required defaultValue={draft?.nameEn || ""} placeholder="Student name in English" className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-emerald-200"/></div>
+            <div><label className="text-sm text-gray-700">Student Name (Urdu) / طالب/طالبہ کا نام (اردو)</label><input name="nameUr" dir="rtl" defaultValue={draft?.nameUr || ""} placeholder="طالب یا طالبہ کا نام اردو میں" className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2.5 font-urdu text-right focus:outline-none focus:ring-2 focus:ring-emerald-200"/></div>
             <div>
               <label className="text-sm text-gray-700">Age / عمر</label>
               <div className="mt-1">
-                <SuggestionInput name="age" required suggestions={ageOpts} className="w-full border border-gray-200 rounded-lg px-3 py-2.5" placeholder="e.g. 8 years" />
+                <SuggestionInput name="age" required defaultValue={draft?.age || ""} suggestions={ageOpts} className="w-full border border-gray-200 rounded-lg px-3 py-2.5" placeholder="e.g. 8 years" />
               </div>
             </div>
-            <div><label className="text-sm text-gray-700">Date of Birth / تاریخ پیدائش</label><DateInputDMY name="dob" className="mt-1" inputClassName="border border-gray-200 rounded-lg px-3 py-2.5" /></div>
+            <div><label className="text-sm text-gray-700">Date of Birth / تاریخ پیدائش</label><DateInputDMY name="dob" defaultValue={draft?.dob || ""} className="mt-1" inputClassName="border border-gray-200 rounded-lg px-3 py-2.5" /></div>
             <div>
               <label className="text-sm text-gray-700">Gender / جنس</label>
-              <select name="gender" required defaultValue="" className="mt-1 block w-full h-[42px] border border-gray-200 rounded-lg px-3 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-200" style={{ paddingTop: 0, paddingBottom: 0, lineHeight: "40px" }}>
+              <select name="gender" required defaultValue={draft?.gender || ""} className="mt-1 block w-full h-[42px] border border-gray-200 rounded-lg px-3 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-200" style={{ paddingTop: 0, paddingBottom: 0, lineHeight: "40px" }}>
                 <option value="" disabled>Gender</option>
                 <option value="Male">Male / لڑکا</option>
                 <option value="Female">Female / لڑکی</option>
@@ -215,7 +246,7 @@ export default async function NewStudent({ searchParams }: { searchParams?: Prom
             <div>
               <label className="text-sm text-gray-700">Class for Admission / کس جماعت میں داخلہ چاہیے</label>
               <div className="mt-1">
-                <SuggestionInput name="admissionClass" required suggestions={classOpts} className="w-full border border-gray-200 rounded-lg px-3 py-2.5" placeholder="e.g. Nazra / Class 1" />
+                <SuggestionInput name="admissionClass" required defaultValue={draft?.admissionClass || ""} suggestions={classOpts} className="w-full border border-gray-200 rounded-lg px-3 py-2.5" placeholder="e.g. Nazra / Class 1" />
               </div>
             </div>
           </div>
@@ -230,18 +261,18 @@ export default async function NewStudent({ searchParams }: { searchParams?: Prom
             <div className="md:col-span-2">
               <label className="text-sm text-gray-700">Father / Mother Name / والد یا والدہ کا نام</label>
               <div className="mt-1">
-                <SuggestionInput name="fatherName" required suggestions={parentOpts} className="w-full border border-gray-200 rounded-lg px-3 py-2.5" placeholder="Father / Mother Name" />
+                <SuggestionInput name="fatherName" required defaultValue={draft?.fatherName || ""} suggestions={parentOpts} className="w-full border border-gray-200 rounded-lg px-3 py-2.5" placeholder="Father / Mother Name" />
               </div>
               <input type="hidden" name="motherName" value="" />
             </div>
             <div>
               <label className="text-sm text-gray-700">Phone No / فون نمبر</label>
-              <PhoneInput name="phone" required suggestions={phoneOpts} placeholder="03XX-XXXXXXX" className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2.5"/>
+              <PhoneInput name="phone" required defaultValue={draft?.phone || ""} suggestions={phoneOpts} placeholder="03XX-XXXXXXX" className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2.5"/>
             </div>
             <div className="md:col-span-2">
               <label className="text-sm text-gray-700">Address / پتہ</label>
               <div className="mt-1">
-                <SuggestionInput name="address" required suggestions={addressOpts} className="w-full border border-gray-200 rounded-lg px-3 py-2.5" placeholder="Full address" />
+                <SuggestionInput name="address" required defaultValue={draft?.address || ""} suggestions={addressOpts} className="w-full border border-gray-200 rounded-lg px-3 py-2.5" placeholder="Full address" />
               </div>
             </div>
             <input type="hidden" name="guardianName" value="" />
@@ -256,7 +287,7 @@ export default async function NewStudent({ searchParams }: { searchParams?: Prom
           <div>
             <label className="text-sm text-gray-700">Previous School/Madrasa / سابقہ مدرسہ/سکول</label>
             <div className="mt-1">
-              <SuggestionInput name="previousSchool" suggestions={schoolOpts} className="w-full border border-gray-200 rounded-lg px-3 py-2.5" placeholder="Previous school or madrasa" />
+              <SuggestionInput name="previousSchool" defaultValue={draft?.previousSchool || ""} suggestions={schoolOpts} className="w-full border border-gray-200 rounded-lg px-3 py-2.5" placeholder="Previous school or madrasa" />
             </div>
           </div>
         </div>
@@ -274,7 +305,7 @@ export default async function NewStudent({ searchParams }: { searchParams?: Prom
             <div className="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-64 overflow-auto pr-1">
               {all.map(s => (
                 <label key={s.id} className="flex items-center gap-2 border border-gray-200 rounded-lg px-3 py-2 hover:bg-emerald-50 cursor-pointer">
-                  <input type="checkbox" name="siblings" value={s.id} className="h-4 w-4 shrink-0" />
+                  <input type="checkbox" name="siblings" value={s.id} defaultChecked={Array.isArray(draft?.siblings) ? draft.siblings.includes(s.id) : draft?.siblings === s.id} className="h-4 w-4 shrink-0" />
                   <span className="text-sm text-gray-800 break-words"><span className="font-medium text-emerald-800">{s.admissionNo}</span> - {s.nameEn}</span>
                 </label>
               ))}
