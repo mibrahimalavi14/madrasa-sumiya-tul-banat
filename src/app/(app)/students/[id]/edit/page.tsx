@@ -7,6 +7,7 @@ import { revalidatePath } from "next/cache";
 import { parseDateInput, toDateInputDMY } from "@/lib/utils";
 import DateInputDMY from "@/components/DateInputDMY";
 import ScrollToTopOnError from "@/components/ScrollToTopOnError";
+import PhoneInput from "@/components/PhoneInput";
 import { logAudit } from "@/lib/audit";
 
 async function updateStudent(formData: FormData) {
@@ -111,7 +112,7 @@ export default async function EditStudent({ params, searchParams }: { params: Pr
   const student = await prisma.student.findUnique({ where: { id }, include: { siblingsA: true, siblingsB: true } });
   if (!student) notFound();
   const enrollment = session ? await prisma.studentEnrollment.findUnique({ where: { studentId_sessionId: { studentId: id, sessionId: session.id } } }) : null;
-  const all = await prisma.student.findMany({ where: { id: { not: id } }, orderBy: { nameEn: "asc" } });
+  const all = await prisma.student.findMany({ where: { id: { not: id } }, select: { id: true, admissionNo: true, nameEn: true }, orderBy: { admissionNo: "asc" } });
   const currentSibs = new Set([...student.siblingsA.map(s=>s.studentBId), ...student.siblingsB.map(s=>s.studentAId)]);
   return (
     <div className="max-w-5xl space-y-4">
@@ -190,7 +191,7 @@ export default async function EditStudent({ params, searchParams }: { params: Pr
               <label className="text-sm text-gray-700">Father / Mother Name</label>
               <input name="fatherMotherName" required defaultValue={[student.fatherName, student.motherName].filter(Boolean).join(" / ")} placeholder="Father Name / Mother Name" className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2.5"/>
             </div>
-            <div><label className="text-sm text-gray-700">Phone No</label><input name="phone" required defaultValue={student.phone||""} className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2.5"/></div>
+            <div><label className="text-sm text-gray-700">Phone No</label><PhoneInput name="phone" required defaultValue={student.phone||""} className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2.5"/></div>
             <div className="md:col-span-2"><label className="text-sm text-gray-700">Address</label><input name="address" required defaultValue={student.address||""} className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2.5"/></div>
             <input type="hidden" name="guardianName" value={student.guardianName||""} />
           </div>
@@ -202,17 +203,24 @@ export default async function EditStudent({ params, searchParams }: { params: Pr
         </div>
 
         <details className="bg-white rounded-2xl shadow-sm border border-emerald-100 p-5">
-          <summary className="cursor-pointer list-none flex items-center justify-between">
-            <div>
-              <div className="font-semibold text-emerald-900">Add/Manage Siblings</div>
+          <summary className="cursor-pointer list-none flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+            <div className="min-w-0">
+              <div className="font-semibold text-emerald-900 break-words">Add/Manage Siblings</div>
               <p className="text-xs text-gray-500 mt-0.5">Select/update registered siblings.</p>
             </div>
-            <span className="text-sm bg-emerald-50 text-emerald-800 border border-emerald-200 px-3 py-1 rounded-lg">+ Add Siblings</span>
+            <span className="text-sm bg-emerald-50 text-emerald-800 border border-emerald-200 px-3 py-1 rounded-lg self-start shrink-0">+ Add Siblings</span>
           </summary>
           <div className="mt-4 border-t pt-4">
-            <label className="text-sm text-gray-700">Select from registered students</label>
-            <select name="siblings" multiple defaultValue={[...currentSibs]} className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2.5 h-36">{all.map(s => <option key={s.id} value={s.id}>{s.admissionNo} - {s.nameEn}</option>)}</select>
-            <p className="text-xs text-gray-500 mt-1">Hold Ctrl/Cmd to select multiple.</p>
+            <label className="text-sm text-gray-700">Select from registered students (Admission No order)</label>
+            <div className="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-64 overflow-auto pr-1">
+              {all.map(s => (
+                <label key={s.id} className="flex items-center gap-2 border border-gray-200 rounded-lg px-3 py-2 hover:bg-emerald-50 cursor-pointer">
+                  <input type="checkbox" name="siblings" value={s.id} defaultChecked={currentSibs.has(s.id)} className="h-4 w-4 shrink-0" />
+                  <span className="text-sm text-gray-800 break-words"><span className="font-medium text-emerald-800">{s.admissionNo}</span> - {s.nameEn}</span>
+                </label>
+              ))}
+            </div>
+            <p className="text-xs text-gray-500 mt-2">Select all siblings that apply. Leave empty if not needed.</p>
           </div>
         </details>
 

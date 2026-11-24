@@ -7,6 +7,7 @@ import { revalidatePath } from "next/cache";
 import { formatAdmissionNo, formatRegNo, parseDateInput } from "@/lib/utils";
 import DateInputDMY from "@/components/DateInputDMY";
 import ScrollToTopOnError from "@/components/ScrollToTopOnError";
+import PhoneInput from "@/components/PhoneInput";
 import { logAudit } from "@/lib/audit";
 
 async function createStudent(formData: FormData) {
@@ -108,7 +109,7 @@ export default async function NewStudent({ searchParams }: { searchParams?: Prom
   const session = await getCurrentSession(); if (!session) return <p>Create an active session first.</p>;
   const sp = (await searchParams) || {};
   const [all, prev] = await Promise.all([
-    prisma.student.findMany({ select: { id: true, admissionNo: true, nameEn: true }, orderBy: { nameEn: "asc" } }),
+    prisma.student.findMany({ select: { id: true, admissionNo: true, nameEn: true }, orderBy: { admissionNo: "asc" } }),
     prisma.student.findMany({
       select: { age: true, admissionClass: true, previousSchool: true, fatherName: true, motherName: true, phone: true, address: true },
       orderBy: { createdAt: "desc" },
@@ -220,7 +221,7 @@ export default async function NewStudent({ searchParams }: { searchParams?: Prom
             </div>
             <div>
               <label className="text-sm text-gray-700">Phone No / فون نمبر</label>
-              <input name="phone" required list="prev-phones" placeholder="e.g. 03XXXXXXXXX" className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2.5"/>
+              <PhoneInput name="phone" required list="prev-phones" placeholder="03XX-XXXXXXX" className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2.5"/>
               <datalist id="prev-phones">{phoneOpts.map((v) => <option key={v} value={v} />)}</datalist>
             </div>
             <div className="md:col-span-2">
@@ -245,19 +246,24 @@ export default async function NewStudent({ searchParams }: { searchParams?: Prom
         </div>
 
         <details className="bg-white rounded-2xl shadow-sm border border-emerald-100 p-5 group">
-          <summary className="cursor-pointer list-none flex items-center justify-between">
-            <div>
-              <div className="font-semibold text-emerald-900">Add Siblings / بہن بھائی شامل کریں (اختیاری)</div>
+          <summary className="cursor-pointer list-none flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+            <div className="min-w-0">
+              <div className="font-semibold text-emerald-900 break-words">Add Siblings / بہن بھائی شامل کریں (اختیاری)</div>
               <p className="text-xs text-gray-500 mt-0.5">If any siblings are already registered, select them here.</p>
             </div>
-            <span className="text-sm bg-emerald-50 text-emerald-800 border border-emerald-200 px-3 py-1 rounded-lg">+ Add Siblings</span>
+            <span className="text-sm bg-emerald-50 text-emerald-800 border border-emerald-200 px-3 py-1 rounded-lg self-start shrink-0">+ Add Siblings</span>
           </summary>
           <div className="mt-4 border-t pt-4">
-            <label className="text-sm text-gray-700">Select from registered students</label>
-            <select name="siblings" multiple className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2.5 h-36">
-              {all.map(s => <option key={s.id} value={s.id}>{s.admissionNo} - {s.nameEn}</option>)}
-            </select>
-            <p className="text-xs text-gray-500 mt-1">Hold Ctrl/Cmd to select multiple. Leave empty if not needed.</p>
+            <label className="text-sm text-gray-700">Select from registered students (Admission No order)</label>
+            <div className="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-64 overflow-auto pr-1">
+              {all.map(s => (
+                <label key={s.id} className="flex items-center gap-2 border border-gray-200 rounded-lg px-3 py-2 hover:bg-emerald-50 cursor-pointer">
+                  <input type="checkbox" name="siblings" value={s.id} className="h-4 w-4 shrink-0" />
+                  <span className="text-sm text-gray-800 break-words"><span className="font-medium text-emerald-800">{s.admissionNo}</span> - {s.nameEn}</span>
+                </label>
+              ))}
+            </div>
+            <p className="text-xs text-gray-500 mt-2">Select all siblings that apply. Leave empty if not needed.</p>
           </div>
         </details>
 
