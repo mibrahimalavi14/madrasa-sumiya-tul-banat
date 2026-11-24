@@ -116,7 +116,7 @@ export default async function CertificatesPage({ searchParams }: { searchParams:
         )}
 
         <form className={`flex gap-2 flex-wrap items-end ${canEditCertificates ? "border-t border-amber-100 pt-4" : ""} no-print`}>
-          <div><label className="text-xs text-gray-600 block mb-1">{lang==="ur" ? "تلاش" : "Search"}</label><input name="q" defaultValue={q} placeholder={lang==="ur" ? "سیریل / داخلہ نمبر / نام" : "Serial / Admission / Name"} className="border border-amber-200 rounded-lg px-3 py-2 text-sm min-w-[220px]" /></div>
+          <div><label className="text-xs text-gray-600 block mb-1">{lang==="ur" ? "تلاش" : "Search"}</label><input name="q" defaultValue={q} placeholder={lang==="ur" ? "سیریل / داخلہ نمبر / نام" : "Serial / Admission / Name"} className="border border-amber-200 rounded-lg px-3 py-2 text-sm w-full min-w-0 sm:w-auto sm:min-w-[220px]" /></div>
           <div><label className="text-xs text-gray-600 block mb-1">{tr.type}</label><select name="type" defaultValue={typeFilter} className="border border-amber-200 rounded-lg px-3 py-2 text-sm"><option value="">{lang==="ur" ? "تمام" : "All"}</option><option value="ANNUAL">{tr.annual}</option><option value="NAZRA_COMPLETION">{tr.nazraCompletion}</option></select></div>
           <button className="bg-gray-800 hover:bg-gray-900 text-white px-4 py-2 rounded-lg text-sm">{tr.search}</button>
           {(q || typeFilter) && <Link href="/certificates" className="text-sm text-amber-800 underline">{lang==="ur" ? "صاف کریں" : "Clear"}</Link>}

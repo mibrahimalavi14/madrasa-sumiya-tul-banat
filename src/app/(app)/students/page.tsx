@@ -177,7 +177,7 @@ export default async function StudentsPage({ searchParams }: { searchParams: Pro
           <input type="hidden" name="fromSessionId" value={session.id} />
           <div>
             <label className="block text-xs text-gray-600 mb-1">{lang==="ur" ? "منتخب طلبہ کو منتقل کریں (فعال سیشن میں)" : "Carry selected students to (ACTIVE session)"}</label>
-            <select name="toId" required className="border border-emerald-200 rounded-xl px-3 py-2.5 min-w-[220px] text-sm">
+            <select name="toId" required className="border border-emerald-200 rounded-xl px-3 py-2.5 w-full min-w-0 sm:w-auto sm:min-w-[220px] text-sm">
               <option value="">{lang==="ur" ? "ہدف سیشن منتخب کریں" : "Select target session"}</option>
               {targetSessions.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
             </select>

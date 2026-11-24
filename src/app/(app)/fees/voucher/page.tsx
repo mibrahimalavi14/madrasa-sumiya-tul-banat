@@ -62,7 +62,7 @@ export default async function FeeVoucherPage({ searchParams }: { searchParams: P
                 <div className="text-xs text-gray-600 mt-1">Fee Voucher / فیس واؤچر</div>
               </div>
             </div>
-            <div className="text-sm bg-teal-50 border border-teal-200 rounded-lg p-3 min-w-[220px]">
+            <div className="text-sm bg-teal-50 border border-teal-200 rounded-lg p-3 w-full min-w-0 sm:w-auto sm:min-w-[220px]">
               <div className="flex justify-between gap-4"><span className="text-gray-600">Voucher No / واؤچر نمبر</span><span className="font-bold text-teal-900">{voucherNo}</span></div>
               <div className="flex justify-between gap-4 mt-1"><span className="text-gray-600">Session / سیشن</span><span className="font-semibold">{session.name}</span></div>
               <div className="flex justify-between gap-4 mt-1"><span className="text-gray-600">Month / مہینہ</span><span className="font-semibold">{monthName} {year}</span></div>

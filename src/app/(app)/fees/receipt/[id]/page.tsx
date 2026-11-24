@@ -49,7 +49,7 @@ export default async function FeeReceiptPage({ params }: { params: Promise<{ id:
                 <div className="text-xs text-gray-600 mt-1">Fee Receipt / فیس رسید</div>
               </div>
             </div>
-            <div className="text-sm bg-emerald-50 border border-emerald-200 rounded-lg p-3 min-w-[220px]">
+            <div className="text-sm bg-emerald-50 border border-emerald-200 rounded-lg p-3 w-full min-w-0 sm:w-auto sm:min-w-[220px]">
               <div className="flex justify-between gap-4"><span className="text-gray-600">Receipt No / رسید نمبر</span><span className="font-bold text-emerald-900">{receiptNo}</span></div>
               <div className="flex justify-between gap-4 mt-1"><span className="text-gray-600">Date / تاریخ</span><span className="font-semibold">{formatDateDMY(fee.paidAt) || "-"}</span></div>
               <div className="flex justify-between gap-4 mt-1"><span className="text-gray-600">Session / سیشن</span><span className="font-semibold">{fee.session.name}</span></div>

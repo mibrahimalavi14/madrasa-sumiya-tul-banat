@@ -16,6 +16,9 @@
   --color-card: var(--card);
   --color-muted: var(--muted);
 }
+html, body {
+  overflow-x: hidden;
+}
 body {
   background:
     radial-gradient(1200px 500px at 100% -10%, rgba(180,83,9,0.10), transparent 60%),

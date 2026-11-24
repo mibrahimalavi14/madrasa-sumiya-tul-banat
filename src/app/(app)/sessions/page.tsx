@@ -196,13 +196,13 @@ export default async function SessionsPage({ searchParams }: { searchParams: Pro
                   <div className="flex items-center justify-center gap-2 flex-wrap">
                     {s.status === "ACTIVE" ? (
                       s.isCurrent ? (
-                        <span className="inline-flex items-center justify-center min-w-[120px] px-3 py-2 rounded-lg text-sm font-medium border border-blue-300 bg-blue-100 text-blue-800 shadow-sm">
+                        <span className="inline-flex items-center justify-center w-full min-w-0 sm:w-auto sm:min-w-[120px] px-3 py-2 rounded-lg text-sm font-medium border border-blue-300 bg-blue-100 text-blue-800 shadow-sm">
                           ✓ {lang === "ur" ? "موجودہ سیشن" : "Current"}
                         </span>
                       ) : (
                         <form action={setCurrentAction}>
                           <input type="hidden" name="id" value={s.id}/>
-                          <button className="inline-flex items-center justify-center min-w-[120px] px-3 py-2 rounded-lg text-sm font-medium border border-blue-200 bg-blue-50 text-blue-800 hover:bg-blue-100 transition">
+                          <button className="inline-flex items-center justify-center w-full min-w-0 sm:w-auto sm:min-w-[120px] px-3 py-2 rounded-lg text-sm font-medium border border-blue-200 bg-blue-50 text-blue-800 hover:bg-blue-100 transition">
                             {tr.setCurrent}
                           </button>
                         </form>
@@ -211,14 +211,14 @@ export default async function SessionsPage({ searchParams }: { searchParams: Pro
                       <>
                         {viewSessionId === s.id ? (
                           <form action={exitViewSessionAction}>
-                            <button className="inline-flex items-center justify-center min-w-[140px] px-3 py-2 rounded-lg text-sm font-medium border border-emerald-300 bg-emerald-100 text-emerald-900 hover:bg-emerald-200 transition">
+                            <button className="inline-flex items-center justify-center w-full min-w-0 sm:w-auto sm:min-w-[140px] px-3 py-2 rounded-lg text-sm font-medium border border-emerald-300 bg-emerald-100 text-emerald-900 hover:bg-emerald-200 transition">
                               {lang === "ur" ? "ویو موڈ سے باہر نکلیں" : "Exit View Mode"}
                             </button>
                           </form>
                         ) : (
                           <form action={viewSessionAction}>
                             <input type="hidden" name="id" value={s.id}/>
-                            <button className="inline-flex items-center justify-center min-w-[140px] px-3 py-2 rounded-lg text-sm font-medium border border-emerald-200 bg-emerald-50 text-emerald-800 hover:bg-emerald-100 transition">
+                            <button className="inline-flex items-center justify-center w-full min-w-0 sm:w-auto sm:min-w-[140px] px-3 py-2 rounded-lg text-sm font-medium border border-emerald-200 bg-emerald-50 text-emerald-800 hover:bg-emerald-100 transition">
                               {lang === "ur" ? "دیکھیں (ریڈ اونلی)" : "View (Read-only)"}
                             </button>
                           </form>

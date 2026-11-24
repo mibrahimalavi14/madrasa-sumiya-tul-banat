@@ -18,6 +18,16 @@ async function updateStudent(formData: FormData) {
   const feeExempt = formData.get("feeExempt") === "on";
   const dob = parseDateInput(formData.get("dob"));
   const enteredAgeText = String(formData.get("age")||"").trim();
+  const nameEn = String(formData.get("nameEn") || "").trim();
+  const applicationNo = String(formData.get("applicationNo") || "").trim();
+  const fatherMotherName = String(formData.get("fatherMotherName") || formData.get("fatherName") || "").trim();
+  const phone = String(formData.get("phone") || "").trim();
+  const address = String(formData.get("address") || "").trim();
+  const gender = String(formData.get("gender") || "").trim();
+  const admissionClass = String(formData.get("admissionClass") || "").trim();
+  if (!nameEn || !enteredAgeText || !fatherMotherName || !applicationNo || !phone || !address || !gender || !admissionClass) {
+    redirect(`/students/${id}/edit?error=required`);
+  }
   if (dob && enteredAgeText) {
     const enteredMatch = enteredAgeText.match(/\d+/);
     if (enteredMatch) {
@@ -40,18 +50,18 @@ async function updateStudent(formData: FormData) {
     return (years >= 0 && years <= 130) ? `${years} years` : (enteredAgeText || null);
   })();
   await prisma.student.update({ where: { id }, data: {
-    applicationNo: String(formData.get("applicationNo")||"") || null,
-    nameEn: String(formData.get("nameEn")||""), nameUr: String(formData.get("nameUr")||"") || null,
-    fatherName: (() => { const v = String(formData.get("fatherMotherName")||formData.get("fatherName")||"").trim(); if (!v) return null; const parts = v.split(/\s*\/\s*|\s+-\s+/); return (parts[0]||"").trim() || null; })(),
-    motherName: (() => { const v = String(formData.get("fatherMotherName")||formData.get("fatherName")||"").trim(); if (!v) return null; const parts = v.split(/\s*\/\s*|\s+-\s+/); return (parts.slice(1).join(" / ")||"").trim() || null; })(),
-    guardianName: String(formData.get("guardianName")||"") || null,
-    gender: String(formData.get("gender")||"") || null,
+    applicationNo,
+    nameEn, nameUr: String(formData.get("nameUr")||"").trim() || null,
+    fatherName: (() => { const parts = fatherMotherName.split(/\s*\/\s*|\s+-\s+/); return (parts[0]||"").trim() || null; })(),
+    motherName: (() => { const parts = fatherMotherName.split(/\s*\/\s*|\s+-\s+/); return (parts.slice(1).join(" / ")||"").trim() || null; })(),
+    guardianName: String(formData.get("guardianName")||"").trim() || null,
+    gender,
     age: computedAge,
-    admissionClass: String(formData.get("admissionClass")||"") || null,
+    admissionClass,
     dob,
-    address: String(formData.get("address")||"") || null,
-    phone: String(formData.get("phone")||"") || null,
-    previousSchool: String(formData.get("previousSchool")||"") || null,
+    address,
+    phone,
+    previousSchool: String(formData.get("previousSchool")||"").trim() || null,
     status: String(formData.get("status")||"ACTIVE"),
   }});
   if (sessionId) {
@@ -121,6 +131,11 @@ export default async function EditStudent({ params, searchParams }: { params: Pr
           درج کی گئی عمر تاریخِ پیدائش کے مطابق نہیں ہے۔ براہِ کرم درست عمر یا درست تاریخِ پیدائش درج کریں۔
         </div>
       )}
+      {sp.error === "required" && (
+        <div className="text-sm text-red-700 bg-red-50 border border-red-200 rounded-xl p-3">
+          Please fill all required fields: Application No, Name (English), Age, Gender, Class for Admission, Father/Mother Name, Phone No, and Address.
+        </div>
+      )}
       {sp.error === "session" && (
         <div className="text-sm text-red-700 bg-red-50 border border-red-200 rounded-xl p-3">
           This session is not active. Enrollment/roll/fee-exempt changes are disabled for expired sessions (read-only view).
@@ -144,7 +159,7 @@ export default async function EditStudent({ params, searchParams }: { params: Pr
               />
 
             </div>
-            <div><label className="text-sm text-gray-700">Application No</label><input name="applicationNo" defaultValue={student.applicationNo||""} className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2.5"/></div>
+            <div><label className="text-sm text-gray-700">Application No</label><input name="applicationNo" required defaultValue={student.applicationNo||""} className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2.5"/></div>
             <div><label className="text-sm text-gray-700">Status</label><select name="status" defaultValue={student.status || "ACTIVE"} className="mt-1 block w-full h-[42px] border border-gray-200 rounded-lg px-3 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-200" style={{ paddingTop: 0, paddingBottom: 0, lineHeight: "40px" }}><option value="REGISTERED">REGISTERED</option><option value="ACTIVE">ACTIVE</option><option value="LEFT">LEFT</option></select></div>
           </div>
           <div className="mt-4 flex items-start gap-3 p-3 rounded-xl border border-amber-200 bg-amber-50/60">
@@ -161,10 +176,10 @@ export default async function EditStudent({ params, searchParams }: { params: Pr
           <div className="grid md:grid-cols-2 gap-4">
             <div><label className="text-sm text-gray-700">Student Name (English)</label><input name="nameEn" defaultValue={student.nameEn} required className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2.5"/></div>
             <div><label className="text-sm text-gray-700">Student Name (Urdu)</label><input name="nameUr" defaultValue={student.nameUr||""} className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2.5 font-urdu"/></div>
-            <div><label className="text-sm text-gray-700">Age</label><input name="age" defaultValue={student.age||""} className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2.5"/></div>
+            <div><label className="text-sm text-gray-700">Age</label><input name="age" required defaultValue={student.age||""} className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2.5"/></div>
             <div><label className="text-sm text-gray-700">Date of Birth</label><DateInputDMY name="dob" defaultValue={toDateInputDMY(student.dob)} className="mt-1" inputClassName="border border-gray-200 rounded-lg px-3 py-2.5" /></div>
-            <div><label className="text-sm text-gray-700">Gender</label><select name="gender" defaultValue={student.gender||""} className="mt-1 block w-full h-[42px] border border-gray-200 rounded-lg px-3 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-200" style={{ paddingTop: 0, paddingBottom: 0, lineHeight: "40px" }}><option value="">Select</option><option value="Male">Male</option><option value="Female">Female</option></select></div>
-            <div><label className="text-sm text-gray-700">Class for Admission</label><input name="admissionClass" defaultValue={student.admissionClass||""} className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2.5"/></div>
+            <div><label className="text-sm text-gray-700">Gender</label><select name="gender" required defaultValue={student.gender||""} className="mt-1 block w-full h-[42px] border border-gray-200 rounded-lg px-3 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-200" style={{ paddingTop: 0, paddingBottom: 0, lineHeight: "40px" }}><option value="" disabled>Select</option><option value="Male">Male</option><option value="Female">Female</option></select></div>
+            <div><label className="text-sm text-gray-700">Class for Admission</label><input name="admissionClass" required defaultValue={student.admissionClass||""} className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2.5"/></div>
           </div>
         </div>
 
@@ -173,10 +188,10 @@ export default async function EditStudent({ params, searchParams }: { params: Pr
           <div className="grid md:grid-cols-2 gap-4">
             <div className="md:col-span-2">
               <label className="text-sm text-gray-700">Father / Mother Name</label>
-              <input name="fatherMotherName" defaultValue={[student.fatherName, student.motherName].filter(Boolean).join(" / ")} placeholder="Father Name / Mother Name" className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2.5"/>
+              <input name="fatherMotherName" required defaultValue={[student.fatherName, student.motherName].filter(Boolean).join(" / ")} placeholder="Father Name / Mother Name" className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2.5"/>
             </div>
-            <div><label className="text-sm text-gray-700">Phone No</label><input name="phone" defaultValue={student.phone||""} className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2.5"/></div>
-            <div className="md:col-span-2"><label className="text-sm text-gray-700">Address</label><input name="address" defaultValue={student.address||""} className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2.5"/></div>
+            <div><label className="text-sm text-gray-700">Phone No</label><input name="phone" required defaultValue={student.phone||""} className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2.5"/></div>
+            <div className="md:col-span-2"><label className="text-sm text-gray-700">Address</label><input name="address" required defaultValue={student.address||""} className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2.5"/></div>
             <input type="hidden" name="guardianName" value={student.guardianName||""} />
           </div>
         </div>

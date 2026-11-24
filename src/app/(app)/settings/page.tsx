@@ -163,7 +163,7 @@ export default async function SettingsPage() {
           <form action={saveFee} className="flex gap-4 items-end flex-wrap">
             <div className="flex flex-col gap-2">
               <label className="text-sm font-medium text-gray-700">{tr.monthlyFeeAmount}</label>
-              <input name="monthlyFee" type="number" defaultValue={feeSetting?.value || ""} className="border border-emerald-200/80 rounded-lg px-3 py-2.5 min-w-[180px]"/>
+              <input name="monthlyFee" type="number" defaultValue={feeSetting?.value || ""} className="border border-emerald-200/80 rounded-lg px-3 py-2.5 w-full min-w-0 sm:w-auto sm:min-w-[180px]"/>
             </div>
             <button className="bg-emerald-800 hover:bg-emerald-900 text-white px-4 py-2.5 rounded-lg">{tr.save}</button>
           </form>
@@ -220,7 +220,7 @@ export default async function SettingsPage() {
       <div className="grid lg:grid-cols-2 gap-5">
         <div className="bg-white rounded-2xl shadow-sm border border-emerald-100/80 p-5">
           <h2 className="font-semibold mb-2 text-emerald-900">{tr.changeMyPassword}</h2>
-          <form action={changePassword} className="flex gap-4 items-end flex-wrap"><div className="flex flex-col gap-2"><label className="text-sm font-medium text-gray-700">{tr.newPassword}</label><input name="password" type="password" required className="border border-emerald-200/80 rounded-lg px-3 py-2.5 min-w-[220px]"/></div><button className="bg-gray-800 hover:bg-gray-900 text-white px-4 py-2.5 rounded-lg">{tr.updatePassword}</button></form>
+          <form action={changePassword} className="flex gap-4 items-end flex-wrap"><div className="flex flex-col gap-2"><label className="text-sm font-medium text-gray-700">{tr.newPassword}</label><input name="password" type="password" required className="border border-emerald-200/80 rounded-lg px-3 py-2.5 w-full min-w-0 sm:w-auto sm:min-w-[220px]"/></div><button className="bg-gray-800 hover:bg-gray-900 text-white px-4 py-2.5 rounded-lg">{tr.updatePassword}</button></form>
         </div>
         <div className="bg-white rounded-2xl shadow-sm border border-emerald-100/80 p-5">
           <h2 className="font-semibold mb-2 text-emerald-900">{ur ? "اہم قواعد" : "Important Rules"}</h2>

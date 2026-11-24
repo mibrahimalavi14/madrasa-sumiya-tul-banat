@@ -46,7 +46,7 @@ export default async function StudentRollInfoPage({ params }: { params: Promise<
               <div className="text-xl font-bold text-gray-900">{student.nameEn}</div>
               {student.nameUr ? <div className="font-urdu text-xl text-gray-800 mt-0.5">{student.nameUr}</div> : null}
             </div>
-            <div className="text-center bg-white border-2 border-emerald-500 rounded-xl px-6 py-3 min-w-[140px]">
+            <div className="text-center bg-white border-2 border-emerald-500 rounded-xl px-6 py-3 w-full min-w-0 sm:w-auto sm:min-w-[140px]">
               <div className="text-xs text-gray-600">Roll No / رول نمبر</div>
               <div className="text-4xl font-extrabold text-emerald-900 leading-tight">{enrollment.rollNo || "-"}</div>
             </div>

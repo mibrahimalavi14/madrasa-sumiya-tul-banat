@@ -54,7 +54,7 @@ export default async function AuditLogPage({ searchParams }: { searchParams: Pro
       <form className="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 flex gap-2 flex-wrap items-end no-print">
         <div>
           <label className="text-xs text-gray-600 block mb-1">{ur ? "تلاش" : "Search"}</label>
-          <input name="q" defaultValue={q} placeholder={ur ? "ایکشن / صارف / تفصیل..." : "Action / user / details..."} className="border border-slate-200 rounded-lg px-3 py-2 text-sm min-w-[260px]" />
+          <input name="q" defaultValue={q} placeholder={ur ? "ایکشن / صارف / تفصیل..." : "Action / user / details..."} className="border border-slate-200 rounded-lg px-3 py-2 text-sm w-full min-w-0 sm:w-auto sm:min-w-[260px]" />
         </div>
         <button className="bg-slate-800 hover:bg-slate-900 text-white px-4 py-2 rounded-lg text-sm">{ur ? "تلاش" : "Search"}</button>
         {q && <Link href="/settings/audit" className="text-sm text-slate-700 underline">{ur ? "صاف کریں" : "Clear"}</Link>}

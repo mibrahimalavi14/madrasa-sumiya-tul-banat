@@ -93,7 +93,7 @@ export default async function FeeVouchersBulkPage({ searchParams }: { searchPara
                         <div className="text-[11px] text-gray-600">Fee Voucher / فیس واؤچر · Session: {session.name}</div>
                       </div>
                     </div>
-                    <div className="text-xs bg-teal-50 border border-teal-200 rounded-lg p-2 min-w-[200px]">
+                    <div className="text-xs bg-teal-50 border border-teal-200 rounded-lg p-2 w-full min-w-0 sm:w-auto sm:min-w-[200px]">
                       <div className="flex justify-between gap-3"><span className="text-gray-600">Voucher No</span><span className="font-bold text-teal-900">{voucherNo}</span></div>
                       <div className="flex justify-between gap-3 mt-0.5"><span className="text-gray-600">Month</span><span className="font-semibold">{monthName} {year}</span></div>
                     </div>

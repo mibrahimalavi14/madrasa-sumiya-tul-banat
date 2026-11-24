@@ -294,7 +294,7 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
               {session && <div className="mt-3 inline-flex items-center gap-2 bg-white/15 border border-white/20 rounded-full px-3 py-1 text-sm">{tr.activeSession}: <b>{session.name}</b> ({session.status})</div>}
             </div>
           </div>
-          <div className="bg-white/10 border border-white/20 rounded-2xl p-4 min-w-[240px]">
+          <div className="bg-white/10 border border-white/20 rounded-2xl p-4 w-full min-w-0 sm:w-auto sm:min-w-[240px]">
             <div className="text-xs text-emerald-100 uppercase tracking-wider">{feesMonthLabel}</div>
             <div className="text-lg font-bold mt-1">{m}/{y}</div>
             <div className="text-sm mt-1">{ur ? "ادا شدہ" : "Paid"}: <b>{monthPaid}</b> / {monthTotal || 0}</div>
