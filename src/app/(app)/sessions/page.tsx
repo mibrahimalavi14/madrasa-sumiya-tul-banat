@@ -182,16 +182,30 @@ export default async function SessionsPage({ searchParams }: { searchParams: Pro
               <tr key={s.id} className="border-t hover:bg-gray-50/60 align-middle">
                 <td className="p-3 font-semibold text-gray-900">{s.name}</td>
                 <td className="p-3 text-center">
-                  <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold border ${s.status === "ACTIVE" ? "bg-emerald-50 text-emerald-800 border-emerald-200" : s.status === "EXPIRED" ? "bg-amber-50 text-amber-800 border-amber-200" : "bg-gray-100 text-gray-700 border-gray-200"}`}>
-                    {s.status}
-                  </span>
+                  {(() => {
+                    const notStarted = s.status === "ACTIVE" && !!s.startDate && new Date() < new Date(s.startDate);
+                    const cls = notStarted
+                      ? "bg-sky-50 text-sky-800 border-sky-200"
+                      : s.status === "ACTIVE"
+                      ? "bg-emerald-50 text-emerald-800 border-emerald-200"
+                      : s.status === "EXPIRED"
+                      ? "bg-amber-50 text-amber-800 border-amber-200"
+                      : "bg-gray-100 text-gray-700 border-gray-200";
+                    const label = notStarted ? (lang === "ur" ? "فعال (ابھی شروع نہیں ہوا)" : "ACTIVE (Not Started)") : s.status;
+                    return <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold border ${cls}`}>{label}</span>;
+                  })()}
                 </td>
                 <td className="p-3 text-center">
                   <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold border ${s.isCurrent ? "bg-blue-50 text-blue-800 border-blue-200" : "bg-gray-50 text-gray-600 border-gray-200"}`}>
                     {s.isCurrent ? tr.yes : tr.no}
                   </span>
                 </td>
-                <td className="p-3 text-center text-gray-700">{formatDateDMY(s.startDate)} <span className="text-gray-400">to</span> {formatDateDMY(s.endDate)}</td>
+                <td className="p-3 text-center text-gray-700">
+                  <div>{formatDateDMY(s.startDate)} <span className="text-gray-400">to</span> {formatDateDMY(s.endDate)}</div>
+                  {s.status === "ACTIVE" && !!s.startDate && new Date() < new Date(s.startDate) && (
+                    <div className="text-[11px] text-sky-700 mt-1">{lang === "ur" ? `سیشن ${formatDateDMY(s.startDate)} کو شروع ہوگا — ڈیٹا اندراج جاری رہ سکتا ہے` : `Starts on ${formatDateDMY(s.startDate)} — data entry can continue`}</div>
+                  )}
+                </td>
                 <td className="p-3">
                   <div className="flex items-center justify-center gap-2 flex-wrap">
                     {s.status === "ACTIVE" ? (
