@@ -23,9 +23,15 @@ export default function SidebarNav({ sections }: { sections: Section[] }) {
           <div className="space-y-1.5">
             {section.items.map(([href, label, icon]) => {
               const [hrefPath, hrefQuery] = href.split("?");
-              const exact = hrefQuery ? fullPath === href || pathname === hrefPath && searchParams.toString() === hrefQuery : pathname === hrefPath;
+              const querySpecificMatch = !hrefQuery && allHrefs.some((h) => {
+                const [hp, hq] = h.split("?");
+                return hq && hp === hrefPath && fullPath === h;
+              });
+              const exact = hrefQuery
+                ? fullPath === href
+                : pathname === hrefPath && !querySpecificMatch;
               const prefix = !hrefQuery && hrefPath !== "/dashboard" && pathname.startsWith(hrefPath + "/");
-              const better = prefix && allHrefs.some(h => {
+              const better = prefix && allHrefs.some((h) => {
                 const [hp] = h.split("?");
                 return h !== href && hp.startsWith(hrefPath + "/") && (pathname === hp || pathname.startsWith(hp + "/"));
               });
