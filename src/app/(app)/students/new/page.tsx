@@ -185,7 +185,7 @@ export default async function NewStudent({ searchParams }: { searchParams?: Prom
           </div>
           <div className="grid md:grid-cols-2 gap-4">
             <div><label className="text-sm text-gray-700">Student Name (English) / طالب/طالبہ کا نام (انگریزی)</label><input name="nameEn" required placeholder="Student name in English" className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-emerald-200"/></div>
-            <div><label className="text-sm text-gray-700">Student Name (Urdu) / طالب/طالبہ کا نام (اردو)</label><input name="nameUr" placeholder="طالب یا طالبہ کا نام اردو میں" className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2.5 font-urdu focus:outline-none focus:ring-2 focus:ring-emerald-200"/></div>
+            <div><label className="text-sm text-gray-700">Student Name (Urdu) / طالب/طالبہ کا نام (اردو)</label><input name="nameUr" dir="rtl" placeholder="طالب یا طالبہ کا نام اردو میں" className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2.5 font-urdu text-right focus:outline-none focus:ring-2 focus:ring-emerald-200"/></div>
             <div>
               <label className="text-sm text-gray-700">Age / عمر</label>
               <div className="mt-1">
