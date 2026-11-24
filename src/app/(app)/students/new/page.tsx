@@ -29,8 +29,18 @@ async function createStudent(formData: FormData) {
   const fatherOrMotherName = String(formData.get("fatherName") || "").trim();
   const phone = String(formData.get("phone") || "").trim();
   const address = String(formData.get("address") || "").trim();
-  if (!admissionNo || !applicationNo || !rollNo || !ageInput || !gender || !admissionClass || !fatherOrMotherName || !phone || !address) {
-    redirect("/students/new?error=required");
+  const missing: string[] = [];
+  if (!admissionNo) missing.push("Admission No");
+  if (!applicationNo) missing.push("Application No");
+  if (!rollNo) missing.push("Roll No");
+  if (!ageInput) missing.push("Age");
+  if (!gender) missing.push("Gender");
+  if (!admissionClass) missing.push("Class for Admission");
+  if (!fatherOrMotherName) missing.push("Father/Mother Name");
+  if (!phone) missing.push("Phone No");
+  if (!address) missing.push("Address");
+  if (missing.length) {
+    redirect(`/students/new?error=required&missing=${encodeURIComponent(missing.join(", "))}`);
   }
   if (rollNo) {
     const conflict = await prisma.studentEnrollment.findFirst({ where: { sessionId: session.id, rollNo } });
@@ -105,7 +115,7 @@ async function createStudent(formData: FormData) {
   }
 }
 
-export default async function NewStudent({ searchParams }: { searchParams?: Promise<{ error?: string }> }) {
+export default async function NewStudent({ searchParams }: { searchParams?: Promise<{ error?: string; missing?: string }> }) {
   const user = await getAuthUser(); if (user?.role !== "ADMIN") redirect("/dashboard");
   const session = await getCurrentSession(); if (!session) return <p>Create an active session first.</p>;
   const sp = (await searchParams) || {};
@@ -129,7 +139,7 @@ export default async function NewStudent({ searchParams }: { searchParams?: Prom
       <ScrollToTopOnError active={!!sp.error} />
       <Link href="/students" className="inline-flex items-center gap-2 text-sm text-emerald-800 hover:text-emerald-900 font-medium">← Back / واپس</Link>
       <div className="bg-gradient-to-r from-emerald-800 to-emerald-700 text-white rounded-2xl p-5 shadow-sm">
-        <h1 className="text-2xl font-bold">Student Admission / طالب/طالبہ کا داخلہ</h1>
+        <h1 className="text-2xl font-bold">Student Admission / طالبہ کا داخلہ فارم</h1>
         <p className="text-sm text-emerald-50 mt-1">Session: <b>{session.name}</b> — داخلہ فارم کے مطابق معلومات درج کریں۔</p>
       </div>
       {sp.error === "roll" && (
@@ -145,6 +155,7 @@ export default async function NewStudent({ searchParams }: { searchParams?: Prom
       {sp.error === "required" && (
         <div className="text-sm text-red-700 bg-red-50 border border-red-200 rounded-xl p-3">
           Please fill all required fields: Admission No, Application No, Roll No, Name (English), Age, Gender, Class for Admission, Father/Mother Name, Phone No, and Address.
+          {sp.missing ? <div className="mt-1 font-medium">Missing: {sp.missing}</div> : null}
         </div>
       )}
       {sp.error === "age" && (
