@@ -82,15 +82,15 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       ];
   const sidebar = (
     <>
-      <div className="mb-4 pb-4 border-b border-emerald-700/50">
-        <div className="flex items-center gap-3 p-2 rounded-2xl bg-white/5 border border-white/10">
-          <div className="shrink-0 bg-white rounded-xl p-1 shadow-sm"><Logo size={42} /></div>
+      <div className="mb-3 pb-3 border-b border-emerald-700/50">
+        <div className="flex items-center gap-2.5 p-2 rounded-2xl bg-white/5 border border-white/10">
+          <div className="shrink-0 bg-white rounded-xl p-1 shadow-sm"><Logo size={38} /></div>
           <div className="min-w-0">
             <div className="font-bold text-[13px] leading-tight tracking-wide">Madrasa Sumiya-tul-Banat</div>
-            <div className="font-urdu text-sm text-amber-200/90 mt-0.5">مدرسہ سمیّة البنات</div>
+            <div className="font-urdu text-[13px] text-amber-200/90 mt-0.5">مدرسہ سمیّة البنات</div>
           </div>
         </div>
-        <div className="mt-3 flex items-center justify-between gap-2">
+        <div className="mt-2 flex items-center justify-between gap-2">
           <span className="text-[11px] uppercase tracking-wider text-emerald-300/80 font-semibold">{lang === "ur" ? "زبان" : "Language"}</span>
           <LanguageToggle lang={lang} />
         </div>
@@ -123,16 +123,15 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
       <SidebarNav sections={sections} />
 
-      <form action={logout} className="mt-3 pt-3 border-t border-emerald-700/40">
-        <button className="w-full flex items-center justify-center gap-2 bg-red-500/10 hover:bg-red-500/20 border border-red-400/30 text-red-50 rounded-xl px-3 py-2.5 text-sm font-medium transition">
+      <form action={logout} className="mt-2 pt-2 border-t border-emerald-700/40">
+        <button className="w-full flex items-center justify-center gap-2 bg-red-500/10 hover:bg-red-500/20 border border-red-400/30 text-red-50 rounded-xl px-3 py-2 text-sm font-medium transition">
           <span>⎋</span><span>{tr.logout}</span>
         </button>
       </form>
 
-      <div className="mt-4 pt-4 border-t border-emerald-700/30 text-center">
-        <div className="text-[11px] text-emerald-300/70 font-medium tracking-wide">Madrasa Sumiya-tul-Banat</div>
-        <div className="font-urdu text-xs text-amber-200/60 mt-1">مدرسہ سمیّة البنات</div>
-        <div className="mt-2 text-[10px] text-emerald-400/50">© {new Date().getFullYear()}</div>
+      <div className="mt-2 pt-2 border-t border-emerald-700/30 text-center">
+        <div className="text-[10px] text-emerald-300/70 font-medium tracking-wide">Madrasa Sumiya-tul-Banat</div>
+        <div className="font-urdu text-[11px] text-amber-200/60 mt-0.5">مدرسہ سمیّة البنات</div>
       </div>
     </>
   );
