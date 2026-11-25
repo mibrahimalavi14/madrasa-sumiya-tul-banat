@@ -108,7 +108,7 @@ export default async function FeesSessionReportPage() {
         <div className="overflow-auto border border-gray-200 rounded-lg">
           <table className="w-full text-sm">
             <thead className="bg-gray-50"><tr>
-              <th className="p-2 text-left">{ur ? "مہینہ" : "Month"}</th>
+              <th className="p-2 text-center">{ur ? "مہینہ" : "Month"}</th>
               <th className="p-2 text-center">{ur ? "کل" : "Total"}</th>
               <th className="p-2 text-center">{ur ? "ادا شدہ" : "Paid"}</th>
               <th className="p-2 text-center">{ur ? "باقی" : "Pending"}</th>

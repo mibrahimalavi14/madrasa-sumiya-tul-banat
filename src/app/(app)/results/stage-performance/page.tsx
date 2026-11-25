@@ -67,7 +67,7 @@ export default async function StagePerformancePage() {
         <table className="w-full text-sm">
           <thead className="bg-blue-50 text-blue-950"><tr>
             <th className="p-2 text-center">{ur ? "مرحلہ" : "Stage"}</th>
-            <th className="p-2 text-left">{ur ? "امتحان" : "Exam"}</th>
+            <th className="p-2 text-center">{ur ? "امتحان" : "Exam"}</th>
             <th className="p-2 text-center">{ur ? "منتخب" : "Selected"}</th>
             <th className="p-2 text-center">{ur ? "نتائج" : "Results"}</th>
             <th className="p-2 text-center">{ur ? "اوسط %" : "Avg %"}</th>

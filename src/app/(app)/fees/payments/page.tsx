@@ -34,7 +34,7 @@ export default async function RecentFeePaymentsPage() {
       <div className="bg-white rounded-2xl shadow-sm border border-violet-100 p-5 overflow-auto">
         <table className="w-full text-sm">
           <thead className="bg-violet-50 text-violet-950"><tr>
-            <th className="p-2 text-left">{ur ? "تاریخ" : "Date"}</th>
+            <th className="p-2 text-center">{ur ? "تاریخ" : "Date"}</th>
             <th className="p-2 text-left">{ur ? "طالب علم" : "Student"}</th>
             <th className="p-2 text-center">{ur ? "مہینہ/سال" : "Month/Year"}</th>
             <th className="p-2 text-center">{ur ? "واجب" : "Due"}</th>

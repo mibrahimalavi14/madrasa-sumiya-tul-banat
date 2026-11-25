@@ -108,7 +108,7 @@ export default async function FeesArrearsPage() {
                 <div className="text-sm font-semibold text-red-700">{ur ? "کل بقایا" : "Total Arrears"}: Rs {total}</div>
               </div>
               <table className="w-full text-sm">
-                <thead><tr className="border-t"><th className="p-2 text-left">{ur ? "مہینہ" : "Month"}</th><th className="p-2 text-right">{ur ? "واجب" : "Due"}</th><th className="p-2 text-right">{ur ? "ادا شدہ" : "Paid"}</th><th className="p-2 text-right">{ur ? "بقایا" : "Balance"}</th><th className="p-2 text-center">{ur ? "حیثیت" : "Status"}</th></tr></thead>
+                <thead><tr className="border-t"><th className="p-2 text-center">{ur ? "مہینہ" : "Month"}</th><th className="p-2 text-right">{ur ? "واجب" : "Due"}</th><th className="p-2 text-right">{ur ? "ادا شدہ" : "Paid"}</th><th className="p-2 text-right">{ur ? "بقایا" : "Balance"}</th><th className="p-2 text-center">{ur ? "حیثیت" : "Status"}</th></tr></thead>
                 <tbody>
                   {items.map((it: any) => (
                     <tr key={`${it.year}-${it.month}`} className="border-t">
