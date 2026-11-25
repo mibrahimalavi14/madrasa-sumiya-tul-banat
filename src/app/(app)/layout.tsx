@@ -123,11 +123,17 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
       <SidebarNav sections={sections} />
 
-      <form action={logout} className="mt-4 pt-3 border-t border-emerald-700/40">
+      <form action={logout} className="mt-3 pt-3 border-t border-emerald-700/40">
         <button className="w-full flex items-center justify-center gap-2 bg-red-500/10 hover:bg-red-500/20 border border-red-400/30 text-red-50 rounded-xl px-3 py-2.5 text-sm font-medium transition">
           <span>⎋</span><span>{tr.logout}</span>
         </button>
       </form>
+
+      <div className="mt-4 pt-4 border-t border-emerald-700/30 text-center">
+        <div className="text-[11px] text-emerald-300/70 font-medium tracking-wide">Madrasa Sumiya-tul-Banat</div>
+        <div className="font-urdu text-xs text-amber-200/60 mt-1">مدرسہ سمیّة البنات</div>
+        <div className="mt-2 text-[10px] text-emerald-400/50">© {new Date().getFullYear()}</div>
+      </div>
     </>
   );
 
