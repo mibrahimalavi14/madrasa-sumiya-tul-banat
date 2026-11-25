@@ -103,7 +103,7 @@ export default async function CertificatesPage({ searchParams }: { searchParams:
       <div className="bg-white rounded-2xl shadow-sm border border-amber-100 p-4 space-y-4">
         {canEditCertificates ? (
           <div>
-            <h2 className="font-semibold mb-2">{tr.issueCertificate}</h2>
+            <h2 className="font-semibold mb-2 text-center">{tr.issueCertificate}</h2>
             <p className="text-xs text-gray-500 mb-2">{lang==="ur" ? "سالانہ امتحان پر سالانہ سرٹیفکیٹ اور ناظرہ مکمل ہونے پر ناظرہ تکمیل سرٹیفکیٹ جاری کریں۔" : "Issue annual certificates on annual examination and Nazra completion certificates when completed."}</p>
             <form action={createCert} className="grid md:grid-cols-4 gap-3 items-end">
               <div><label className="text-sm">{tr.student}</label><select name="studentId" className="w-full border rounded-lg px-3 py-2.5">{enrolls.map(e=><option key={e.studentId} value={e.studentId}>{e.student.admissionNo} - {e.student.nameEn}</option>)}</select></div>

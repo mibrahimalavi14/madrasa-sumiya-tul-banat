@@ -84,7 +84,7 @@ export default async function SettingsPage() {
 
       <div className="grid lg:grid-cols-2 gap-5">
         <div className="bg-white rounded-2xl shadow-sm border border-emerald-100/80 p-5">
-          <h2 className="text-lg font-semibold text-emerald-900 mb-3">{ur ? "سسٹم کا خلاصہ" : "System Overview"}</h2>
+          <h2 className="text-lg font-semibold text-emerald-900 mb-3 text-center">{ur ? "سسٹم کا خلاصہ" : "System Overview"}</h2>
           <div className="grid grid-cols-2 gap-3 text-sm">
             <div className="rounded-xl border border-emerald-100 bg-emerald-50/40 p-3"><div className="text-gray-500">{ur ? "کل سیشنز" : "Total Sessions"}</div><div className="text-xl font-bold text-emerald-900">{sessionsCount}</div></div>
             <div className="rounded-xl border border-emerald-100 bg-emerald-50/40 p-3"><div className="text-gray-500">{ur ? "کل طلبہ (ریکارڈ)" : "Total Students"}</div><div className="text-xl font-bold text-emerald-900">{totalStudents}</div></div>
@@ -96,7 +96,7 @@ export default async function SettingsPage() {
         </div>
 
         <div className="bg-white rounded-2xl shadow-sm border border-emerald-100/80 p-5">
-          <h2 className="text-lg font-semibold text-emerald-900 mb-3">{ur ? "فعال سیشن اور زبان" : "Active Session & Language"}</h2>
+          <h2 className="text-lg font-semibold text-emerald-900 mb-3 text-center">{ur ? "فعال سیشن اور زبان" : "Active Session & Language"}</h2>
           <div className="space-y-3 text-sm">
             <div className="rounded-xl border border-emerald-100 p-3">
               <div className="text-gray-500">{ur ? "فعال سیشن" : "Active Session"}</div>
@@ -121,7 +121,7 @@ export default async function SettingsPage() {
       </div>
 
       <div className="bg-white rounded-2xl shadow-sm border border-emerald-100/80 p-5">
-        <h2 className="text-lg font-semibold text-emerald-900 mb-3 border-b-2 border-emerald-200 pb-3">{tr.gradingSystem}</h2>
+        <h2 className="text-lg font-semibold text-emerald-900 mb-3 border-b-2 border-emerald-200 pb-3 text-center">{tr.gradingSystem}</h2>
         <div className="overflow-auto border-t border-emerald-200 pt-4 rounded-xl">
           <table className="w-full text-sm border border-emerald-200/80 rounded-xl overflow-hidden">
             <thead className="bg-emerald-700 text-white">

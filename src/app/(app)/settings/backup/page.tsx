@@ -58,7 +58,7 @@ export default async function BackupCenterPage() {
       </div>
 
       <div className="bg-white rounded-2xl shadow-sm border border-emerald-100/80 p-5">
-        <h2 className="text-lg font-semibold text-emerald-900 mb-1">{ur ? "CSV بیک اپ ڈاؤن لوڈ کریں" : "Download CSV Backups"}</h2>
+        <h2 className="text-lg font-semibold text-emerald-900 mb-1 text-center">{ur ? "CSV بیک اپ ڈاؤن لوڈ کریں" : "Download CSV Backups"}</h2>
         <p className="text-sm text-gray-600 mb-4">
           {ur
             ? "نیچے ہر بٹن سے متعلقہ ڈیٹا کی CSV فائل ڈاؤن لوڈ ہوگی۔ باقاعدگی سے (مثلاً ہفتہ وار/ماہانہ) بیک اپ لیں۔"

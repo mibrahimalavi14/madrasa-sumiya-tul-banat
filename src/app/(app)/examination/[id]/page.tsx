@@ -60,7 +60,7 @@ export default async function ExamDetail({ params }: { params: Promise<{ id: str
       </div>
 
       <div className="bg-white rounded-xl shadow p-4">
-        <h2 className="font-semibold mb-2">Selected Students</h2>
+        <h2 className="font-semibold mb-2 text-center">Selected Students</h2>
         <p className="text-sm text-gray-600 mb-3">صرف وہی طلبہ دکھائے گئے ہیں جو اس امتحان کے لیے منتخب کیے گئے ہیں۔</p>
         <div className="overflow-auto border rounded-xl">
           <table className="w-full text-sm">
@@ -85,14 +85,14 @@ export default async function ExamDetail({ params }: { params: Promise<{ id: str
 
       <div className="grid md:grid-cols-2 gap-4">
         <div className="bg-white rounded-xl shadow p-4">
-          <h2 className="font-semibold mb-2">Tehreeri (Written) Papers - 01,02,03</h2>
+          <h2 className="font-semibold mb-2 text-center">Tehreeri (Written) Papers - 01,02,03</h2>
           <p className="text-xs text-gray-500 mb-2">Mazmoon: Basic Islamic Studies | Class: Nazra Quran & Basic Islamic Studies</p>
           {written.length === 0 ? <p className="text-sm text-gray-500">No written papers in this exam.</p> : (
             <ul className="space-y-2">{written.map(p => (<li key={p.id} className="flex items-center justify-between border rounded p-2"><span>Code {p.paperCode} - {p.title||"Written"}</span><span className="space-x-2 text-sm"><Link className="text-blue-700 underline" href={`/examination/${exam.id}/paper/${p.id}`}>Edit/Questions</Link><Link className="text-emerald-700 underline" href={`/examination/${exam.id}/paper/${p.id}/print`}>Print</Link></span></li>))}</ul>
           )}
         </div>
         <div className="bg-white rounded-xl shadow p-4">
-          <h2 className="font-semibold mb-2">Oral Papers - 01,02,03</h2>
+          <h2 className="font-semibold mb-2 text-center">Oral Papers - 01,02,03</h2>
           <p className="text-xs text-gray-500 mb-2">Mazmoon: Nazra Quran & Basic Islamic Studies | Questions only (teacher reminder)</p>
           {oral.length === 0 ? <p className="text-sm text-gray-500">No oral papers in this exam.</p> : (
             <ul className="space-y-2">{oral.map(p => (<li key={p.id} className="flex items-center justify-between border rounded p-2"><span>Code {p.paperCode} - {p.title||"Oral"}</span><span className="space-x-2 text-sm"><Link className="text-blue-700 underline" href={`/examination/${exam.id}/paper/${p.id}`}>Edit Questions</Link><Link className="text-emerald-700 underline" href={`/examination/${exam.id}/paper/${p.id}/print`}>Print (Teacher)</Link><span className="text-gray-500">زبانی نمبر Results میں درج کریں / Enter oral marks in Results</span></span></li>))}</ul>

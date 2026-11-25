@@ -126,7 +126,7 @@ export default async function ExaminationPage() {
       )}
 
       <div className="bg-white rounded-2xl shadow-sm border border-emerald-100 p-5">
-        <h2 className="text-lg font-semibold text-emerald-900 mb-1">{ur ? "سالانہ امتحانی کیلنڈر" : "Annual Exam Calendar"}</h2>
+        <h2 className="text-lg font-semibold text-emerald-900 mb-1 text-center">{ur ? "سالانہ امتحانی کیلنڈر" : "Annual Exam Calendar"}</h2>
         <p className="text-sm text-gray-600 mb-4">{ur ? "چار مراحل: ہر امتحان کا الگ ریکارڈ، نمبر، خودکار فیصد و گریڈ، اور وزنی سالانہ مجموعی نتیجہ۔" : "Four stages: separate record, marks, auto percentage & grade for each exam, and weighted annual combined result."}</p>
         <div className="grid md:grid-cols-2 gap-3">
           {STAGES.map(s => (
@@ -147,7 +147,7 @@ export default async function ExaminationPage() {
       </div>
 
       <div className="bg-white rounded-2xl shadow-sm border border-emerald-100 p-5">
-        <h2 className="font-semibold mb-2">{ur ? "ہر بڑے امتحان کے حصے" : "Parts of Each Major Exam"}</h2>
+        <h2 className="font-semibold mb-2 text-center">{ur ? "ہر بڑے امتحان کے حصے" : "Parts of Each Major Exam"}</h2>
         <div className="grid md:grid-cols-2 gap-3 text-sm">
           <div className="border rounded-xl p-3"><div className="font-semibold text-emerald-900 mb-1">{ur ? "تحریری امتحان" : "Written Exam"}</div><ul className={`list-disc ${ur ? "pr-5" : "pl-5"} text-gray-700 space-y-0.5 ${ur ? "font-urdu" : ""}`} dir={ur?"rtl":"ltr"}>{ur ? (<><li>MCQs</li><li>خالی جگہیں</li><li>درست / غلط</li><li>مختصر سوالات</li><li>تفصیلی سوالات</li></>) : (<><li>MCQs</li><li>Fill in the blanks</li><li>True / False</li><li>Short questions</li><li>Descriptive questions</li></>)}</ul></div>
           <div className="border rounded-xl p-3"><div className="font-semibold text-emerald-900 mb-1">{ur ? "زبانی امتحان" : "Oral Exam"}</div><ul className={`list-disc ${ur ? "pr-5" : "pl-5"} text-gray-700 space-y-0.5 ${ur ? "font-urdu" : ""}`} dir={ur?"rtl":"ltr"}>{ur ? (<><li>ناظرہ قرآن</li><li>کلمے</li><li>مسنون دعائیں</li><li>نماز اور وضو</li><li>بنیادی اسلامی معلومات</li></>) : (<><li>Nazra Quran</li><li>Kalimas</li><li>Masnoon Duas</li><li>Namaz and Wuzu</li><li>Basic Islamic knowledge</li></>)}</ul></div>
@@ -155,7 +155,7 @@ export default async function ExaminationPage() {
       </div>
 
       <div className="bg-white rounded-2xl shadow-sm border border-emerald-100 p-5">
-        <h2 className="text-lg font-semibold text-emerald-900 mb-1">{ur ? "ہر امتحان کے لیے طلبہ منتخب کریں (امتحان سے پہلے)" : "Select Students for Each Exam (Before Opening Exam)"}</h2>
+        <h2 className="text-lg font-semibold text-emerald-900 mb-1 text-center">{ur ? "ہر امتحان کے لیے طلبہ منتخب کریں (امتحان سے پہلے)" : "Select Students for Each Exam (Before Opening Exam)"}</h2>
         <p className="text-sm text-gray-600 mb-4">{ur ? "یہ مرحلہ باہر/پہلے کریں: ہر امتحان کے لیے طلبہ منتخب کر کے محفوظ کریں، پھر امتحان کھولیں۔" : "Do this step outside/first: select and save students for each exam, then open the exam."}</p>
         <div className="space-y-4">
           {exams.map(e => {
@@ -193,7 +193,7 @@ export default async function ExaminationPage() {
       </div>
 
       {canEditExams && <div className="bg-white rounded-2xl shadow-sm border border-emerald-100 p-5">
-        <h2 className="font-semibold mb-2">{ur ? "امتحان بنائیں (مرحلہ وار)" : "Create Exam (by Stage)"}</h2>
+        <h2 className="font-semibold mb-2 text-center">{ur ? "امتحان بنائیں (مرحلہ وار)" : "Create Exam (by Stage)"}</h2>
         <form action={createExam} className="grid md:grid-cols-5 gap-4 items-end">
           <div className="flex flex-col gap-2">
             <label className="text-sm font-medium text-gray-700">{ur ? "مرحلہ" : "Stage"}</label>

@@ -32,7 +32,7 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
         {!student ? <div className="bg-white rounded-2xl border border-amber-200 p-5 text-amber-900">{tr.noLinkedStudent}</div> : (
           <div className="grid md:grid-cols-2 gap-4">
             <div className="bg-white rounded-2xl shadow-sm border border-teal-100 p-5">
-              <h2 className="font-semibold mb-3 text-teal-900">{tr.student}</h2>
+              <h2 className="font-semibold mb-3 text-teal-900 text-center">{tr.student}</h2>
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between gap-3 border-b border-gray-100 pb-2"><span className="text-gray-500">{ur ? "نام" : "Name"}</span><span className="font-semibold text-gray-900">{student.nameEn} {student.nameUr && <span className="font-urdu">({student.nameUr})</span>}</span></div>
                 <div className="flex justify-between gap-3 border-b border-gray-100 pb-2"><span className="text-gray-500">{tr.admissionNo}</span><span className="font-semibold">{student.admissionNo}</span></div>
@@ -45,11 +45,11 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
               </div>
             </div>
             <div className="bg-white rounded-2xl shadow-sm border border-teal-100 p-5">
-              <h2 className="font-semibold mb-3 text-teal-900">{tr.recentFees}</h2>
+              <h2 className="font-semibold mb-3 text-teal-900 text-center">{tr.recentFees}</h2>
               {student.feePayments.length===0?<p className="text-sm text-gray-500">{tr.noRecords}</p>:<div className="overflow-auto"><table className="w-full text-sm"><thead><tr><th className="p-2 text-left">{tr.month}/{tr.year}</th><th className="p-2 text-center">{ur ? "ادا/واجب" : "Paid/Due"}</th><th className="p-2 text-center">{tr.status}</th></tr></thead><tbody>{student.feePayments.map((f: any)=>{ const paidAmt = Number(f.paidAmount ?? 0) > 0 ? Number(f.paidAmount ?? 0) : (f.isPaid ? Number(f.amount||0) : 0); const dueAmt = Number(f.amount||0); const full = f.isPaid || (dueAmt>0 && paidAmt>=dueAmt); const partial = paidAmt>0 && paidAmt<dueAmt; const label = full ? (f.isLate?tr.late:tr.paid) : (partial ? (lang === "ur" ? "جزوی" : "Partial") : tr.unpaid); return (<tr key={f.id} className="border-t"><td className="p-2">{f.month}/{f.year}</td><td className="p-2 text-center">Rs {paidAmt}/{dueAmt}</td><td className="p-2 text-center"><span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-semibold ${full ? (f.isLate?"bg-amber-100 text-amber-800":"bg-emerald-100 text-emerald-800") : (partial?"bg-amber-100 text-amber-800":"bg-red-100 text-red-800")}`}>{label}</span></td></tr>); })}</tbody></table></div>}
             </div>
             <div className="bg-white rounded-2xl shadow-sm border border-teal-100 p-5 md:col-span-2">
-              <h2 className="font-semibold mb-3 text-teal-900">{tr.recentResults}</h2>
+              <h2 className="font-semibold mb-3 text-teal-900 text-center">{tr.recentResults}</h2>
               {student.results.length===0?<p className="text-sm text-gray-500">{tr.noResults}</p>:<div className="overflow-auto"><table className="w-full text-sm"><thead><tr><th className="p-2 text-center">%</th><th className="p-2 text-center">{ur ? "گریڈ" : "Grade"}</th><th className="p-2 text-center">{ur ? "حیثیت" : "Status"}</th><th className="p-2 text-center">{ur ? "پوزیشن" : "Position"}</th></tr></thead><tbody>{student.results.map(r=>(<tr key={r.id} className="border-t"><td className="p-2 text-center font-medium">{r.percentage?.toFixed(1)}%</td><td className="p-2 text-center font-semibold">{r.grade}</td><td className={`p-2 text-center ${r.status==="Pass"?"text-emerald-700":"text-red-700"}`}>{r.status}</td><td className="p-2 text-center">{r.position??"-"}</td></tr>))}</tbody></table></div>}
             </div>
           </div>

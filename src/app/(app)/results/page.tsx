@@ -172,7 +172,7 @@ export default async function ResultsPage({ searchParams }: { searchParams: Prom
           <div className={`text-emerald-800 ${ur ? "font-urdu" : ""}`} dir={ur?"rtl":"ltr"}>{ur ? "شامل امتحانات" : "Included exams"}: {annualExams.map(e=>examDisplayName(e)).join(ur ? "، " : ", ") || (ur ? "کوئی امتحان شامل نہیں" : "No exams included")}</div>
         </div>
         <div className="bg-white rounded-2xl shadow-sm border border-emerald-100 p-5">
-          <h2 className="font-semibold mb-3">{ur ? "پوزیشن ہولڈرز کی فہرست (پہلی 3)" : "Position Holders List (Top 3)"}</h2>
+          <h2 className="font-semibold mb-3 text-center">{ur ? "پوزیشن ہولڈرز کی فہرست (پہلی 3)" : "Position Holders List (Top 3)"}</h2>
           {holders.length === 0 ? <p className="text-sm text-gray-500">{ur ? "ابھی کوئی پوزیشن ہولڈر نہیں۔" : "No position holders yet."}</p> : (
             <div className="grid md:grid-cols-3 gap-4">
               {holders.map(h => (

@@ -136,7 +136,7 @@ export default async function SessionsPage({ searchParams }: { searchParams: Pro
     <div className="space-y-5 theme-sessions">
       <h1 className="text-2xl font-bold text-emerald-900 mb-4">{tr.sessions}</h1>
       <div className="bg-white rounded-xl shadow p-4 mb-6">
-        <h2 className="font-semibold mb-3">{tr.createNewSession}</h2>
+        <h2 className="font-semibold mb-3 text-center">{tr.createNewSession}</h2>
         {errorMsg && <div className="mb-3 text-sm text-red-700 bg-red-50 border border-red-200 rounded-lg p-3">{errorMsg}</div>}
         {canCreateSession ? (
           <form action={createSessionAction} className="grid md:grid-cols-4 gap-3 items-end">
@@ -158,7 +158,7 @@ export default async function SessionsPage({ searchParams }: { searchParams: Pro
         )}
       </div>
       <div className="bg-white rounded-xl shadow p-4 mb-6">
-        <h2 className="font-semibold mb-3">{tr.carryStudents}</h2>
+        <h2 className="font-semibold mb-3 text-center">{tr.carryStudents}</h2>
         <form action={carryStudentsAction} className="grid md:grid-cols-3 gap-3 items-end">
           <div><label className="text-sm">{tr.fromSession}</label><select name="fromId" className="w-full border rounded px-2 py-2">{sessions.map(s=><option key={s.id} value={s.id}>{s.name} ({s.status})</option>)}</select></div>
           <div><label className="text-sm">{tr.toSession}</label><select name="toId" className="w-full border rounded px-2 py-2">{sessions.map(s=><option key={s.id} value={s.id}>{s.name} ({s.status})</option>)}</select></div>
