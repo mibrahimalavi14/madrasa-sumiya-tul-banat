@@ -12,7 +12,7 @@ export default function SidebarNav({ sections }: { sections: Section[] }) {
   const fullPath = search ? `${pathname}?${search}` : pathname;
   const allHrefs = sections.flatMap(s => s.items.map(i => i[0]));
   return (
-    <nav className="flex-1 space-y-3 mt-1 overflow-auto pr-1">
+    <nav className="space-y-3 mt-1 pr-1">
       {sections.map((section, idx) => (
         <div key={idx}>
           <div className="px-2 mb-1 flex items-center gap-2">
