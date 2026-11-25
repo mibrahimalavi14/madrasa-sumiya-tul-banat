@@ -40,6 +40,7 @@ export default function DateInputDMY({
   className = "",
   form,
   inputClassName = "",
+  disabled,
 }: {
   name: string;
   defaultValue?: string | Date | null;
@@ -48,6 +49,7 @@ export default function DateInputDMY({
   className?: string;
   form?: string;
   inputClassName?: string;
+  disabled?: boolean;
 }) {
   const initialDate = useMemo(() => parseToDate(typeof defaultValue === "string" ? defaultValue : defaultValue ? defaultValue.toISOString() : ""), [defaultValue]);
   const [text, setText] = useState(initialDate ? dmyFromDate(initialDate) : (typeof defaultValue === "string" && /^\d{1,2}[\/\-]\d{1,2}[\/\-]\d{4}$/.test(defaultValue.trim()) ? defaultValue.trim().replace(/-/g, "/") : ""));
@@ -55,6 +57,7 @@ export default function DateInputDMY({
   const dateRef = useRef<HTMLInputElement>(null);
 
   const openPicker = () => {
+    if (disabled) return;
     const el = dateRef.current;
     if (!el) return;
     // @ts-ignore
@@ -78,13 +81,15 @@ export default function DateInputDMY({
         placeholder={placeholder}
         inputMode="numeric"
         required={required}
+        disabled={disabled}
         className={`w-full pr-10 ${inputClassName}`}
         autoComplete="off"
       />
       <button
         type="button"
         onClick={openPicker}
-        className="absolute inset-y-0 right-0 px-3 flex items-center text-gray-500 hover:text-emerald-700"
+        disabled={disabled}
+        className="absolute inset-y-0 right-0 px-3 flex items-center text-gray-500 hover:text-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed"
         aria-label="Open calendar"
         tabIndex={-1}
       >

@@ -271,20 +271,20 @@ export default async function FeesPage({ searchParams }: { searchParams: Promise
                 </td>
                 <td className="p-3">
                   <div className="flex items-center gap-2">
-                    <input form={sFormId} name="studentMonthlyFee" type="number" step="1" defaultValue={studentFee ?? ""} placeholder={String(defaultAmount)} className="border border-emerald-200/80 rounded-lg px-3 py-2 w-24" />
+                    <input form={sFormId} name="studentMonthlyFee" type="number" step="1" defaultValue={studentFee ?? ""} placeholder={String(defaultAmount)} disabled={!sessionStarted} className="border border-emerald-200/80 rounded-lg px-3 py-2 w-24 disabled:bg-gray-50 disabled:text-gray-500" />
                     <button form={sFormId} disabled={!sessionStarted} className="bg-gray-700 hover:bg-gray-800 text-white px-3 py-2 rounded-lg text-xs disabled:opacity-50 disabled:cursor-not-allowed">{lang === "ur" ? "سیٹ" : "Set"}</button>
                   </div>
                 </td>
                 <td className="p-3">
-                  <input form={formId} name="dueAmount" type="number" step="1" defaultValue={due} className="border border-emerald-200/80 rounded-lg px-3 py-2 w-24" />
+                  <input form={formId} name="dueAmount" type="number" step="1" defaultValue={due} disabled={!sessionStarted} className="border border-emerald-200/80 rounded-lg px-3 py-2 w-24 disabled:bg-gray-50 disabled:text-gray-500" />
                 </td>
                 <td className="p-3">
-                  <input form={formId} name="paidAmount" type="number" step="1" defaultValue={paid} className="border border-emerald-200/80 rounded-lg px-3 py-2 w-24" />
+                  <input form={formId} name="paidAmount" type="number" step="1" defaultValue={paid} disabled={!sessionStarted} className="border border-emerald-200/80 rounded-lg px-3 py-2 w-24 disabled:bg-gray-50 disabled:text-gray-500" />
                   <div className="text-[11px] text-gray-500 mt-1">{lang === "ur" ? "کل موصولہ" : "Total received"}</div>
                 </td>
                 <td className="p-3 font-semibold text-amber-700">Rs {balance}</td>
                 <td className="p-3">
-                  <DateInputDMY form={formId} name="paidAt" defaultValue={toDateInputDMY(f?.paidAt)} inputClassName="border border-emerald-200/80 rounded-lg px-3 py-2" />
+                  <DateInputDMY form={formId} name="paidAt" defaultValue={toDateInputDMY(f?.paidAt)} disabled={!sessionStarted} inputClassName="border border-emerald-200/80 rounded-lg px-3 py-2 disabled:bg-gray-50 disabled:text-gray-500" />
                 </td>
                 <td className="p-3 text-center">
                   <span className={`inline-flex px-2.5 py-1 rounded-full text-xs font-semibold ${isPartial ? "bg-amber-100 text-amber-800" : "bg-red-100 text-red-800"}`}>{status}</span>
