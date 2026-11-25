@@ -147,8 +147,8 @@ export default async function StudentsPage({ searchParams }: { searchParams: Pro
           {canEditStudents && <Link href="/students/new" className="bg-white text-emerald-800 px-3 py-2 rounded-lg text-sm font-semibold shadow-sm hover:bg-emerald-50 text-center sm:w-40 flex items-center justify-center">{tr.newAdmission}</Link>}
           <Link href="/students/admission-form" className="bg-amber-500 text-white px-3 py-2 rounded-lg text-sm font-semibold shadow-sm hover:bg-amber-600 text-center sm:w-40 flex items-center justify-center">{tr.blankAdmissionForm}</Link>
           <Link href="/students/slips" className="bg-teal-500 text-white px-3 py-2 rounded-lg text-sm font-semibold shadow-sm hover:bg-teal-600 text-center sm:w-40 flex items-center justify-center">{lang==="ur" ? "رول نمبر فہرست" : "Roll No List"}</Link>
-          <details className="relative sm:w-52">
-            <summary className="list-none cursor-pointer bg-emerald-900/40 border border-emerald-200/30 text-white px-4 py-1.5 rounded-lg text-sm font-semibold shadow-sm hover:bg-emerald-900/60 text-center w-full flex items-center justify-center">{lang==="ur" ? "CSV ایکسپورٹ" : "Export CSV"}</summary>
+          <details className="relative sm:w-44">
+            <summary className="list-none cursor-pointer bg-emerald-900/40 border border-emerald-200/30 text-white px-3 py-2 rounded-lg text-sm font-semibold shadow-sm hover:bg-emerald-900/60 text-center w-full flex items-center justify-center">{lang==="ur" ? "CSV ایکسپورٹ" : "Export CSV"}</summary>
             <div className="absolute left-0 sm:left-auto sm:right-0 mt-2 w-[min(18rem,calc(100vw-2rem))] bg-white text-gray-800 border border-emerald-100 rounded-xl shadow-lg p-3 z-20">
               <form action="/api/export/students" method="get" className="space-y-2 text-sm">
                 <div className="font-semibold text-emerald-900">{lang==="ur" ? "کالم منتخب کریں" : "Select columns"}</div>
