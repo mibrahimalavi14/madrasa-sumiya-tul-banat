@@ -40,11 +40,11 @@ export default async function ExamDetail({ params }: { params: Promise<{ id: str
         </div>
         <Link href="/examination" className="text-emerald-700 underline">← Back</Link>
       </div>
-      <div className="bg-white rounded-xl shadow p-4 text-sm grid md:grid-cols-4 gap-2">
-        <div><b>Session:</b> {exam.session.name}</div>
-        <div><b>Subject:</b> {exam.subject || "-"}</div>
-        <div><b>Date:</b> {formatDateDMY(exam.examDate)}</div>
-        <div><b>Type:</b> {exam.hasWritten !== false ? "Written" : ""}{exam.hasWritten !== false && exam.hasOral !== false ? " + " : ""}{exam.hasOral !== false ? "Oral" : ""} {exam.stage ? `| Annual Weight: ${exam.stage===4?40:20}%` : ""}</div>
+      <div className="bg-white rounded-xl shadow p-4 text-sm grid grid-cols-2 md:grid-cols-4 gap-3 items-start">
+        <div><div className="text-gray-500 text-xs mb-0.5">Session</div><div className="font-medium">{exam.session.name}</div></div>
+        <div><div className="text-gray-500 text-xs mb-0.5">Subject</div><div className="font-medium">{exam.subject || "-"}</div></div>
+        <div><div className="text-gray-500 text-xs mb-0.5">Date</div><div className="font-medium">{formatDateDMY(exam.examDate)}</div></div>
+        <div><div className="text-gray-500 text-xs mb-0.5">Type</div><div className="font-medium">{exam.hasWritten !== false ? "Written" : ""}{exam.hasWritten !== false && exam.hasOral !== false ? " + " : ""}{exam.hasOral !== false ? "Oral" : ""}{exam.stage ? ` | Annual Weight: ${exam.stage===4?40:20}%` : ""}</div></div>
       </div>
 
       <div className="bg-white rounded-xl shadow p-4">

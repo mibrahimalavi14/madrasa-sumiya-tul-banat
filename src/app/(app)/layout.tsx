@@ -129,7 +129,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         </button>
       </form>
 
-      <div className="mt-4 pt-4 border-t border-emerald-700/30 text-center">
+      <div className="mt-auto pt-4 border-t border-emerald-700/30 text-center">
         <div className="text-[11px] text-emerald-300/70 font-medium tracking-wide">Madrasa Sumiya-tul-Banat</div>
         <div className="font-urdu text-xs text-amber-200/60 mt-1">مدرسہ سمیّة البنات</div>
         <div className="mt-2 text-[10px] text-emerald-400/50">© {new Date().getFullYear()}</div>
