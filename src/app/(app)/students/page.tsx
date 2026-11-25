@@ -144,11 +144,11 @@ export default async function StudentsPage({ searchParams }: { searchParams: Pro
           <p className="text-sm text-emerald-50 mt-1">{tr.session}: {session.name} · {lang==="ur" ? "کل" : "Total"}: {total}</p>
         </div>
         <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-2 no-print w-full sm:w-auto">
-          {canEditStudents && <Link href="/students/new" className="bg-white text-emerald-800 px-3 py-2 rounded-lg text-sm font-semibold shadow-sm hover:bg-emerald-50 text-center">{tr.newAdmission}</Link>}
-          <Link href="/students/admission-form" className="bg-amber-500 text-white px-3 py-2 rounded-lg text-sm font-semibold shadow-sm hover:bg-amber-600 text-center">{tr.blankAdmissionForm}</Link>
-          <Link href="/students/slips" className="bg-teal-500 text-white px-3 py-2 rounded-lg text-sm font-semibold shadow-sm hover:bg-teal-600 text-center">{lang==="ur" ? "رول نمبر فہرست" : "Roll No List"}</Link>
+          {canEditStudents && <Link href="/students/new" className="bg-white text-emerald-800 px-3 py-1.5 rounded-lg text-sm font-semibold shadow-sm hover:bg-emerald-50 text-center">{tr.newAdmission}</Link>}
+          <Link href="/students/admission-form" className="bg-amber-500 text-white px-3 py-1.5 rounded-lg text-sm font-semibold shadow-sm hover:bg-amber-600 text-center">{tr.blankAdmissionForm}</Link>
+          <Link href="/students/slips" className="bg-teal-500 text-white px-3 py-1.5 rounded-lg text-sm font-semibold shadow-sm hover:bg-teal-600 text-center">{lang==="ur" ? "رول نمبر فہرست" : "Roll No List"}</Link>
           <details className="relative">
-            <summary className="list-none cursor-pointer bg-emerald-900/40 border border-emerald-200/30 text-white px-3 py-2 rounded-lg text-sm font-semibold shadow-sm hover:bg-emerald-900/60 text-center">{lang==="ur" ? "CSV ایکسپورٹ ▾" : "Export CSV ▾"}</summary>
+            <summary className="list-none cursor-pointer bg-emerald-900/40 border border-emerald-200/30 text-white px-3 py-1.5 rounded-lg text-sm font-semibold shadow-sm hover:bg-emerald-900/60 text-center">{lang==="ur" ? "CSV ایکسپورٹ ▾" : "Export CSV ▾"}</summary>
             <div className="absolute left-0 sm:left-auto sm:right-0 mt-2 w-[min(18rem,calc(100vw-2rem))] bg-white text-gray-800 border border-emerald-100 rounded-xl shadow-lg p-3 z-20">
               <form action="/api/export/students" method="get" className="space-y-2 text-sm">
                 <div className="font-semibold text-emerald-900">{lang==="ur" ? "کالم منتخب کریں" : "Select columns"}</div>
@@ -166,8 +166,9 @@ export default async function StudentsPage({ searchParams }: { searchParams: Pro
           </details>
         </div>
       </div>
-      <form className="bg-white rounded-2xl shadow-sm border border-emerald-100 p-4 flex gap-2 no-print flex-wrap items-center">
-        <input name="q" defaultValue={q} placeholder={lang==="ur" ? "داخلہ نمبر / درخواست نمبر / نام تلاش کریں" : "Search Admission No / Application No / Name"} className="border border-gray-200 rounded-xl px-4 py-2.5 w-full sm:w-80 focus:outline-none focus:ring-2 focus:ring-emerald-200" />
+      <form className="bg-white rounded-2xl shadow-sm border border-emerald-100 p-4 flex gap-3 no-print flex-wrap items-center">
+        <label className="text-sm font-semibold text-emerald-900 shrink-0">{lang==="ur" ? "تلاش:" : "Search:"}</label>
+        <input name="q" defaultValue={q} placeholder={lang==="ur" ? "داخلہ نمبر / درخواست نمبر / نام تلاش کریں" : "Search Admission No / Application No / Name"} className="border border-gray-200 rounded-xl px-4 py-2.5 w-full sm:flex-1 sm:min-w-[320px] sm:max-w-2xl focus:outline-none focus:ring-2 focus:ring-emerald-200" />
         <button className="bg-gray-800 hover:bg-gray-900 text-white px-5 py-2.5 rounded-xl font-medium">{tr.search}</button>
         {q && <Link href="/students" className="text-sm text-emerald-700 underline">{lang==="ur" ? "صاف کریں" : "Clear"}</Link>}
       </form>
