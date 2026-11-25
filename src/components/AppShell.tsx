@@ -65,7 +65,7 @@ export default function AppShell({
 
       {/* Sidebar */}
       <aside
-        className={`fixed md:static md:h-screen md:overflow-y-auto inset-y-0 z-50 md:z-auto w-72 max-w-[85vw] bg-gradient-to-b from-emerald-950 via-emerald-900 to-teal-950 text-white p-4 flex flex-col no-print shadow-2xl border-r border-emerald-800/40 transform transition-transform duration-200 ease-out md:transform-none md:translate-x-0 ${
+        className={`fixed md:static md:h-screen inset-y-0 z-50 md:z-auto w-72 max-w-[85vw] bg-gradient-to-b from-emerald-950 via-emerald-900 to-teal-950 text-white p-4 flex flex-col no-print shadow-2xl border-r border-emerald-800/40 transform transition-transform duration-200 ease-out md:transform-none md:translate-x-0 ${
           open ? "translate-x-0" : dir === "rtl" ? "translate-x-full md:translate-x-0" : "-translate-x-full md:translate-x-0"
         } ${dir === "rtl" ? "right-0 md:right-auto" : "left-0 md:left-auto"}`}
       >
