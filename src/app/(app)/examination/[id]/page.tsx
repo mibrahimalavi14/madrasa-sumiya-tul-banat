@@ -40,7 +40,7 @@ export default async function ExamDetail({ params }: { params: Promise<{ id: str
         </div>
         <Link href="/examination" className="text-emerald-700 underline">← Back</Link>
       </div>
-      <div className="bg-white rounded-xl shadow p-4 text-sm grid grid-cols-2 md:grid-cols-4 gap-4 items-start">
+      <div className="bg-white rounded-xl shadow p-4 text-sm grid grid-cols-2 sm:grid-cols-4 gap-4 items-start">
         <div>
           <div className="text-gray-500 text-xs mb-1">Subject</div>
           <div className="font-medium text-gray-900">{exam.subject || "-"}</div>
