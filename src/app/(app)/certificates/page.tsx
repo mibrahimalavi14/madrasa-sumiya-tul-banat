@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import { getCurrentSession } from "@/lib/session";
+import { getCurrentSession, hasSessionStarted } from "@/lib/session";
 import { getAuthUser } from "@/lib/auth";
 import { getLang } from "@/lib/lang";
 import { t } from "@/lib/i18n";
@@ -12,7 +12,7 @@ import { logAudit } from "@/lib/audit";
 async function createCert(formData: FormData) {
   "use server";
   const user = await getAuthUser(); if (user?.role !== "ADMIN") throw new Error("UNAUTHORIZED");
-  const session = await getCurrentSession(); if (!session || session.status !== "ACTIVE") throw new Error("SESSION_NOT_ACTIVE");
+  const session = await getCurrentSession(); if (!session || session.status !== "ACTIVE") throw new Error("SESSION_NOT_ACTIVE"); if (!hasSessionStarted(session)) throw new Error("SESSION_NOT_STARTED");
   const studentId = String(formData.get("studentId"));
   const type = String(formData.get("type")) as "ANNUAL" | "NAZRA_COMPLETION";
   const count = await prisma.certificate.count();
@@ -47,7 +47,8 @@ export default async function CertificatesPage({ searchParams }: { searchParams:
     );
   }
   if (!session) return <p>{lang==="ur" ? "براہ کرم پہلے فعال سیشن بنائیں/منتخب کریں۔" : "Create/select active session first."}</p>;
-  const canEditCertificates = user?.role === "ADMIN";
+  const sessionStarted = hasSessionStarted(session);
+  const canEditCertificates = user?.role === "ADMIN" && sessionStarted;
 
   const where: any = { sessionId: session.id };
   if (typeFilter) where.type = typeFilter;
@@ -112,7 +113,7 @@ export default async function CertificatesPage({ searchParams }: { searchParams:
             </form>
           </div>
         ) : (
-          <div className="text-sm text-blue-900 bg-blue-50 border border-blue-200 rounded-lg p-3">{lang==="ur" ? "سرٹیفکیٹ جاری کرنے کی اجازت صرف ایڈمن کو ہے۔ آپ سرٹیفکیٹس دیکھ/تلاش/پرنٹ/ایکسپورٹ کر سکتے ہیں۔" : "Issuing certificates is Admin-only. You can view, search, print, and export certificates."}</div>
+          <div className={`text-sm border rounded-lg p-3 ${!sessionStarted ? "text-amber-900 bg-amber-50 border-amber-200" : "text-blue-900 bg-blue-50 border-blue-200"}`}>{!sessionStarted ? (lang==="ur" ? "سیشن ابھی شروع نہیں ہوا۔ شروع ہونے کی تاریخ سے پہلے سرٹیفکیٹ جاری نہیں کیا جا سکتا، صرف دیکھ/تلاش/پرنٹ/ایکسپورٹ کر سکتے ہیں۔" : "Session has not started yet. Certificates cannot be issued before the session start date; viewing/search/print/export are allowed.") : (lang==="ur" ? "سرٹیفکیٹ جاری کرنے کی اجازت صرف ایڈمن کو ہے۔ آپ سرٹیفکیٹس دیکھ/تلاش/پرنٹ/ایکسپورٹ کر سکتے ہیں۔" : "Issuing certificates is Admin-only. You can view, search, print, and export certificates.")}</div>
         )}
 
         <form className={`flex gap-2 flex-wrap items-end ${canEditCertificates ? "border-t border-amber-100 pt-4" : ""} no-print`}>

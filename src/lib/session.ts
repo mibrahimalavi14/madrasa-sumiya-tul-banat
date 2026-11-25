@@ -59,10 +59,23 @@ export async function requireCurrentSession() {
   return s;
 }
 
+export function hasSessionStarted(session: { startDate?: Date | null } | null | undefined) {
+  if (!session?.startDate) return true;
+  const start = new Date(session.startDate);
+  start.setHours(0, 0, 0, 0);
+  return new Date() >= start;
+}
+
 export async function requireActiveSessionForMutation() {
   const s = await getCurrentSession();
   if (!s) throw new Error("NO_SESSION");
   if (s.status !== "ACTIVE") throw new Error("SESSION_NOT_ACTIVE");
+  return s;
+}
+
+export async function requireStartedSessionForMutation() {
+  const s = await requireActiveSessionForMutation();
+  if (!hasSessionStarted(s)) throw new Error("SESSION_NOT_STARTED");
   return s;
 }
 

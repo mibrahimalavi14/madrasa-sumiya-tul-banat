@@ -203,7 +203,7 @@ export default async function SessionsPage({ searchParams }: { searchParams: Pro
                 <td className="p-3 text-center text-gray-700">
                   <div>{formatDateDMY(s.startDate)} <span className="text-gray-400">to</span> {formatDateDMY(s.endDate)}</div>
                   {s.status === "ACTIVE" && !!s.startDate && new Date() < new Date(s.startDate) && (
-                    <div className="text-[11px] text-sky-700 mt-1">{lang === "ur" ? `سیشن ${formatDateDMY(s.startDate)} کو شروع ہوگا — ڈیٹا اندراج جاری رہ سکتا ہے` : `Starts on ${formatDateDMY(s.startDate)} — data entry can continue`}</div>
+                    <div className="text-[11px] text-sky-700 mt-1">{lang === "ur" ? `سیشن ${formatDateDMY(s.startDate)} کو شروع ہوگا — طالب علم کا اندراج جاری رہ سکتا ہے` : `Starts on ${formatDateDMY(s.startDate)} — student enrollment can continue`}</div>
                   )}
                 </td>
                 <td className="p-3">

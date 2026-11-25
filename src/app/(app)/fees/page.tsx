@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import { getCurrentSession } from "@/lib/session";
+import { getCurrentSession, hasSessionStarted } from "@/lib/session";
 import { getAuthUser } from "@/lib/auth";
 import { getLang } from "@/lib/lang";
 import { t } from "@/lib/i18n";
@@ -13,7 +13,7 @@ import { logAudit } from "@/lib/audit";
 async function upsertFee(formData: FormData) {
   "use server";
   const user = await getAuthUser(); if (user?.role !== "ADMIN" && user?.role !== "ACCOUNTANT") throw new Error("UNAUTHORIZED");
-  const session = await getCurrentSession(); if (!session || session.status !== "ACTIVE") throw new Error("SESSION_NOT_ACTIVE");
+  const session = await getCurrentSession(); if (!session || session.status !== "ACTIVE") throw new Error("SESSION_NOT_ACTIVE"); if (!hasSessionStarted(session)) throw new Error("SESSION_NOT_STARTED");
   const studentId = String(formData.get("studentId"));
   const month = Number(formData.get("month")); const year = Number(formData.get("year"));
 
@@ -51,7 +51,7 @@ async function upsertFee(formData: FormData) {
 async function saveStudentFee(formData: FormData) {
   "use server";
   const user = await getAuthUser(); if (user?.role !== "ADMIN" && user?.role !== "ACCOUNTANT") throw new Error("UNAUTHORIZED");
-  const session = await getCurrentSession(); if (!session || session.status !== "ACTIVE") throw new Error("SESSION_NOT_ACTIVE");
+  const session = await getCurrentSession(); if (!session || session.status !== "ACTIVE") throw new Error("SESSION_NOT_ACTIVE"); if (!hasSessionStarted(session)) throw new Error("SESSION_NOT_STARTED");
   const studentId = String(formData.get("studentId"));
   const raw = String(formData.get("studentMonthlyFee") ?? "").trim();
   const monthlyFee = raw === "" ? null : Number(raw);
@@ -89,6 +89,7 @@ export default async function FeesPage({ searchParams }: { searchParams: Promise
     );
   }
   if (!session) return <p>{lang==="ur" ? "براہ کرم پہلے فعال سیشن بنائیں/منتخب کریں۔" : "Create/select active session first."}</p>;
+  const sessionStarted = hasSessionStarted(session);
   const sp = await searchParams;
   const now = new Date();
   const q = sp.q?.trim() || "";
@@ -191,6 +192,7 @@ export default async function FeesPage({ searchParams }: { searchParams: Promise
           <span>{lang === "ur" ? `باقی: ${unpaidEnrolls.length}` : `Remaining: ${unpaidEnrolls.length}`}</span>
         </div>
       </div>
+      {!sessionStarted && <div className="bg-amber-50 border border-amber-200 text-amber-900 rounded-xl p-4 text-sm">{lang === "ur" ? "سیشن ابھی شروع نہیں ہوا۔ شروع ہونے کی تاریخ سے پہلے فیس کا اندراج/جمع نہیں ہو سکتا، صرف دیکھ سکتے ہیں۔ طالب علم کا اندراج ممکن ہے۔" : "Session has not started yet. Fees cannot be entered/collected before the session start date; viewing is allowed. Student enrollment is allowed."}</div>}
       <form className="bg-white rounded-xl shadow p-4 flex gap-4 items-end no-print flex-wrap border border-emerald-100/80">
         <div className="flex items-center gap-2">
           <label className="text-sm font-medium">{tr.month}</label>
@@ -270,7 +272,7 @@ export default async function FeesPage({ searchParams }: { searchParams: Promise
                 <td className="p-3">
                   <div className="flex items-center gap-2">
                     <input form={sFormId} name="studentMonthlyFee" type="number" step="1" defaultValue={studentFee ?? ""} placeholder={String(defaultAmount)} className="border border-emerald-200/80 rounded-lg px-3 py-2 w-24" />
-                    <button form={sFormId} className="bg-gray-700 hover:bg-gray-800 text-white px-3 py-2 rounded-lg text-xs">{lang === "ur" ? "سیٹ" : "Set"}</button>
+                    <button form={sFormId} disabled={!sessionStarted} className="bg-gray-700 hover:bg-gray-800 text-white px-3 py-2 rounded-lg text-xs disabled:opacity-50 disabled:cursor-not-allowed">{lang === "ur" ? "سیٹ" : "Set"}</button>
                   </div>
                 </td>
                 <td className="p-3">
@@ -288,7 +290,7 @@ export default async function FeesPage({ searchParams }: { searchParams: Promise
                   <span className={`inline-flex px-2.5 py-1 rounded-full text-xs font-semibold ${isPartial ? "bg-amber-100 text-amber-800" : "bg-red-100 text-red-800"}`}>{status}</span>
                 </td>
                 <td className="p-3 text-center">
-                  <button form={formId} className="bg-emerald-800 hover:bg-emerald-900 text-white px-4 py-2 rounded-lg">{tr.save}</button>
+                  <button form={formId} disabled={!sessionStarted} className="bg-emerald-800 hover:bg-emerald-900 text-white px-4 py-2 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed">{tr.save}</button>
                 </td>
                 <td className="p-3 text-center">
                   <Link href={`/fees/voucher?studentId=${en.studentId}&month=${month}&year=${year}`} className="inline-flex px-3 py-1.5 rounded-lg border border-teal-200 bg-teal-50 text-teal-800 font-medium hover:bg-teal-100">{lang === "ur" ? "واؤچر" : "Voucher"}</Link>

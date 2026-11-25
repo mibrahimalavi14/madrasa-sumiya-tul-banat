@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
-import { getCurrentSession } from "@/lib/session";
+import { getCurrentSession, hasSessionStarted } from "@/lib/session";
 import { getAuthUser } from "@/lib/auth";
 import { getLang } from "@/lib/lang";
 import { formatDateDMY, parseDateInput } from "@/lib/utils";
@@ -19,7 +19,7 @@ const STAGES = [
 async function createExam(formData: FormData) {
   "use server";
   const user = await getAuthUser(); if (user?.role !== "ADMIN") throw new Error("UNAUTHORIZED");
-  const session = await getCurrentSession(); if (!session || session.status !== "ACTIVE") throw new Error("NO_SESSION");
+  const session = await getCurrentSession(); if (!session || session.status !== "ACTIVE") throw new Error("NO_SESSION"); if (!hasSessionStarted(session)) throw new Error("SESSION_NOT_STARTED");
   const stageNo = Number(formData.get("stage") || 0);
   const preset = STAGES.find(s => s.stage === stageNo);
   const name = String(formData.get("name") || "").trim();
@@ -46,7 +46,7 @@ async function createExam(formData: FormData) {
 async function selectStudentsForExam(formData: FormData) {
   "use server";
   const user = await getAuthUser(); if (user?.role !== "ADMIN") throw new Error("UNAUTHORIZED");
-  const session = await getCurrentSession(); if (!session || session.status !== "ACTIVE") throw new Error("SESSION_NOT_ACTIVE");
+  const session = await getCurrentSession(); if (!session || session.status !== "ACTIVE") throw new Error("SESSION_NOT_ACTIVE"); if (!hasSessionStarted(session)) throw new Error("SESSION_NOT_STARTED");
   const examId = String(formData.get("examId"));
   const ids = formData.getAll("studentIds").map(String);
   await prisma.examStudent.deleteMany({ where: { examId } });
@@ -58,11 +58,12 @@ async function selectStudentsForExam(formData: FormData) {
 
 export default async function ExaminationPage() {
   const user = await getAuthUser(); if (user?.role !== "ADMIN" && user?.role !== "ACCOUNTANT") redirect("/dashboard");
-  const canEditExams = user?.role === "ADMIN";
   const lang = await getLang();
   const ur = lang === "ur";
   const session = await getCurrentSession();
   if (!session) return <p>{ur ? "براہ کرم پہلے فعال سیشن بنائیں/منتخب کریں۔" : "Create/select an active session first."}</p>;
+  const sessionStarted = hasSessionStarted(session);
+  const canEditExams = user?.role === "ADMIN" && sessionStarted;
 
   const existingStages = await prisma.exam.findMany({
     where: { sessionId: session.id, stage: { in: STAGES.map(s => s.stage) } },
@@ -118,7 +119,11 @@ export default async function ExaminationPage() {
         <p className="text-sm text-emerald-50 mt-1">{ur ? `سیشن: ${session.name} — سالانہ امتحانی کیلنڈر اور چاروں امتحانات کا ریکارڈ` : `Session: ${session.name} — Annual exam calendar and records of all four exams`}</p>
       </div>
 
-
+      {!sessionStarted && (
+        <div className="bg-amber-50 border border-amber-200 text-amber-900 rounded-xl p-4 text-sm">
+          {ur ? "سیشن ابھی شروع نہیں ہوا۔ شروع ہونے کی تاریخ سے پہلے امتحانات/نتائج/فیس وغیرہ کا اندراج نہیں ہو سکتا، صرف دیکھ سکتے ہیں۔ طالب علم کا اندراج ممکن ہے۔" : "Session has not started yet. Exams/results/fees etc. cannot be entered before the session start date; viewing is allowed. Student enrollment is allowed."}
+        </div>
+      )}
 
       <div className="bg-white rounded-2xl shadow-sm border border-emerald-100 p-5">
         <h2 className="text-lg font-semibold text-emerald-900 mb-1">{ur ? "سالانہ امتحانی کیلنڈر" : "Annual Exam Calendar"}</h2>

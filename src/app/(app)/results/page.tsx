@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
-import { getCurrentSession } from "@/lib/session";
+import { getCurrentSession, hasSessionStarted } from "@/lib/session";
 import { getAuthUser } from "@/lib/auth";
 import { getLang } from "@/lib/lang";
 import { redirect } from "next/navigation";
@@ -11,7 +11,7 @@ import { logAudit } from "@/lib/audit";
 async function saveWritten(formData: FormData) {
   "use server";
   const user = await getAuthUser(); if (user?.role !== "ADMIN") throw new Error("UNAUTHORIZED");
-  const session = await getCurrentSession(); if (!session || session.status !== "ACTIVE") throw new Error("SESSION_NOT_ACTIVE");
+  const session = await getCurrentSession(); if (!session || session.status !== "ACTIVE") throw new Error("SESSION_NOT_ACTIVE"); if (!hasSessionStarted(session)) throw new Error("SESSION_NOT_STARTED");
   const examId = String(formData.get("examId")); const studentId = String(formData.get("studentId"));
   const att = String(formData.get("attendance") || "PRESENT").toUpperCase();
   const isAbsent = att === "ABSENT" || att === "LEAVE";
@@ -46,7 +46,7 @@ async function saveWritten(formData: FormData) {
 async function saveAllWritten(formData: FormData) {
   "use server";
   const user = await getAuthUser(); if (user?.role !== "ADMIN") throw new Error("UNAUTHORIZED");
-  const session = await getCurrentSession(); if (!session || session.status !== "ACTIVE") throw new Error("SESSION_NOT_ACTIVE");
+  const session = await getCurrentSession(); if (!session || session.status !== "ACTIVE") throw new Error("SESSION_NOT_ACTIVE"); if (!hasSessionStarted(session)) throw new Error("SESSION_NOT_STARTED");
   const examId = String(formData.get("examId"));
   const studentIds = formData.getAll("studentIds").map(String);
   for (const studentId of studentIds) {
@@ -102,7 +102,8 @@ export default async function ResultsPage({ searchParams }: { searchParams: Prom
     );
   }
   if (!session) return <p>{ur ? "براہ کرم پہلے فعال سیشن بنائیں/منتخب کریں۔" : "Create/select active session first."}</p>;
-  const canEditResults = user?.role === "ADMIN";
+  const sessionStarted = hasSessionStarted(session);
+  const canEditResults = user?.role === "ADMIN" && sessionStarted;
   const examsRaw = await prisma.exam.findMany({ where: { sessionId: session.id }, orderBy: { createdAt: "asc" } });
   const exams = [...examsRaw].sort((a, b) => ((a as any).stage ?? 99) - ((b as any).stage ?? 99) || a.createdAt.getTime() - b.createdAt.getTime());
   const examWiseExams = exams.filter(e => Number((e as any).stage) !== 4);
@@ -354,7 +355,7 @@ export default async function ResultsPage({ searchParams }: { searchParams: Prom
             {exam.students.length > 0 && <div className="mt-3 flex justify-end"><button className="bg-emerald-800 hover:bg-emerald-900 text-white px-4 py-2 rounded-lg font-medium">{ur ? "سب محفوظ کریں (Save All)" : "Save All"}</button></div>}
           </form>
         </div>}
-        {!canEditResults && !lockedExamView && <div className="bg-blue-50 border border-blue-200 text-blue-900 rounded-xl p-4 text-sm">{ur ? "تحریری نمبر درج کرنے/محفوظ کرنے کی اجازت صرف ایڈمن کو ہے۔ آپ نتائج صرف دیکھ/پرنٹ/ایکسپورٹ کر سکتے ہیں۔" : "Entering/saving written marks is Admin-only. You can view, print, and export results."}</div>}
+        {!canEditResults && !lockedExamView && <div className={`${!sessionStarted ? "bg-amber-50 border-amber-200 text-amber-900" : "bg-blue-50 border-blue-200 text-blue-900"} border rounded-xl p-4 text-sm`}>{!sessionStarted ? (ur ? "سیشن ابھی شروع نہیں ہوا۔ شروع ہونے کی تاریخ سے پہلے نتائج/نمبر درج نہیں کیے جا سکتے، صرف دیکھ سکتے ہیں۔" : "Session has not started yet. Results/marks cannot be entered before the session start date; viewing is allowed.") : (ur ? "تحریری نمبر درج کرنے/محفوظ کرنے کی اجازت صرف ایڈمن کو ہے۔ آپ نتائج صرف دیکھ/پرنٹ/ایکسپورٹ کر سکتے ہیں۔" : "Entering/saving written marks is Admin-only. You can view, print, and export results.")}</div>}
         <div className="bg-white rounded-2xl shadow-sm border border-emerald-100 p-4 overflow-auto">
           <div className="flex items-center justify-between gap-2 flex-wrap mb-3">
             <h2 className={`font-semibold text-emerald-950 ${ur ? "font-urdu" : ""}`} dir={ur?"rtl":"ltr"}>{lockedExamView ? (ur ? "اس مرحلے کے تفصیلی نتائج" : "Stage Result Details") : (ur ? "تمام محفوظ نتائج" : "All Saved Results")} - {examDisplayName(exam)}</h2>

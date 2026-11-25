@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { getAuthUser } from "@/lib/auth";
-import { getCurrentSession } from "@/lib/session";
+import { getCurrentSession, hasSessionStarted } from "@/lib/session";
 import { notFound, redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import Link from "next/link";
@@ -13,7 +13,7 @@ const SEC3_COUNT = 5;  // Short Q/A, 4 marks each = 20
 async function saveWrittenPaper(formData: FormData) {
   "use server";
   const user = await getAuthUser(); if (user?.role !== "ADMIN") throw new Error("UNAUTHORIZED");
-  const session = await getCurrentSession(); if (!session || session.status !== "ACTIVE") throw new Error("SESSION_NOT_ACTIVE");
+  const session = await getCurrentSession(); if (!session || session.status !== "ACTIVE") throw new Error("SESSION_NOT_ACTIVE"); if (!hasSessionStarted(session)) throw new Error("SESSION_NOT_STARTED");
   const paperId = String(formData.get("paperId"));
   const examId = String(formData.get("examId"));
   const paper = await prisma.questionPaper.findUnique({ where: { id: paperId } });
@@ -48,7 +48,7 @@ async function saveWrittenPaper(formData: FormData) {
 async function addOralQuestion(formData: FormData) {
   "use server";
   const user = await getAuthUser(); if (user?.role !== "ADMIN") throw new Error("UNAUTHORIZED");
-  const session = await getCurrentSession(); if (!session || session.status !== "ACTIVE") throw new Error("SESSION_NOT_ACTIVE");
+  const session = await getCurrentSession(); if (!session || session.status !== "ACTIVE") throw new Error("SESSION_NOT_ACTIVE"); if (!hasSessionStarted(session)) throw new Error("SESSION_NOT_STARTED");
   const paperId = String(formData.get("paperId"));
   const examId = String(formData.get("examId"));
   const count = await prisma.question.count({ where: { paperId } });
@@ -66,7 +66,7 @@ async function addOralQuestion(formData: FormData) {
 async function deleteQuestion(formData: FormData) {
   "use server";
   const user = await getAuthUser(); if (user?.role !== "ADMIN") throw new Error("UNAUTHORIZED");
-  const session = await getCurrentSession(); if (!session || session.status !== "ACTIVE") throw new Error("SESSION_NOT_ACTIVE");
+  const session = await getCurrentSession(); if (!session || session.status !== "ACTIVE") throw new Error("SESSION_NOT_ACTIVE"); if (!hasSessionStarted(session)) throw new Error("SESSION_NOT_STARTED");
   const id = String(formData.get("id")); const examId = String(formData.get("examId")); const paperId = String(formData.get("paperId"));
   await prisma.question.delete({ where: { id } });
   await logAudit({ actorUserId: user.id, actorLabel: user.username || user.name, action: "EXAM_QUESTION_DELETE", entityType: "QuestionPaper", entityId: paperId, details: JSON.stringify({ examId, paperId, questionId: id }) });
