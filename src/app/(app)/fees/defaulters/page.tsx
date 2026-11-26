@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { getCurrentSession, inSessionPeriod as sessionPeriodCheck } from "@/lib/session";
+import MonthYearFilter from "@/components/MonthYearFilter";
 import { getAuthUser } from "@/lib/auth";
 import { getLang } from "@/lib/lang";
 import { redirect } from "next/navigation";
@@ -44,6 +45,7 @@ export default async function FeesDefaultersPage({ searchParams }: { searchParam
     }
   }
   const monthOptions = Array.from({ length: 12 }, (_, i) => i + 1).filter(m => inSessionPeriod(year, m));
+  const monthOptionsByYear = Object.fromEntries(yearOptions.map(yy => [String(yy), Array.from({ length: 12 }, (_, i) => i + 1).filter(mm => inSessionPeriod(yy, mm))]));
   const valid = inSessionPeriod(year, month);
 
   const [defaultAmountSettingSession, defaultAmountSettingGlobal, enrollsAllRaw, fees] = await Promise.all([
@@ -101,14 +103,17 @@ export default async function FeesDefaultersPage({ searchParams }: { searchParam
             <p className="text-sm text-gray-600 mt-1">{ur ? "سیشن" : "Session"}: <b>{session.name}</b> · {ur ? "مہینہ/سال" : "Month/Year"}: <b>{month}/{year}</b></p>
           </div>
           <form className="no-print flex items-end gap-2 flex-wrap">
-            <div>
-              <label className="block text-xs text-gray-600 mb-1">{ur ? "مہینہ" : "Month"}</label>
-              <select name="month" defaultValue={String(month)} className="border rounded px-2 py-1.5 text-sm">{monthOptions.map(m => <option key={m} value={m}>{m}</option>)}</select>
-            </div>
-            <div>
-              <label className="block text-xs text-gray-600 mb-1">{ur ? "سال" : "Year"}</label>
-              <select name="year" defaultValue={String(year)} className="border rounded px-2 py-1.5 text-sm">{yearOptions.map(y => <option key={y} value={y}>{y}</option>)}</select>
-            </div>
+            <MonthYearFilter
+              yearOptions={yearOptions}
+              monthOptionsByYear={monthOptionsByYear}
+              defaultYear={year}
+              defaultMonth={month}
+              monthLabel={ur ? "مہینہ" : "Month"}
+              yearLabel={ur ? "سال" : "Year"}
+              className="flex items-end gap-2 flex-wrap"
+              selectClassName="border rounded px-2 py-1.5 text-sm bg-white"
+              labelClassName="text-xs text-gray-600"
+            />
             <button className="bg-gray-800 text-white px-3 py-1.5 rounded text-sm">{ur ? "لوڈ" : "Load"}</button>
           </form>
         </div>

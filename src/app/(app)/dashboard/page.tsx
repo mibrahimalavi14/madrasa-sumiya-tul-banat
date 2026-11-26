@@ -2,6 +2,7 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { getCurrentSession, inSessionPeriod } from "@/lib/session";
 import ScrollToId from "@/components/ScrollToId";
+import MonthYearFilter from "@/components/MonthYearFilter";
 import { getAuthUser } from "@/lib/auth";
 import { getLang } from "@/lib/lang";
 import { t } from "@/lib/i18n";
@@ -79,6 +80,7 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
   let trendMonths: Array<{ month: number; year: number; label: string }> = [];
   let yearOptions: number[] = [actualY];
   let monthOptions: number[] = Array.from({ length: 12 }, (_, i) => i + 1);
+  let monthOptionsByYear: Record<string, number[]> = { [String(actualY)]: Array.from({ length: 12 }, (_, i) => i + 1) };
 
   if (session) {
     const sStart = session.startDate ? new Date(session.startDate) : null;
@@ -101,6 +103,7 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
     if (!yearOptions.includes(y)) y = yearOptions[0];
     monthOptions = Array.from({ length: 12 }, (_, i) => i + 1).filter(mm => inSessionPeriodCheck(y, mm));
     if (!monthOptions.includes(m)) m = monthOptions[0] ?? m;
+    const monthOptionsByYear = Object.fromEntries(yearOptions.map(yy => [String(yy), Array.from({ length: 12 }, (_, i) => i + 1).filter(mm => inSessionPeriodCheck(yy, mm))]));
 
     const sid = session.id;
     const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
@@ -338,14 +341,17 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
             <h2 className="font-semibold text-lg text-emerald-950">{ur ? "فیس خلاصہ (مزید واضح)" : "Fee Summary (Detailed)"}</h2>
             <div className="flex items-center gap-2 flex-wrap">
               <form className="flex items-center gap-2 flex-wrap">
-                <label className="text-xs text-gray-500">{ur ? "مہینہ" : "Month"}</label>
-                <select name="month" defaultValue={String(m)} className="border rounded px-2 py-1 text-sm bg-white">
-                  {monthOptions.map(mm => <option key={mm} value={mm}>{mm}</option>)}
-                </select>
-                <label className="text-xs text-gray-500">{ur ? "سال" : "Year"}</label>
-                <select name="year" defaultValue={String(y)} className="border rounded px-2 py-1 text-sm bg-white">
-                  {yearOptions.map(yy => <option key={yy} value={yy}>{yy}</option>)}
-                </select>
+                <MonthYearFilter
+                  yearOptions={yearOptions}
+                  monthOptionsByYear={monthOptionsByYear}
+                  defaultYear={y}
+                  defaultMonth={m}
+                  monthLabel={ur ? "مہینہ" : "Month"}
+                  yearLabel={ur ? "سال" : "Year"}
+                  className="flex items-center gap-2 flex-wrap"
+                  selectClassName="border rounded px-2 py-1 text-sm bg-white"
+                  labelClassName="text-xs text-gray-500"
+                />
                 <button className="bg-emerald-800 text-white px-3 py-1 rounded text-sm">{ur ? "فلٹر" : "Filter"}</button>
               </form>
               <Link href="/fees" className="text-sm text-emerald-700 underline">{ur ? "فیس کھولیں" : "Open Fees"}</Link>

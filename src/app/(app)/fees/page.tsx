@@ -9,6 +9,7 @@ import { revalidatePath } from "next/cache";
 import Link from "next/link";
 import ExportCsvDetails from "@/components/ExportCsvDetails";
 import ScrollToId from "@/components/ScrollToId";
+import MonthYearFilter from "@/components/MonthYearFilter";
 import DateInputDMY from "@/components/DateInputDMY";
 import { logAudit } from "@/lib/audit";
 
@@ -133,6 +134,7 @@ export default async function FeesPage({ searchParams }: { searchParams: Promise
     }
   }
   const monthOptions = Array.from({ length: 12 }, (_, i) => i + 1).filter(m => inSessionPeriod(year, m));
+  const monthOptionsByYear = Object.fromEntries(yearOptions.map(yy => [String(yy), Array.from({ length: 12 }, (_, i) => i + 1).filter(mm => inSessionPeriod(yy, mm))]));
 
   const isInSessionRange = inSessionPeriod(year, month);
   const studentFilter = q ? { OR: [
@@ -190,18 +192,17 @@ export default async function FeesPage({ searchParams }: { searchParams: Promise
       </div>
       {!sessionStarted && <div className="bg-amber-50 border border-amber-200 text-amber-900 rounded-xl p-4 text-sm">{lang === "ur" ? "سیشن ابھی شروع نہیں ہوا۔ شروع ہونے کی تاریخ سے پہلے فیس کا اندراج/جمع نہیں ہو سکتا، صرف دیکھ سکتے ہیں۔" : "Session has not started yet. Fees cannot be entered/collected before the session start date; viewing is allowed."}</div>}
       <form className="bg-white rounded-xl shadow p-4 flex gap-4 items-end no-print flex-wrap border border-emerald-100/80">
-        <div className="flex items-center gap-2">
-          <label className="text-sm font-medium">{tr.month}</label>
-          <select name="month" defaultValue={String(month)} className="border border-emerald-200/80 rounded-md px-2 py-1.5 w-16 text-sm h-9 bg-white">
-            {monthOptions.map(m => <option key={m} value={m}>{m}</option>)}
-          </select>
-        </div>
-        <div className="flex items-center gap-2 !border-t-0 !mt-0 !pt-0">
-          <label className="text-sm font-medium">{tr.year}</label>
-          <select name="year" defaultValue={String(year)} className="border border-emerald-200/80 rounded-md px-2 py-1.5 w-20 text-sm h-9 bg-white">
-            {yearOptions.map(y => <option key={y} value={y}>{y}</option>)}
-          </select>
-        </div>
+        <MonthYearFilter
+          yearOptions={yearOptions}
+          monthOptionsByYear={monthOptionsByYear}
+          defaultYear={year}
+          defaultMonth={month}
+          monthLabel={tr.month}
+          yearLabel={tr.year}
+          className="flex items-center gap-3 flex-wrap"
+          selectClassName="border border-emerald-200/80 rounded-md px-2 py-1.5 text-sm h-9 bg-white"
+          labelClassName="text-sm font-medium"
+        />
         <div className="flex items-center !border-t-0 !mt-0 !pt-0">
           <input name="q" defaultValue={q} placeholder={lang === "ur" ? "داخلہ نمبر / نام تلاش کریں" : "Search Admission No / Name"} className="border border-emerald-200/80 rounded-md px-3 py-1.5 w-64 text-sm h-9"/>
         </div>
