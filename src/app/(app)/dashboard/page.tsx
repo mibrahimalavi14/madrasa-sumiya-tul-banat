@@ -76,6 +76,8 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
   let recentCerts: any[] = [];
   let monthFeeTrendRows: any[] = [];
   let trendMonths: Array<{ month: number; year: number; label: string }> = [];
+  let yearOptions: number[] = [actualY];
+  let monthOptions: number[] = Array.from({ length: 12 }, (_, i) => i + 1);
 
   if (session) {
     const sStart = session.startDate ? new Date(session.startDate) : null;
@@ -87,6 +89,23 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
       if (nowIdx < startIdx) { y = sStart.getFullYear(); m = sStart.getMonth() + 1; }
       else if (nowIdx > endIdx) { y = sEnd.getFullYear(); m = sEnd.getMonth() + 1; }
     }
+    const inSessionPeriod = (yy: number, mm: number) => {
+      if (!sStart || !sEnd) return true;
+      const startIdx = sStart.getFullYear() * 12 + sStart.getMonth();
+      const endIdx = sEnd.getFullYear() * 12 + sEnd.getMonth();
+      const curIdx = yy * 12 + (mm - 1);
+      return curIdx >= startIdx && curIdx <= endIdx;
+    };
+    if (sStart && sEnd) {
+      const ys = new Set<number>();
+      for (let yy = sStart.getFullYear(); yy <= sEnd.getFullYear(); yy++) ys.add(yy);
+      yearOptions = [...ys].sort((a, b) => a - b);
+    } else {
+      yearOptions = [actualY];
+    }
+    if (!yearOptions.includes(y)) y = yearOptions[0];
+    monthOptions = Array.from({ length: 12 }, (_, i) => i + 1).filter(mm => inSessionPeriod(y, mm));
+    if (!monthOptions.includes(m)) m = monthOptions[0] ?? m;
 
     const sid = session.id;
     const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
@@ -324,9 +343,13 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
             <div className="flex items-center gap-2 flex-wrap">
               <form className="flex items-center gap-2 flex-wrap">
                 <label className="text-xs text-gray-500">{ur ? "مہینہ" : "Month"}</label>
-                <input name="month" type="number" min={1} max={12} defaultValue={m} className="w-20 border rounded px-2 py-1 text-sm" />
+                <select name="month" defaultValue={String(m)} className="border rounded px-2 py-1 text-sm bg-white">
+                  {monthOptions.map(mm => <option key={mm} value={mm}>{mm}</option>)}
+                </select>
                 <label className="text-xs text-gray-500">{ur ? "سال" : "Year"}</label>
-                <input name="year" type="number" min={2000} max={2100} defaultValue={y} className="w-24 border rounded px-2 py-1 text-sm" />
+                <select name="year" defaultValue={String(y)} className="border rounded px-2 py-1 text-sm bg-white">
+                  {yearOptions.map(yy => <option key={yy} value={yy}>{yy}</option>)}
+                </select>
                 <button className="bg-emerald-800 text-white px-3 py-1 rounded text-sm">{ur ? "فلٹر" : "Filter"}</button>
               </form>
               <Link href="/fees" className="text-sm text-emerald-700 underline">{ur ? "فیس کھولیں" : "Open Fees"}</Link>
