@@ -202,10 +202,10 @@ export default async function ResultsPage({ searchParams }: { searchParams: Prom
               {q && <Link href="/results?view=annual" className="text-sm text-emerald-700 underline">{ur ? "صاف کریں" : "Clear"}</Link>}
             </form>
           </div>
-          <table className="w-full text-sm"><thead className="bg-emerald-50"><tr><th className="p-2">{ur ? "پوزیشن" : "Position"}</th><th className="p-2">{ur ? "رول نمبر" : "Roll No"}</th><th className="p-2">{ur ? "طالب علم کا نام" : "Student Name"}</th><th className="p-2">{ur ? "امتحان 1" : "Exam 1"}</th><th className="p-2">{ur ? "امتحان 2" : "Exam 2"}</th><th className="p-2">{ur ? "امتحان 3" : "Exam 3"}</th><th className="p-2">{ur ? "امتحان 4" : "Exam 4"}</th><th className="p-2">{ur ? "حاصل کردہ نمبر" : "Obtained Marks"}</th><th className="p-2">{ur ? "کل نمبر" : "Total Marks"}</th><th className="p-2">{ur ? "فیصد" : "Percentage"}</th><th className="p-2">{ur ? "گریڈ" : "Grade"}</th><th className="p-2">{ur ? "حیثیت" : "Status"}</th><th className="p-2">{ur ? "رزلٹ کارڈ" : "Result Card"}</th></tr></thead>
+          <table className="w-full text-sm"><thead className="bg-emerald-50"><tr><th className="p-2">{ur ? "پوزیشن" : "Position"}</th><th className="p-2">{ur ? "رول نمبر" : "Roll No"}</th><th className="p-2">{ur ? "طالب علم کا نام" : "Student Name"}</th><th className="p-2">{ur ? "امتحان 1" : "Exam 1"}</th><th className="p-2">{ur ? "امتحان 2" : "Exam 2"}</th><th className="p-2">{ur ? "امتحان 3" : "Exam 3"}</th><th className="p-2">{ur ? "امتحان 4" : "Exam 4"}</th><th className="p-2">{ur ? "حاصل کردہ نمبر" : "Obtained Marks"}</th><th className="p-2">{ur ? "کل نمبر" : "Total Marks"}</th><th className="p-2">{ur ? "فیصد" : "Percentage"}</th><th className="p-2">{ur ? "گریڈ" : "Grade"}</th><th className="p-2">{ur ? "حیثیت" : "Status"}</th><th className="p-2">{ur ? "رزلٹ کارڈز" : "Result Cards"}</th></tr></thead>
           <tbody>
             {annualWithPos.map(a => (
-              <tr key={a.id} className="border-t"><td className="p-2 text-center">{a.position ?? "-"}</td><td className="p-2 text-center">{a.rollNo || "-"}</td><td className="p-2">{a.student.nameEn}</td><td className="p-2 text-center">{a.stagePct?.[1] != null ? a.stagePct[1].toFixed(1) : "-"}</td><td className="p-2 text-center">{a.stagePct?.[2] != null ? a.stagePct[2].toFixed(1) : "-"}</td><td className="p-2 text-center">{a.stagePct?.[3] != null ? a.stagePct[3].toFixed(1) : "-"}</td><td className="p-2 text-center">{a.stagePct?.[4] != null ? a.stagePct[4].toFixed(1) : "-"}</td><td className="p-2 text-center">{a.totalObtained}</td><td className="p-2 text-center">{a.totalMarks}</td><td className="p-2 text-center font-medium">{a.percentage.toFixed(2)}</td><td className="p-2 text-center font-semibold">{a.grade}</td><td className={`p-2 text-center ${a.status==="Pass"?"text-emerald-700":"text-red-700"}`}>{a.status}</td><td className="p-2 text-center"><Link className="text-emerald-700 underline" href={`/results/annual-card/${a.student.id}`}>{ur ? "پرنٹ" : "Print"}</Link></td></tr>
+              <tr key={a.id} className="border-t"><td className="p-2 text-center">{a.position ?? "-"}</td><td className="p-2 text-center">{a.rollNo || "-"}</td><td className="p-2">{a.student.nameEn}</td><td className="p-2 text-center">{a.stagePct?.[1] != null ? a.stagePct[1].toFixed(1) : "-"}</td><td className="p-2 text-center">{a.stagePct?.[2] != null ? a.stagePct[2].toFixed(1) : "-"}</td><td className="p-2 text-center">{a.stagePct?.[3] != null ? a.stagePct[3].toFixed(1) : "-"}</td><td className="p-2 text-center">{a.stagePct?.[4] != null ? a.stagePct[4].toFixed(1) : "-"}</td><td className="p-2 text-center">{a.totalObtained}</td><td className="p-2 text-center">{a.totalMarks}</td><td className="p-2 text-center font-medium">{a.percentage.toFixed(2)}</td><td className="p-2 text-center font-semibold">{a.grade}</td><td className={`p-2 text-center ${a.status==="Pass"?"text-emerald-700":"text-red-700"}`}>{a.status}</td><td className="p-2 text-center"><div className="flex flex-col gap-1 items-center"><Link className="text-emerald-700 underline text-xs font-medium" href={`/results/annual-card/${a.student.id}`}>{ur ? "تمام مراحل" : "All Stages"}</Link><Link className="text-blue-700 underline text-xs font-medium" href={`/results/stage-card/${a.student.id}/4`}>{ur ? "سالانہ (مرحلہ 4)" : "Annual (Stage 4)"}</Link></div></td></tr>
             ))}
             {annualWithPos.length===0 && <tr><td colSpan={13} className="p-4 text-center text-gray-500">{ur ? "ابھی سالانہ نتائج نہیں۔ شامل امتحانات کے نتائج محفوظ کریں۔" : "No annual results yet. Save exam results for included exams."}</td></tr>}
           </tbody></table>
@@ -384,6 +384,7 @@ function ResultsTable({ results, ur = false, rollMap }: { results: any[]; ur?: b
           <th className="p-2">%</th>
           <th className="p-2">{ur ? "گریڈ" : "Grade"}</th>
           <th className="p-2">{ur ? "حیثیت" : "Status"}</th>
+          <th className="p-2">{ur ? "رزلٹ کارڈ" : "Result Card"}</th>
         </tr>
       </thead>
       <tbody>
@@ -401,10 +402,11 @@ function ResultsTable({ results, ur = false, rollMap }: { results: any[]; ur?: b
               <td className="p-2 text-center">{r.percentage != null ? Number(r.percentage).toFixed(2) : "-"}</td>
               <td className="p-2 text-center font-semibold">{r.grade || "-"}</td>
               <td className={`p-2 text-center ${r.status === "Pass" ? "text-emerald-700" : "text-red-700"}`}>{(r.remarks === "ABSENT" || r.remarks === "LEAVE") ? (ur ? (r.remarks === "ABSENT" ? "غیر حاضر" : "رخصت") : r.remarks) : (r.status || "-")}</td>
+              <td className="p-2 text-center">{r.exam?.stage ? <Link className="text-emerald-700 underline font-medium" href={`/results/stage-card/${r.studentId}/${r.exam.stage}`}>{ur ? "پرنٹ" : "Print"}</Link> : "-"}</td>
             </tr>
           );
         })}
-        {results.length === 0 && <tr><td colSpan={10} className="p-4 text-center text-gray-500">{ur ? "ابھی کوئی نتیجہ محفوظ نہیں۔" : "No results saved yet."}</td></tr>}
+        {results.length === 0 && <tr><td colSpan={11} className="p-4 text-center text-gray-500">{ur ? "ابھی کوئی نتیجہ محفوظ نہیں۔" : "No results saved yet."}</td></tr>}
       </tbody>
     </table>
   );
