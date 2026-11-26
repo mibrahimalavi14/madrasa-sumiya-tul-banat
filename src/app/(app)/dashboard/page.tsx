@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
-import { getCurrentSession } from "@/lib/session";
+import { getCurrentSession, inSessionPeriod } from "@/lib/session";
+import ScrollToId from "@/components/ScrollToId";
 import { getAuthUser } from "@/lib/auth";
 import { getLang } from "@/lib/lang";
 import { t } from "@/lib/i18n";
@@ -89,13 +90,7 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
       if (nowIdx < startIdx) { y = sStart.getFullYear(); m = sStart.getMonth() + 1; }
       else if (nowIdx > endIdx) { y = sEnd.getFullYear(); m = sEnd.getMonth() + 1; }
     }
-    const inSessionPeriod = (yy: number, mm: number) => {
-      if (!sStart || !sEnd) return true;
-      const startIdx = sStart.getFullYear() * 12 + sStart.getMonth();
-      const endIdx = sEnd.getFullYear() * 12 + sEnd.getMonth();
-      const curIdx = yy * 12 + (mm - 1);
-      return curIdx >= startIdx && curIdx <= endIdx;
-    };
+    const inSessionPeriodCheck = (yy: number, mm: number) => inSessionPeriod(yy, mm, session);
     if (sStart && sEnd) {
       const ys = new Set<number>();
       for (let yy = sStart.getFullYear(); yy <= sEnd.getFullYear(); yy++) ys.add(yy);
@@ -104,7 +99,7 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
       yearOptions = [actualY];
     }
     if (!yearOptions.includes(y)) y = yearOptions[0];
-    monthOptions = Array.from({ length: 12 }, (_, i) => i + 1).filter(mm => inSessionPeriod(y, mm));
+    monthOptions = Array.from({ length: 12 }, (_, i) => i + 1).filter(mm => inSessionPeriodCheck(y, mm));
     if (!monthOptions.includes(m)) m = monthOptions[0] ?? m;
 
     const sid = session.id;
@@ -337,7 +332,8 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
       </div>
 
       <div className="grid lg:grid-cols-3 gap-5">
-        <div className="bg-white rounded-2xl shadow-sm border border-emerald-100 p-5 lg:col-span-2">
+        {(sp.month || sp.year) ? <ScrollToId id="fee-summary" /> : null}
+        <div id="fee-summary" className="bg-white rounded-2xl shadow-sm border border-emerald-100 p-5 lg:col-span-2 scroll-mt-4">
           <div className="flex items-center justify-between gap-3 flex-wrap mb-3">
             <h2 className="font-semibold text-lg text-emerald-950">{ur ? "فیس خلاصہ (مزید واضح)" : "Fee Summary (Detailed)"}</h2>
             <div className="flex items-center gap-2 flex-wrap">

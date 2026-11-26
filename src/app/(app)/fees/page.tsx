@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import { getCurrentSession, hasSessionStarted } from "@/lib/session";
+import { getCurrentSession, hasSessionStarted, inSessionPeriod as sessionPeriodCheck } from "@/lib/session";
 import { getAuthUser } from "@/lib/auth";
 import { getLang } from "@/lib/lang";
 import { t } from "@/lib/i18n";
@@ -8,6 +8,7 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import Link from "next/link";
 import ExportCsvDetails from "@/components/ExportCsvDetails";
+import ScrollToId from "@/components/ScrollToId";
 import DateInputDMY from "@/components/DateInputDMY";
 import { logAudit } from "@/lib/audit";
 
@@ -98,13 +99,7 @@ export default async function FeesPage({ searchParams }: { searchParams: Promise
   // Session-bound month/year options (only months/years within this session)
   const sStart = session.startDate ? new Date(session.startDate) : null;
   const sEnd = session.endDate ? new Date(session.endDate) : null;
-  const inSessionPeriod = (y: number, m: number) => {
-    if (!sStart || !sEnd) return true;
-    const startIdx = sStart.getFullYear() * 12 + sStart.getMonth();
-    const endIdx = sEnd.getFullYear() * 12 + sEnd.getMonth();
-    const curIdx = y * 12 + (m - 1);
-    return curIdx >= startIdx && curIdx <= endIdx;
-  };
+  const inSessionPeriod = (y: number, m: number) => sessionPeriodCheck(y, m, session);
   const yearSet = new Set<number>();
   if (sStart && sEnd) {
     for (let y = sStart.getFullYear(); y <= sEnd.getFullYear(); y++) yearSet.add(y);
@@ -236,7 +231,8 @@ export default async function FeesPage({ searchParams }: { searchParams: Promise
           </div>
         </ExportCsvDetails>
       </div>
-      <div className="bg-white rounded-2xl shadow-sm overflow-auto border border-emerald-100/80">
+      {(sp.month || sp.year || q) ? <ScrollToId id="fee-list" /> : null}
+      <div id="fee-list" className="bg-white rounded-2xl shadow-sm overflow-auto border border-emerald-100/80 scroll-mt-4">
         <div className="px-4 py-3 border-b border-emerald-100 bg-emerald-50/40 flex items-center justify-between gap-3 flex-wrap">
           <h2 className="font-semibold text-emerald-900">{lang === "ur" ? "باقی / جزوی فیس (اس مہینے)" : "Pending / Partial Fees (This Month)"}</h2>
           <span className="text-sm text-gray-600">{lang === "ur" ? `تعداد: ${unpaidEnrolls.length}` : `Count: ${unpaidEnrolls.length}`}</span>

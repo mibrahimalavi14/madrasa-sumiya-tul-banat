@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import { getCurrentSession } from "@/lib/session";
+import { getCurrentSession, inSessionPeriod } from "@/lib/session";
 import { getAuthUser } from "@/lib/auth";
 import { notFound, redirect } from "next/navigation";
 import Logo from "@/components/Logo";
@@ -18,11 +18,7 @@ export default async function FeeVouchersBulkPage({ searchParams }: { searchPara
   const year = Number(sp.year || now.getFullYear()) || now.getFullYear();
   const statusFilter = sp.status === "all" ? "all" : "pending"; // pending = unpaid/partial, all = all non-exempt
 
-  const sessionStart = new Date(session.startDate);
-  const sessionStartYear = sessionStart.getFullYear();
-  const sessionStartMonth = sessionStart.getMonth() + 1;
-  const inRange = year > sessionStartYear || (year === sessionStartYear && month >= sessionStartMonth);
-  if (!inRange) notFound();
+  if (!inSessionPeriod(year, month, session)) notFound();
 
   const [defaultAmountSettingSession, defaultAmountSettingGlobal, enrolls, fees] = await Promise.all([
     prisma.setting.findFirst({ where: { key: "monthlyFee", sessionId: session.id }, select: { value: true } }),

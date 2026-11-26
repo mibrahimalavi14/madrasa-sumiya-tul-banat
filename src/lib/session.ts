@@ -66,6 +66,17 @@ export function hasSessionStarted(session: { startDate?: Date | null } | null | 
   return new Date() >= start;
 }
 
+export function inSessionPeriod(y: number, m: number, session: { startDate?: Date | null; endDate?: Date | null } | null | undefined) {
+  if (!session?.startDate) return true;
+  const sStart = new Date(session.startDate);
+  const startIdx = sStart.getFullYear() * 12 + sStart.getMonth();
+  const sEnd = session.endDate ? new Date(session.endDate) : null;
+  const endIdxByEnd = sEnd ? sEnd.getFullYear() * 12 + sEnd.getMonth() : startIdx + 11;
+  const endIdx = Math.min(endIdxByEnd, startIdx + 11);
+  const curIdx = y * 12 + (m - 1);
+  return curIdx >= startIdx && curIdx <= endIdx;
+}
+
 export async function requireActiveSessionForMutation() {
   const s = await getCurrentSession();
   if (!s) throw new Error("NO_SESSION");

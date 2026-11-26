@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import { getCurrentSession } from "@/lib/session";
+import { getCurrentSession, inSessionPeriod as sessionPeriodCheck } from "@/lib/session";
 import { getAuthUser } from "@/lib/auth";
 import { getLang } from "@/lib/lang";
 import { redirect } from "next/navigation";
@@ -18,13 +18,7 @@ export default async function FeesDefaultersPage({ searchParams }: { searchParam
   const now = new Date();
   const sStart = session.startDate ? new Date(session.startDate) : null;
   const sEnd = session.endDate ? new Date(session.endDate) : null;
-  const inSessionPeriod = (y: number, m: number) => {
-    if (!sStart || !sEnd) return true;
-    const startIdx = sStart.getFullYear() * 12 + sStart.getMonth();
-    const endIdx = sEnd.getFullYear() * 12 + sEnd.getMonth();
-    const curIdx = y * 12 + (m - 1);
-    return curIdx >= startIdx && curIdx <= endIdx;
-  };
+  const inSessionPeriod = (y: number, m: number) => sessionPeriodCheck(y, m, session);
 
   const yearSet = new Set<number>();
   if (sStart && sEnd) { for (let y = sStart.getFullYear(); y <= sEnd.getFullYear(); y++) yearSet.add(y); }
