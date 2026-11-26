@@ -106,6 +106,7 @@ export default async function AnnualResultCard({ params }: { params: Promise<{ i
                 <th className="p-2 border text-center">Exam % / فیصد</th>
                 <th className="p-2 border text-center">Weight / وزن</th>
                 <th className="p-2 border text-center">Weighted / وزنی</th>
+                <th className="p-2 border text-center no-print">Card / کارڈ</th>
               </tr>
             </thead>
             <tbody>
@@ -125,10 +126,11 @@ export default async function AnnualResultCard({ params }: { params: Promise<{ i
                     <td className="p-2 border text-center">{epct != null ? epct.toFixed(2) : "-"}</td>
                     <td className="p-2 border text-center">{w ? `${w}%` : "-"}</td>
                     <td className="p-2 border text-center font-medium">{wcon != null ? wcon.toFixed(2) : "-"}</td>
+                    <td className="p-2 border text-center no-print">{st ? <Link className="text-emerald-700 underline text-xs font-medium" href={`/results/stage-card/${student.id}/${st}`}>Print</Link> : "-"}</td>
                   </tr>
                 );
               })}
-              {included.length === 0 && <tr><td colSpan={8} className="p-4 text-center text-gray-500 border">No included exams found.</td></tr>}
+              {included.length === 0 && <tr><td colSpan={9} className="p-4 text-center text-gray-500 border">No included exams found.</td></tr>}
             </tbody>
           </table>
         </div>
