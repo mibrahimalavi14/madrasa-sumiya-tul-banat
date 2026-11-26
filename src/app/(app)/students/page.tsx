@@ -177,7 +177,7 @@ export default async function StudentsPage({ searchParams }: { searchParams: Pro
       <form className="bg-white rounded-2xl shadow-sm border border-emerald-100 p-4 no-print">
         <label className="block text-base font-bold text-emerald-900 mb-2">{lang==="ur" ? "تلاش" : "Search"}</label>
         <div className="flex gap-2 flex-wrap items-center">
-          <input name="q" defaultValue={q} placeholder={lang==="ur" ? "داخلہ نمبر / درخواست نمبر / نام تلاش کریں" : "Search Admission No / Application No / Name"} className="border border-gray-200 rounded-xl px-4 py-2.5 w-full sm:flex-1 focus:outline-none focus:ring-2 focus:ring-emerald-200" />
+          <input name="q" defaultValue={q} placeholder={lang==="ur" ? "داخلہ نمبر / نام تلاش کریں" : "Search by Admission No / Name"} className="border border-gray-200 rounded-xl px-4 py-2.5 w-full sm:flex-1 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-200" />
           <button className="bg-gray-800 hover:bg-gray-900 text-white px-5 py-2.5 rounded-xl font-medium">{tr.search}</button>
           {q && <Link href="/students" className="text-sm text-emerald-700 underline">{lang==="ur" ? "صاف کریں" : "Clear"}</Link>}
         </div>
