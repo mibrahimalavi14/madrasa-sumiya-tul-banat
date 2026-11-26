@@ -56,20 +56,29 @@ export default async function FeeVouchersBulkPage({ searchParams }: { searchPara
   return (
     <div className="bg-gray-100 min-h-screen p-3 md:p-4 print-area">
       <style>{`@media print { @page { size: A4; margin: 8mm; } .no-print { display:none !important; } body { background: white !important; } .voucher-sheet { break-inside: avoid; page-break-inside: avoid; margin-bottom: 10px; } }`}</style>
-      <div className="no-print max-w-5xl mx-auto mb-4 space-y-3">
-        <div className="flex items-center justify-between gap-3 flex-wrap bg-white border border-gray-200 rounded-xl p-3">
-          <Link href={`/fees?month=${month}&year=${year}`} className="text-sm text-emerald-800 hover:text-emerald-900 font-medium">← Back to Fees / واپس</Link>
-          <div className="font-semibold text-gray-800">{statusFilter === "all" ? "All Fee Vouchers" : "Pending Fee Vouchers"} — {monthName} {year}</div>
-          <PrintButton label="Print All Vouchers / سب واؤچر پرنٹ کریں" className="bg-teal-700 text-white px-4 py-2 rounded-lg font-medium" />
+      <div className="no-print max-w-5xl mx-auto mb-5 space-y-4">
+        <div className="bg-gradient-to-r from-teal-800 to-emerald-700 text-white rounded-2xl shadow-sm p-5 md:p-6 flex items-center justify-between gap-4 flex-wrap">
+          <div className="space-y-1">
+            <Link href={`/fees?month=${month}&year=${year}`} className="inline-flex text-sm text-teal-50 hover:text-white font-medium">← Back to Fees / واپس</Link>
+            <h1 className="text-2xl md:text-3xl font-bold">{statusFilter === "all" ? "All Fee Vouchers" : "Pending Fee Vouchers"}</h1>
+            <p className="text-sm text-teal-50">{monthName} {year} · Session: {session.name}</p>
+          </div>
+          <PrintButton label="Print All Vouchers / سب واؤچر پرنٹ کریں" className="bg-white text-teal-900 hover:bg-teal-50 px-6 py-3.5 rounded-xl font-bold text-base shadow-sm border border-teal-100" />
         </div>
-        <form className="bg-white border border-gray-200 rounded-xl p-3 flex flex-wrap gap-2 items-end text-sm">
+        <form className="bg-white border border-teal-100 rounded-2xl shadow-sm p-4 md:p-5 flex flex-wrap gap-4 items-end">
           <input type="hidden" name="month" value={month} />
           <input type="hidden" name="year" value={year} />
-          <div><label className="block text-xs text-gray-600 mb-1">Show</label>
-            <select name="status" defaultValue={statusFilter} className="border rounded px-2 py-1.5"><option value="pending">Pending / Unpaid & Partial</option><option value="all">All (Non-exempt)</option></select>
+          <div className="w-full sm:w-auto sm:min-w-[280px]">
+            <label className="block text-sm font-semibold text-gray-700 mb-1.5">Show / دکھائیں</label>
+            <select name="status" defaultValue={statusFilter} className="w-full border border-gray-300 rounded-xl px-4 py-3 text-base bg-white focus:outline-none focus:ring-2 focus:ring-teal-200 focus:border-teal-400">
+              <option value="pending">Pending / Unpaid & Partial</option>
+              <option value="all">All (Non-exempt)</option>
+            </select>
           </div>
-          <button className="bg-gray-800 text-white px-3 py-1.5 rounded">Apply</button>
-          <div className="text-gray-600 ml-auto">Total vouchers: <b>{items.length}</b></div>
+          <button className="bg-teal-700 hover:bg-teal-800 text-white px-6 py-3 rounded-xl font-semibold text-base shadow-sm">Apply / لاگو کریں</button>
+          <div className="text-gray-700 ml-auto bg-teal-50 border border-teal-100 rounded-xl px-4 py-3 text-base">
+            Total vouchers: <b className="text-teal-900">{items.length}</b>
+          </div>
         </form>
       </div>
 
