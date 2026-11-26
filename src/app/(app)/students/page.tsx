@@ -106,7 +106,7 @@ export default async function StudentsPage({ searchParams }: { searchParams: Pro
     };
   }
 
-  const [total, enrollments, targetSessions] = await Promise.all([
+  const [total, allEnrollments, targetSessions] = await Promise.all([
     prisma.studentEnrollment.count({ where }),
     prisma.studentEnrollment.findMany({
       where,
@@ -116,37 +116,19 @@ export default async function StudentsPage({ searchParams }: { searchParams: Pro
         student: {
           select: {
             id: true, admissionNo: true, applicationNo: true, nameEn: true, nameUr: true,
-            fatherName: true, motherName: true, admissionClass: true,
+            fatherName: true, motherName: true, admissionClass: true, status: true,
           },
         },
       },
       orderBy: [{ student: { admissionNo: "asc" } }],
-      skip: (page - 1) * pageSize,
-      take: pageSize,
     }),
     prisma.session.findMany({ where: { status: "ACTIVE", id: { not: session.id } }, select: { id: true, name: true }, orderBy: { startDate: "desc" } }),
   ]);
 
-  const totalPages = Math.max(1, Math.ceil(total / pageSize));
-  const safePage = Math.min(page, totalPages);
-  let pageEnrollments = page > totalPages && totalPages > 0 ? [] : enrollments;
-
-  if (highlight && !pageEnrollments.some(e => e.student.id === highlight)) {
-    const allIds = await prisma.studentEnrollment.findMany({
-      where,
-      select: { studentId: true },
-      orderBy: [{ student: { admissionNo: "asc" } }],
-    });
-    const idx = allIds.findIndex(x => x.studentId === highlight);
-    if (idx >= 0) {
-      const targetPage = Math.floor(idx / pageSize) + 1;
-      const params = new URLSearchParams();
-      if (q) params.set("q", q);
-      if (targetPage > 1) params.set("page", String(targetPage));
-      params.set("highlight", highlight);
-      redirect(`/students?${params.toString()}`);
-    }
-  }
+  const activeEnrollments = allEnrollments.filter(e => e.student.status === "ACTIVE");
+  const registeredEnrollments = allEnrollments.filter(e => e.student.status === "REGISTERED");
+  const leftEnrollments = allEnrollments.filter(e => e.student.status === "LEFT");
+  const otherEnrollments = allEnrollments.filter(e => !["ACTIVE", "REGISTERED", "LEFT"].includes(String(e.student.status || "")));
 
   const mkHref = (p: number) => {
     const params = new URLSearchParams();
@@ -229,42 +211,44 @@ export default async function StudentsPage({ searchParams }: { searchParams: Pro
         </form>
       )}
 
-      <div className="bg-white rounded-2xl shadow-sm border border-emerald-100 overflow-auto">
-        <table className="w-full text-sm">
-          <thead className="bg-emerald-50 text-emerald-900"><tr>{canEditStudents && targetSessions.length > 0 && <th className="p-3 text-center w-10 no-print"><div className="flex flex-col items-center gap-1"><SelectAllBulkCheckbox formId="bulk-carry-form" name="studentIds" title={lang==="ur" ? "سب منتخب کریں" : "Select all"} /><span className="text-[10px] font-medium">{lang==="ur" ? "سب" : "All"}</span></div></th>}<th className="p-3 text-center w-14">{lang === "ur" ? "نمبر شمار" : "S.No"}</th><th className="p-3 text-left">{tr.admissionNo}</th><th className="p-3 text-left">{tr.applicationNo}</th><th className="p-3 text-left">{tr.name}</th><th className="p-3 text-left">{tr.fatherMother}</th><th className="p-3 text-left">{tr.class}</th><th className="p-3 text-center">{tr.rollNo}</th><th className="p-3 text-left">{tr.actions}</th></tr></thead>
-          <tbody>
-            {pageEnrollments.map((e, i) => (
-              <tr key={e.id} id={`student-row-${e.student.id}`} data-highlight={highlight === e.student.id ? "true" : undefined} className="border-t hover:bg-gray-50/70">
-                {canEditStudents && targetSessions.length > 0 && <td className="p-3 text-center no-print"><input type="checkbox" name="studentIds" value={e.student.id} form="bulk-carry-form" className="h-4 w-4 rounded border-emerald-300 text-emerald-700" /></td>}
-                <td className="p-3 text-center text-gray-600 font-medium">{(safePage - 1) * pageSize + i + 1}</td>
-                <td className="p-3 font-semibold text-gray-900">{e.student.admissionNo}</td>
-                <td className="p-3">{e.student.applicationNo || "-"}</td>
-                <td className="p-3">{e.student.nameEn} {e.student.nameUr && <span className="font-urdu text-gray-700">/ {e.student.nameUr}</span>}</td>
-                <td className="p-3">{[e.student.fatherName, e.student.motherName].filter(Boolean).join(" / ") || "-"}</td>
-                <td className="p-3">{e.student.admissionClass || "-"}</td>
-                <td className="p-3 text-center">{e.rollNo || "-"}</td>
-                <td className="p-3 whitespace-nowrap">
-                  <div className="inline-flex flex-nowrap items-center gap-2">
-                    <Link className="inline-flex px-3 py-1.5 rounded-lg border border-emerald-200 bg-emerald-50 text-emerald-800 font-medium hover:bg-emerald-100" href={`/students/${e.student.id}`}>{tr.profile}</Link>
-                    {canEditStudents && <Link className="inline-flex px-3 py-1.5 rounded-lg border border-blue-200 bg-blue-50 text-blue-800 font-medium hover:bg-blue-100" href={`/students/${e.student.id}/edit`}>{tr.edit}</Link>}
-                    <Link className="inline-flex px-3 py-1.5 rounded-lg border border-amber-200 bg-amber-50 text-amber-800 font-medium hover:bg-amber-100" href={`/students/${e.student.id}/admission-form`}>{tr.print}</Link>
-                  </div>
-                </td>
-              </tr>
-            ))}
-            {pageEnrollments.length===0 && <tr><td colSpan={canEditStudents && targetSessions.length > 0 ? 9 : 8} className="p-6 text-center text-gray-500">{tr.noStudents}</td></tr>}
-          </tbody>
-        </table>
-      </div>
-      {totalPages > 1 && (
-        <div className="flex items-center justify-between gap-3 bg-white rounded-2xl shadow-sm border border-emerald-100 p-3 text-sm flex-wrap">
-          <div className="text-gray-600">{lang==="ur" ? `صفحہ ${safePage} از ${totalPages}` : `Page ${safePage} of ${totalPages}`}</div>
-          <div className="flex items-center gap-2">
-            <Link href={mkHref(Math.max(1, safePage - 1))} aria-disabled={safePage <= 1} className={`px-3 py-1.5 rounded-lg border ${safePage <= 1 ? "pointer-events-none opacity-40" : "hover:bg-gray-50"}`}>{lang==="ur" ? "پچھلا" : "Prev"}</Link>
-            <Link href={mkHref(Math.min(totalPages, safePage + 1))} aria-disabled={safePage >= totalPages} className={`px-3 py-1.5 rounded-lg border ${safePage >= totalPages ? "pointer-events-none opacity-40" : "hover:bg-gray-50"}`}>{lang==="ur" ? "اگلا" : "Next"}</Link>
+      {[
+        { key: "ACTIVE", title: lang === "ur" ? "فعال طلبہ" : "Active Students", list: activeEnrollments, badge: "bg-emerald-100 text-emerald-800" },
+        { key: "REGISTERED", title: lang === "ur" ? "رجسٹرڈ طلبہ" : "Registered Students", list: registeredEnrollments, badge: "bg-blue-100 text-blue-800" },
+        { key: "LEFT", title: lang === "ur" ? "چھوڑنے والے طلبہ" : "Left Students", list: leftEnrollments, badge: "bg-red-100 text-red-800" },
+        ...(otherEnrollments.length ? [{ key: "OTHER", title: lang === "ur" ? "دیگر" : "Other", list: otherEnrollments, badge: "bg-gray-100 text-gray-800" }] : []),
+      ].map(section => (
+        <div key={section.key} className="bg-white rounded-2xl shadow-sm border border-emerald-100 overflow-auto">
+          <div className="px-4 py-3 border-b border-emerald-100 flex items-center justify-between gap-2">
+            <h2 className="font-semibold text-emerald-900">{section.title}</h2>
+            <span className={`inline-flex px-2.5 py-1 rounded-full text-xs font-semibold ${section.badge}`}>{section.list.length}</span>
           </div>
+          <table className="w-full text-sm">
+            <thead className="bg-emerald-50 text-emerald-900"><tr>{canEditStudents && targetSessions.length > 0 && <th className="p-3 text-center w-10 no-print"><div className="flex flex-col items-center gap-1"><SelectAllBulkCheckbox formId="bulk-carry-form" name="studentIds" title={lang==="ur" ? "سب منتخب کریں" : "Select all"} /><span className="text-[10px] font-medium">{lang==="ur" ? "سب" : "All"}</span></div></th>}<th className="p-3 text-center w-14">{lang === "ur" ? "نمبر شمار" : "S.No"}</th><th className="p-3 text-left">{tr.admissionNo}</th><th className="p-3 text-left">{tr.applicationNo}</th><th className="p-3 text-left">{tr.name}</th><th className="p-3 text-left">{tr.fatherMother}</th><th className="p-3 text-left">{tr.class}</th><th className="p-3 text-center">{tr.rollNo}</th><th className="p-3 text-left">{tr.actions}</th></tr></thead>
+            <tbody>
+              {section.list.map((e, i) => (
+                <tr key={e.id} id={`student-row-${e.student.id}`} data-highlight={highlight === e.student.id ? "true" : undefined} className="border-t hover:bg-gray-50/70">
+                  {canEditStudents && targetSessions.length > 0 && <td className="p-3 text-center no-print"><input type="checkbox" name="studentIds" value={e.student.id} form="bulk-carry-form" className="h-4 w-4 rounded border-emerald-300 text-emerald-700" /></td>}
+                  <td className="p-3 text-center text-gray-600 font-medium">{i + 1}</td>
+                  <td className="p-3 font-semibold text-gray-900">{e.student.admissionNo}</td>
+                  <td className="p-3">{e.student.applicationNo || "-"}</td>
+                  <td className="p-3">{e.student.nameEn} {e.student.nameUr && <span className="font-urdu text-gray-700">/ {e.student.nameUr}</span>}</td>
+                  <td className="p-3">{[e.student.fatherName, e.student.motherName].filter(Boolean).join(" / ") || "-"}</td>
+                  <td className="p-3">{e.student.admissionClass || "-"}</td>
+                  <td className="p-3 text-center">{e.rollNo || "-"}</td>
+                  <td className="p-3 whitespace-nowrap">
+                    <div className="inline-flex flex-nowrap items-center gap-2">
+                      <Link className="inline-flex px-3 py-1.5 rounded-lg border border-emerald-200 bg-emerald-50 text-emerald-800 font-medium hover:bg-emerald-100" href={`/students/${e.student.id}`}>{tr.profile}</Link>
+                      {canEditStudents && <Link className="inline-flex px-3 py-1.5 rounded-lg border border-blue-200 bg-blue-50 text-blue-800 font-medium hover:bg-blue-100" href={`/students/${e.student.id}/edit`}>{tr.edit}</Link>}
+                      <Link className="inline-flex px-3 py-1.5 rounded-lg border border-amber-200 bg-amber-50 text-amber-800 font-medium hover:bg-amber-100" href={`/students/${e.student.id}/admission-form`}>{tr.print}</Link>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+              {section.list.length === 0 && <tr><td colSpan={canEditStudents && targetSessions.length > 0 ? 9 : 8} className="p-6 text-center text-gray-500">{lang==="ur" ? "کوئی طالب علم نہیں" : "No students"}</td></tr>}
+            </tbody>
+          </table>
         </div>
-      )}
+      ))}
     </div>
   );
 }
