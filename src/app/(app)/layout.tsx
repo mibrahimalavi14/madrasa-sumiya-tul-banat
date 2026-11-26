@@ -46,9 +46,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           title: lang === "ur" ? "تعلیم و امتحانات" : "Academics",
           items: [
             ["/students", tr.students, "👩‍🎓"],
-            ["/students/status?status=ACTIVE", lang === "ur" ? "فعال طلبہ" : "Active Students", "✅"],
-            ["/students/status?status=REGISTERED", lang === "ur" ? "رجسٹرڈ طلبہ" : "Registered Students", "🟦"],
-            ["/students/status?status=LEFT", lang === "ur" ? "چھوڑنے والے طلبہ" : "Left Students", "🚪"],
+            ["/students/status?status=ACTIVE", lang === "ur" ? "طلبہ حیثیت" : "Students by Status", "📋"],
             ["/students/attention", lang === "ur" ? "توجہ درکار طلبہ" : "Needs Attention", "⚠️"],
             ["/examination", tr.examination, "📝"],
             ["/results", tr.results, "📊"],
