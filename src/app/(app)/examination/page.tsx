@@ -121,7 +121,7 @@ export default async function ExaminationPage() {
 
       {!sessionStarted && (
         <div className="bg-amber-50 border border-amber-200 text-amber-900 rounded-xl p-4 text-sm">
-          {ur ? "سیشن ابھی شروع نہیں ہوا۔ پیپرز/امتحانی تیاری ہو سکتی ہے، لیکن نتائج، فیس اور سرٹیفکیٹس start date سے پہلے درج نہیں ہوں گے۔ طالب علم کا اندراج ممکن ہے۔" : "Session has not started yet. Exam papers/setup can be prepared, but results, fees, and certificates cannot be entered before the session start date. Student enrollment is allowed."}
+          {ur ? "سیشن ابھی شروع نہیں ہوا۔ پیپرز/امتحانی تیاری کی جا سکتی ہے؛ شروع ہونے کی تاریخ کے بعد امتحانی اندراج/نتائج کا عمل ہوگا۔" : "Session has not started yet. Exam papers/setup can be prepared now; exam/result entry will be available after the session start date."}
         </div>
       )}
 

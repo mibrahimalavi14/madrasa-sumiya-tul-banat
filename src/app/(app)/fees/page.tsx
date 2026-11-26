@@ -192,7 +192,7 @@ export default async function FeesPage({ searchParams }: { searchParams: Promise
           <span>{lang === "ur" ? `باقی: ${unpaidEnrolls.length}` : `Remaining: ${unpaidEnrolls.length}`}</span>
         </div>
       </div>
-      {!sessionStarted && <div className="bg-amber-50 border border-amber-200 text-amber-900 rounded-xl p-4 text-sm">{lang === "ur" ? "سیشن ابھی شروع نہیں ہوا۔ شروع ہونے کی تاریخ سے پہلے فیس کا اندراج/جمع نہیں ہو سکتا، صرف دیکھ سکتے ہیں۔ طالب علم کا اندراج ممکن ہے۔" : "Session has not started yet. Fees cannot be entered/collected before the session start date; viewing is allowed. Student enrollment is allowed."}</div>}
+      {!sessionStarted && <div className="bg-amber-50 border border-amber-200 text-amber-900 rounded-xl p-4 text-sm">{lang === "ur" ? "سیشن ابھی شروع نہیں ہوا۔ شروع ہونے کی تاریخ سے پہلے فیس کا اندراج/جمع نہیں ہو سکتا، صرف دیکھ سکتے ہیں۔" : "Session has not started yet. Fees cannot be entered/collected before the session start date; viewing is allowed."}</div>}
       <form className="bg-white rounded-xl shadow p-4 flex gap-4 items-end no-print flex-wrap border border-emerald-100/80">
         <div className="flex items-center gap-2">
           <label className="text-sm font-medium">{tr.month}</label>
