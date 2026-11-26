@@ -22,7 +22,7 @@ export default async function StagePerformancePage() {
     }),
     prisma.result.findMany({
       where: { exam: { sessionId: session.id } },
-      select: { percentage: true, status: true, totalObtained: true, totalMarks: true, writtenObtained: true, writtenTotal: true, oralObtained: true, oralTotal: true, remarks: true, position: true, student: { select: { admissionNo: true, nameEn: true, nameUr: true } }, exam: { select: { stage: true } } },
+      select: { studentId: true, percentage: true, grade: true, status: true, totalObtained: true, totalMarks: true, writtenObtained: true, writtenTotal: true, oralObtained: true, oralTotal: true, remarks: true, position: true, student: { select: { id: true, admissionNo: true, nameEn: true, nameUr: true } }, exam: { select: { stage: true } } },
     }),
   ]);
 
@@ -44,6 +44,18 @@ export default async function StagePerformancePage() {
       .sort((a: any, b: any) => Number(a.position) - Number(b.position))
       .slice(0, 3)
       .map((r: any) => ({ position: r.position, name: r.student?.nameEn || "-", admissionNo: r.student?.admissionNo || "-", percentage: r.percentage }));
+    const studentCards = [...rows]
+      .sort((a: any, b: any) => String(a.student?.admissionNo || "").localeCompare(String(b.student?.admissionNo || ""), undefined, { numeric: true }))
+      .map((r: any) => ({
+        studentId: r.studentId || r.student?.id,
+        admissionNo: r.student?.admissionNo || "-",
+        nameEn: r.student?.nameEn || "-",
+        nameUr: r.student?.nameUr || "",
+        percentage: r.percentage,
+        grade: r.grade || "-",
+        status: r.status || "-",
+        position: r.position ?? null,
+      }));
     return {
       stage,
       examId: exam?.id || null,
@@ -53,6 +65,7 @@ export default async function StagePerformancePage() {
       saved: exam?._count?.results ?? total,
       total, pass, fail, absent, avg, writtenAvg, oralAvg, hasWritten: writtenRows.length > 0, hasOral: oralRows.length > 0,
       topHolders,
+      studentCards,
     };
   });
 
@@ -125,6 +138,51 @@ export default async function StagePerformancePage() {
           </div>
         ))}
       </div>
+
+      {stages.map((s) => (
+        <div key={`cards-${s.stage}`} className="bg-white rounded-2xl shadow-sm border border-blue-100 overflow-auto">
+          <div className="px-4 py-3 border-b border-blue-100 flex items-center justify-between gap-2 flex-wrap">
+            <h2 className={`font-semibold text-blue-950 ${ur ? "font-urdu" : ""}`} dir={ur ? "rtl" : "ltr"}>
+              {ur ? `مرحلہ ${s.stage} — طلبہ رزلٹ کارڈز` : `Stage ${s.stage} — Student Result Cards`}
+              <span className="text-sm font-normal text-gray-500 ml-2">({s.name})</span>
+            </h2>
+            <span className="inline-flex px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-800">{s.studentCards.length}</span>
+          </div>
+          <table className="w-full text-sm">
+            <thead className="bg-blue-50 text-blue-950">
+              <tr>
+                <th className="p-2 text-center w-14">{ur ? "نمبر شمار" : "S.No"}</th>
+                <th className="p-2 text-left">{ur ? "داخلہ نمبر" : "Admission No"}</th>
+                <th className="p-2 text-left">{ur ? "نام" : "Name"}</th>
+                <th className="p-2 text-center">{ur ? "فیصد" : "%"}</th>
+                <th className="p-2 text-center">{ur ? "گریڈ" : "Grade"}</th>
+                <th className="p-2 text-center">{ur ? "حیثیت" : "Status"}</th>
+                <th className="p-2 text-center">{ur ? "پوزیشن" : "Position"}</th>
+                <th className="p-2 text-center">{ur ? "رزلٹ کارڈ" : "Result Card"}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {s.studentCards.map((st: any, i: number) => (
+                <tr key={st.studentId} className="border-t hover:bg-gray-50/70">
+                  <td className="p-2 text-center text-gray-600">{i + 1}</td>
+                  <td className="p-2 font-medium">{st.admissionNo}</td>
+                  <td className="p-2">{st.nameEn}{st.nameUr ? <span className="font-urdu text-gray-700"> / {st.nameUr}</span> : ""}</td>
+                  <td className="p-2 text-center">{st.percentage != null ? Number(st.percentage).toFixed(2) : "-"}</td>
+                  <td className="p-2 text-center font-semibold">{st.grade}</td>
+                  <td className={`p-2 text-center font-medium ${st.status === "Pass" ? "text-emerald-700" : st.status === "Fail" ? "text-red-700" : ""}`}>{st.status}</td>
+                  <td className="p-2 text-center">{st.position ?? "-"}</td>
+                  <td className="p-2 text-center">
+                    <Link className="inline-flex px-3 py-1.5 rounded-lg border border-emerald-200 bg-emerald-50 text-emerald-800 font-medium hover:bg-emerald-100 text-xs" href={`/results/stage-card/${st.studentId}/${s.stage}`}>
+                      {ur ? "پرنٹ" : "Print"}
+                    </Link>
+                  </td>
+                </tr>
+              ))}
+              {s.studentCards.length === 0 && <tr><td colSpan={8} className="p-5 text-center text-gray-500">{ur ? "اس مرحلے کا کوئی نتیجہ موجود نہیں" : "No results for this stage"}</td></tr>}
+            </tbody>
+          </table>
+        </div>
+      ))}
     </div>
   );
 }
