@@ -9,6 +9,7 @@ import { revalidatePath } from "next/cache";
 import { logAudit } from "@/lib/audit";
 import SelectAllBulkCheckbox from "@/components/SelectAllBulkCheckbox";
 import ExportCsvDetails from "@/components/ExportCsvDetails";
+import ScrollToHighlight from "@/components/ScrollToHighlight";
 
 async function carrySelectedStudentsAction(formData: FormData) {
   "use server";
@@ -72,7 +73,7 @@ async function autoAssignRollNumbersAction(formData: FormData) {
   revalidatePath("/students");
 }
 
-export default async function StudentsPage({ searchParams }: { searchParams: Promise<{ q?: string; page?: string }> }) {
+export default async function StudentsPage({ searchParams }: { searchParams: Promise<{ q?: string; page?: string; highlight?: string }> }) {
   const user = await getAuthUser();
   const session = await getCurrentSession();
   const lang = await getLang();
@@ -80,6 +81,7 @@ export default async function StudentsPage({ searchParams }: { searchParams: Pro
   const sp = await searchParams;
   const q = sp.q?.trim() || "";
   const page = Math.max(1, parseInt(sp.page || "1", 10) || 1);
+  const highlight = sp.highlight?.trim() || "";
   const pageSize = 30;
 
   if (user?.role === "PARENT") {
@@ -127,7 +129,24 @@ export default async function StudentsPage({ searchParams }: { searchParams: Pro
 
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
   const safePage = Math.min(page, totalPages);
-  const pageEnrollments = page > totalPages && totalPages > 0 ? [] : enrollments;
+  let pageEnrollments = page > totalPages && totalPages > 0 ? [] : enrollments;
+
+  if (highlight && !pageEnrollments.some(e => e.student.id === highlight)) {
+    const allIds = await prisma.studentEnrollment.findMany({
+      where,
+      select: { studentId: true },
+      orderBy: [{ student: { admissionNo: "asc" } }],
+    });
+    const idx = allIds.findIndex(x => x.studentId === highlight);
+    if (idx >= 0) {
+      const targetPage = Math.floor(idx / pageSize) + 1;
+      const params = new URLSearchParams();
+      if (q) params.set("q", q);
+      if (targetPage > 1) params.set("page", String(targetPage));
+      params.set("highlight", highlight);
+      redirect(`/students?${params.toString()}`);
+    }
+  }
 
   const mkHref = (p: number) => {
     const params = new URLSearchParams();
@@ -139,6 +158,7 @@ export default async function StudentsPage({ searchParams }: { searchParams: Pro
 
   return (
     <div className="space-y-4 theme-students">
+      <ScrollToHighlight />
       <div className="bg-gradient-to-r from-emerald-800 to-emerald-700 text-white rounded-2xl p-5 shadow-sm flex items-center justify-between flex-wrap gap-3">
         <div>
           <h1 className="text-2xl font-bold">{tr.students}</h1>
@@ -214,7 +234,7 @@ export default async function StudentsPage({ searchParams }: { searchParams: Pro
           <thead className="bg-emerald-50 text-emerald-900"><tr>{canEditStudents && targetSessions.length > 0 && <th className="p-3 text-center w-10 no-print"><div className="flex flex-col items-center gap-1"><SelectAllBulkCheckbox formId="bulk-carry-form" name="studentIds" title={lang==="ur" ? "سب منتخب کریں" : "Select all"} /><span className="text-[10px] font-medium">{lang==="ur" ? "سب" : "All"}</span></div></th>}<th className="p-3 text-center w-14">{lang === "ur" ? "نمبر شمار" : "S.No"}</th><th className="p-3 text-left">{tr.admissionNo}</th><th className="p-3 text-left">{tr.applicationNo}</th><th className="p-3 text-left">{tr.name}</th><th className="p-3 text-left">{tr.fatherMother}</th><th className="p-3 text-left">{tr.class}</th><th className="p-3 text-center">{tr.rollNo}</th><th className="p-3 text-left">{tr.actions}</th></tr></thead>
           <tbody>
             {pageEnrollments.map((e, i) => (
-              <tr key={e.id} className="border-t hover:bg-gray-50/70">
+              <tr key={e.id} id={`student-row-${e.student.id}`} data-highlight={highlight === e.student.id ? "true" : undefined} className="border-t hover:bg-gray-50/70">
                 {canEditStudents && targetSessions.length > 0 && <td className="p-3 text-center no-print"><input type="checkbox" name="studentIds" value={e.student.id} form="bulk-carry-form" className="h-4 w-4 rounded border-emerald-300 text-emerald-700" /></td>}
                 <td className="p-3 text-center text-gray-600 font-medium">{(safePage - 1) * pageSize + i + 1}</td>
                 <td className="p-3 font-semibold text-gray-900">{e.student.admissionNo}</td>

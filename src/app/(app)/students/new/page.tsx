@@ -137,7 +137,7 @@ async function createStudent(formData: FormData) {
     await logAudit({ actorUserId: user.id, actorLabel: user.username || user.name, action: "STUDENT_CREATE", entityType: "Student", entityId: student.id, details: JSON.stringify({ admissionNo: student.admissionNo, nameEn: student.nameEn, sessionId: session.id }) });
     await clearDraft();
     revalidatePath("/students");
-    redirect("/students");
+    redirect(`/students?highlight=${student.id}`);
   } catch (e: any) {
     if (e?.digest?.startsWith?.("NEXT_REDIRECT")) throw e;
     console.error("createStudent failed", e);

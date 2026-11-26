@@ -221,6 +221,15 @@ main .print-area :where(.space-y-3, .space-y-4, .space-y-5, .space-y-6) > * + * 
   .msb-print-surface { border: none !important; }
 }
 
+@keyframes highlight-blink {
+  0%, 100% { background-color: rgba(16, 185, 129, 0.08); }
+  25%, 75% { background-color: rgba(16, 185, 129, 0.28); }
+  50% { background-color: rgba(16, 185, 129, 0.12); }
+}
+.highlight-blink {
+  animation: highlight-blink 0.8s ease-in-out 3;
+}
+
 @media (max-width: 640px) {
   body { font-size: 14px; }
   h1 { font-size: 1.35rem !important; }
