@@ -144,7 +144,7 @@ export default async function StudentsPage({ searchParams }: { searchParams: Pro
           <h1 className="text-2xl font-bold">{tr.students}</h1>
           <p className="text-sm text-emerald-50 mt-1">{tr.session}: {session.name} · {lang==="ur" ? "کل" : "Total"}: {total}</p>
         </div>
-        <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-2 no-print w-full sm:w-auto">
+        <div className="grid grid-cols-2 sm:flex sm:flex-wrap sm:justify-center gap-2 no-print w-full sm:w-auto">
           {canEditStudents && <Link href="/students/new" className="bg-white text-emerald-800 px-3 py-2 rounded-lg text-sm font-semibold shadow-sm hover:bg-emerald-50 text-center sm:w-40 flex items-center justify-center">{tr.newAdmission}</Link>}
           <Link href="/students/admission-form" className="bg-amber-500 text-white px-3 py-2 rounded-lg text-sm font-semibold shadow-sm hover:bg-amber-600 text-center sm:w-40 flex items-center justify-center">{tr.blankAdmissionForm}</Link>
           <Link href="/students/slips" className="bg-teal-500 text-white px-3 py-2 rounded-lg text-sm font-semibold shadow-sm hover:bg-teal-600 text-center sm:w-40 flex items-center justify-center">{lang==="ur" ? "رول نمبر فہرست" : "Roll No List"}</Link>
