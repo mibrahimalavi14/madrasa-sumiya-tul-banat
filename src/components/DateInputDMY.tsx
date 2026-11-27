@@ -28,11 +28,15 @@ function parseToDate(value?: string | null): Date | null {
   return Number.isNaN(d.getTime()) ? null : d;
 }
 
-const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+const MONTHS_SHORT = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 const WEEKDAYS = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
 
 function daysInMonth(year: number, month: number) {
   return new Date(year, month + 1, 0).getDate();
+}
+function sameDay(a: Date | null, y: number, m: number, d: number) {
+  return !!a && a.getFullYear() === y && a.getMonth() === m && a.getDate() === d;
 }
 
 export default function DateInputDMY({
@@ -78,6 +82,7 @@ export default function DateInputDMY({
 
   const openPicker = () => {
     if (disabled) return;
+    if (open) { setOpen(false); return; }
     const current = parseToDate(text);
     const y = current?.getFullYear() ?? now.getFullYear();
     setPickedYear(current?.getFullYear() ?? null);
@@ -94,6 +99,12 @@ export default function DateInputDMY({
     setOpen(false);
   };
 
+  const setToday = () => {
+    const d = new Date();
+    setText(dmyFromDate(d));
+    setOpen(false);
+  };
+
   const years = Array.from({ length: 12 }, (_, i) => yearWindowStart + i);
   const days = pickedYear != null && pickedMonth != null ? daysInMonth(pickedYear, pickedMonth) : 31;
   const firstWeekday = pickedYear != null && pickedMonth != null ? new Date(pickedYear, pickedMonth, 1).getDay() : 0;
@@ -106,10 +117,7 @@ export default function DateInputDMY({
         name={name}
         form={form}
         value={text}
-        onChange={(e) => {
-          const v = e.target.value;
-          setText(v);
-        }}
+        onChange={(e) => setText(e.target.value)}
         placeholder={placeholder}
         inputMode="numeric"
         required={required}
@@ -121,7 +129,7 @@ export default function DateInputDMY({
         type="button"
         onClick={openPicker}
         disabled={disabled}
-        className="absolute inset-y-0 right-0 px-3 flex items-center text-gray-500 hover:text-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed"
+        className="absolute inset-y-0 right-0 px-3 flex items-center text-gray-500 hover:text-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         aria-label="Open calendar"
         tabIndex={-1}
       >
@@ -131,67 +139,81 @@ export default function DateInputDMY({
       </button>
 
       {open && (
-        <div className="absolute left-1/2 -translate-x-1/2 z-30 mt-1 w-72 max-w-[calc(100vw-2rem)] bg-white border border-gray-200 rounded-xl shadow-lg p-3">
-          <div className="flex items-center justify-between mb-2">
-            <div className="text-sm font-semibold text-emerald-900">
-              {view === "year" ? "Select Year" : view === "month" ? `Select Month (${pickedYear ?? ""})` : `Select Date (${MONTHS[pickedMonth ?? 0]} ${pickedYear ?? ""})`}
+        <div className="absolute left-1/2 -translate-x-1/2 z-30 mt-2 w-[19rem] max-w-[calc(100vw-2rem)] bg-white border border-emerald-100 rounded-2xl shadow-xl p-3 select-none">
+          <div className="flex items-center justify-between mb-3">
+            <div>
+              <div className="text-[11px] uppercase tracking-wide text-emerald-600 font-semibold">
+                {view === "year" ? "Step 1 of 3" : view === "month" ? "Step 2 of 3" : "Step 3 of 3"}
+              </div>
+              <div className="text-sm font-semibold text-gray-900">
+                {view === "year" ? "Select Year" : view === "month" ? "Select Month" : "Select Date"}
+              </div>
             </div>
-            <button type="button" onClick={() => setOpen(false)} className="text-gray-400 hover:text-gray-700 px-1" aria-label="Close">✕</button>
+            <button type="button" onClick={() => setOpen(false)} className="h-8 w-8 grid place-items-center rounded-full text-gray-400 hover:text-gray-700 hover:bg-gray-100" aria-label="Close">✕</button>
           </div>
 
           {view === "year" && (
             <>
-              <div className="flex items-center justify-between mb-2">
-                <button type="button" className="px-2 py-1 text-sm border rounded hover:bg-gray-50" onClick={() => setYearWindowStart((y) => y - 12)}>‹</button>
-                <div className="text-xs text-gray-500">{yearWindowStart} - {yearWindowStart + 11}</div>
-                <button type="button" className="px-2 py-1 text-sm border rounded hover:bg-gray-50" onClick={() => setYearWindowStart((y) => y + 12)}>›</button>
+              <div className="flex items-center justify-between mb-3 bg-gray-50 rounded-xl px-2 py-1.5">
+                <button type="button" className="h-8 w-8 grid place-items-center rounded-lg hover:bg-white text-gray-600" onClick={() => setYearWindowStart((y) => y - 12)} aria-label="Previous years">‹</button>
+                <div className="text-sm font-medium text-gray-700">{yearWindowStart} – {yearWindowStart + 11}</div>
+                <button type="button" className="h-8 w-8 grid place-items-center rounded-lg hover:bg-white text-gray-600" onClick={() => setYearWindowStart((y) => y + 12)} aria-label="Next years">›</button>
               </div>
-              <div className="grid grid-cols-4 gap-1.5">
-                {years.map((y) => (
-                  <button key={y} type="button" onClick={() => { setPickedYear(y); setView("month"); }}
-                    className={`px-2 py-2 text-sm rounded-lg border ${pickedYear === y ? "bg-emerald-600 text-white border-emerald-600" : "border-gray-200 hover:bg-emerald-50"}`}>
-                    {y}
-                  </button>
-                ))}
+              <div className="grid grid-cols-4 gap-2">
+                {years.map((y) => {
+                  const active = pickedYear === y;
+                  const isNow = now.getFullYear() === y;
+                  return (
+                    <button key={y} type="button" onClick={() => { setPickedYear(y); setView("month"); }}
+                      className={`py-2.5 text-sm rounded-xl border transition-colors ${active ? "bg-emerald-600 text-white border-emerald-600 shadow-sm" : isNow ? "border-emerald-300 text-emerald-700 bg-emerald-50 hover:bg-emerald-100" : "border-gray-200 text-gray-700 hover:bg-gray-50"}`}>
+                      {y}
+                    </button>
+                  );
+                })}
               </div>
             </>
           )}
 
           {view === "month" && (
             <>
-              <div className="flex items-center justify-between mb-2">
-                <button type="button" className="px-2 py-1 text-sm border rounded hover:bg-gray-50" onClick={() => setView("year")}>Back</button>
-                <div className="text-xs text-gray-500">{pickedYear}</div>
-                <div />
+              <div className="flex items-center justify-between mb-3 bg-gray-50 rounded-xl px-2 py-1.5">
+                <button type="button" className="h-8 px-2 grid place-items-center rounded-lg hover:bg-white text-gray-600 text-sm" onClick={() => setView("year")}>← Year</button>
+                <div className="text-sm font-semibold text-gray-800">{pickedYear}</div>
+                <div className="w-14" />
               </div>
-              <div className="grid grid-cols-3 gap-1.5">
-                {MONTHS.map((m, i) => (
-                  <button key={m} type="button" onClick={() => { setPickedMonth(i); setView("day"); }}
-                    className={`px-2 py-2 text-sm rounded-lg border ${pickedMonth === i ? "bg-emerald-600 text-white border-emerald-600" : "border-gray-200 hover:bg-emerald-50"}`}>
-                    {m}
-                  </button>
-                ))}
+              <div className="grid grid-cols-3 gap-2">
+                {MONTHS_SHORT.map((m, i) => {
+                  const active = pickedMonth === i;
+                  const isNow = now.getFullYear() === pickedYear && now.getMonth() === i;
+                  return (
+                    <button key={m} type="button" onClick={() => { setPickedMonth(i); setView("day"); }}
+                      className={`py-2.5 text-sm rounded-xl border transition-colors ${active ? "bg-emerald-600 text-white border-emerald-600 shadow-sm" : isNow ? "border-emerald-300 text-emerald-700 bg-emerald-50 hover:bg-emerald-100" : "border-gray-200 text-gray-700 hover:bg-gray-50"}`}>
+                      {m}
+                    </button>
+                  );
+                })}
               </div>
             </>
           )}
 
           {view === "day" && pickedYear != null && pickedMonth != null && (
             <>
-              <div className="flex items-center justify-between mb-2">
-                <button type="button" className="px-2 py-1 text-sm border rounded hover:bg-gray-50" onClick={() => setView("month")}>Back</button>
-                <div className="text-xs text-gray-500">{MONTHS[pickedMonth]} {pickedYear}</div>
-                <div />
+              <div className="flex items-center justify-between mb-3 bg-gray-50 rounded-xl px-2 py-1.5">
+                <button type="button" className="h-8 px-2 grid place-items-center rounded-lg hover:bg-white text-gray-600 text-sm" onClick={() => setView("month")}>← Month</button>
+                <div className="text-sm font-semibold text-gray-800">{MONTHS[pickedMonth]} {pickedYear}</div>
+                <div className="w-14" />
               </div>
               <div className="grid grid-cols-7 gap-1 mb-1">
-                {WEEKDAYS.map((wd) => <div key={wd} className="text-[11px] text-center text-gray-400 py-1">{wd}</div>)}
+                {WEEKDAYS.map((wd) => <div key={wd} className="text-[11px] text-center text-gray-400 py-1 font-medium">{wd}</div>)}
               </div>
               <div className="grid grid-cols-7 gap-1">
-                {Array.from({ length: firstWeekday }).map((_, i) => <div key={`e-${i}`} />)}
+                {Array.from({ length: firstWeekday }).map((_, i) => <div key={`e-${i}`} className="py-1.5" />)}
                 {Array.from({ length: days }, (_, i) => i + 1).map((day) => {
-                  const isSel = selected?.getFullYear() === pickedYear && selected?.getMonth() === pickedMonth && selected?.getDate() === day;
+                  const isSel = sameDay(selected, pickedYear, pickedMonth, day);
+                  const isToday = sameDay(now, pickedYear, pickedMonth, day);
                   return (
                     <button key={day} type="button" onClick={() => selectDay(day)}
-                      className={`py-1.5 text-sm rounded-md border ${isSel ? "bg-emerald-600 text-white border-emerald-600" : "border-transparent hover:bg-emerald-50"}`}>
+                      className={`h-9 w-full text-sm rounded-xl transition-colors ${isSel ? "bg-emerald-600 text-white shadow-sm" : isToday ? "border border-emerald-300 text-emerald-700 bg-emerald-50 hover:bg-emerald-100" : "text-gray-700 hover:bg-gray-100"}`}>
                       {day}
                     </button>
                   );
@@ -199,6 +221,11 @@ export default function DateInputDMY({
               </div>
             </>
           )}
+
+          <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-100">
+            <button type="button" onClick={() => { setText(""); setOpen(false); }} className="text-xs text-gray-500 hover:text-gray-800 px-2 py-1 rounded-md hover:bg-gray-50">Clear</button>
+            <button type="button" onClick={setToday} className="text-xs font-medium text-emerald-700 hover:text-emerald-800 px-2 py-1 rounded-md hover:bg-emerald-50">Today</button>
+          </div>
         </div>
       )}
     </div>
