@@ -4,7 +4,7 @@ import { useState } from "react";
 
 function rollFromAdmission(admissionNo: string) {
   const m = String(admissionNo || "").trim().match(/(\d+)(?!.*\d)/);
-  return m ? m[1] : "";
+  return m ? String(parseInt(m[1], 10)) : "";
 }
 
 export default function AdmissionNoAutoFields({
@@ -36,9 +36,10 @@ export default function AdmissionNoAutoFields({
           name="rollNo"
           required
           value={rollNo}
-          onChange={(e) => { setRollTouched(true); setRollNo(e.target.value); }}
-          className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-emerald-200"
-          placeholder="e.g. 1"
+          readOnly
+          tabIndex={-1}
+          className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2.5 bg-gray-50 text-gray-700 cursor-not-allowed focus:outline-none"
+          placeholder="Auto"
         />
       </div>
       <div>
@@ -47,9 +48,10 @@ export default function AdmissionNoAutoFields({
           name="applicationNo"
           required
           value={applicationNo}
-          onChange={(e) => { setAppTouched(true); setApplicationNo(e.target.value); }}
-          placeholder="e.g. MSB-01"
-          className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-emerald-200"
+          readOnly
+          tabIndex={-1}
+          className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2.5 bg-gray-50 text-gray-700 cursor-not-allowed focus:outline-none"
+          placeholder="Auto"
         />
       </div>
       <div>

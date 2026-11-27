@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 function pad2(n: number) {
   return String(n).padStart(2, "0");
@@ -8,10 +8,6 @@ function pad2(n: number) {
 function dmyFromDate(d: Date) {
   if (Number.isNaN(d.getTime())) return "";
   return `${pad2(d.getDate())}/${pad2(d.getMonth() + 1)}/${d.getFullYear()}`;
-}
-function isoFromDate(d: Date) {
-  if (Number.isNaN(d.getTime())) return "";
-  return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
 }
 function parseToDate(value?: string | null): Date | null {
   const s = String(value ?? "").trim();
@@ -30,6 +26,13 @@ function parseToDate(value?: string | null): Date | null {
   }
   const d = new Date(s);
   return Number.isNaN(d.getTime()) ? null : d;
+}
+
+const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+const WEEKDAYS = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
+
+function daysInMonth(year: number, month: number) {
+  return new Date(year, month + 1, 0).getDate();
 }
 
 export default function DateInputDMY({
@@ -53,10 +56,51 @@ export default function DateInputDMY({
 }) {
   const initialDate = useMemo(() => parseToDate(typeof defaultValue === "string" ? defaultValue : defaultValue ? defaultValue.toISOString() : ""), [defaultValue]);
   const [text, setText] = useState(initialDate ? dmyFromDate(initialDate) : (typeof defaultValue === "string" && /^\d{1,2}[\/\-]\d{1,2}[\/\-]\d{4}$/.test(defaultValue.trim()) ? defaultValue.trim().replace(/-/g, "/") : ""));
-  const [iso, setIso] = useState(initialDate ? isoFromDate(initialDate) : (typeof defaultValue === "string" && /^\d{4}-\d{2}-\d{2}$/.test(defaultValue.trim()) ? defaultValue.trim() : ""));
+  const [open, setOpen] = useState(false);
+  const [view, setView] = useState<"year" | "month" | "day">("year");
+  const now = new Date();
+  const baseYear = initialDate?.getFullYear() ?? now.getFullYear();
+  const [yearWindowStart, setYearWindowStart] = useState(() => Math.floor(baseYear / 12) * 12);
+  const [pickedYear, setPickedYear] = useState<number | null>(initialDate?.getFullYear() ?? null);
+  const [pickedMonth, setPickedMonth] = useState<number | null>(initialDate ? initialDate.getMonth() : null);
+  const rootRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const onDoc = (e: MouseEvent) => {
+      if (!rootRef.current?.contains(e.target as Node)) setOpen(false);
+    };
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setOpen(false); };
+    document.addEventListener("mousedown", onDoc);
+    document.addEventListener("keydown", onKey);
+    return () => { document.removeEventListener("mousedown", onDoc); document.removeEventListener("keydown", onKey); };
+  }, [open]);
+
+  const openPicker = () => {
+    if (disabled) return;
+    const current = parseToDate(text);
+    const y = current?.getFullYear() ?? now.getFullYear();
+    setPickedYear(current?.getFullYear() ?? null);
+    setPickedMonth(current ? current.getMonth() : null);
+    setYearWindowStart(Math.floor(y / 12) * 12);
+    setView("year");
+    setOpen(true);
+  };
+
+  const selectDay = (day: number) => {
+    if (pickedYear == null || pickedMonth == null) return;
+    const d = new Date(pickedYear, pickedMonth, day);
+    setText(dmyFromDate(d));
+    setOpen(false);
+  };
+
+  const years = Array.from({ length: 12 }, (_, i) => yearWindowStart + i);
+  const days = pickedYear != null && pickedMonth != null ? daysInMonth(pickedYear, pickedMonth) : 31;
+  const firstWeekday = pickedYear != null && pickedMonth != null ? new Date(pickedYear, pickedMonth, 1).getDay() : 0;
+  const selected = parseToDate(text);
 
   return (
-    <div className={`relative ${className}`}>
+    <div className={`relative ${className}`} ref={rootRef}>
       <input
         type="text"
         name={name}
@@ -65,8 +109,6 @@ export default function DateInputDMY({
         onChange={(e) => {
           const v = e.target.value;
           setText(v);
-          const d = parseToDate(v);
-          setIso(d ? isoFromDate(d) : "");
         }}
         placeholder={placeholder}
         inputMode="numeric"
@@ -75,25 +117,90 @@ export default function DateInputDMY({
         className={`w-full pr-10 ${inputClassName}`}
         autoComplete="off"
       />
-      <div className="absolute inset-y-0 right-0 w-10 flex items-center justify-center text-gray-500">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5 pointer-events-none">
+      <button
+        type="button"
+        onClick={openPicker}
+        disabled={disabled}
+        className="absolute inset-y-0 right-0 px-3 flex items-center text-gray-500 hover:text-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed"
+        aria-label="Open calendar"
+        tabIndex={-1}
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5">
           <path fillRule="evenodd" d="M5.75 2a.75.75 0 01.75.75V4h7V2.75a.75.75 0 011.5 0V4h.25A2.75 2.75 0 0118 6.75v8.5A2.75 2.75 0 0115.25 18H4.75A2.75 2.75 0 012 15.25v-8.5A2.75 2.75 0 014.75 4H5V2.75A.75.75 0 015.75 2zm-1 5.5c-.69 0-1.25.56-1.25 1.25v6.5c0 .69.56 1.25 1.25 1.25h10.5c.69 0 1.25-.56 1.25-1.25v-6.5c0-.69-.56-1.25-1.25-1.25H4.75z" clipRule="evenodd" />
         </svg>
-        <input
-          type="date"
-          value={iso}
-          onChange={(e) => {
-            const v = e.target.value;
-            setIso(v);
-            const d = parseToDate(v);
-            setText(d ? dmyFromDate(d) : "");
-          }}
-          disabled={disabled}
-          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-not-allowed"
-          tabIndex={-1}
-          aria-label="Open calendar"
-        />
-      </div>
+      </button>
+
+      {open && (
+        <div className="absolute left-1/2 -translate-x-1/2 z-30 mt-1 w-72 max-w-[calc(100vw-2rem)] bg-white border border-gray-200 rounded-xl shadow-lg p-3">
+          <div className="flex items-center justify-between mb-2">
+            <div className="text-sm font-semibold text-emerald-900">
+              {view === "year" ? "Select Year" : view === "month" ? `Select Month (${pickedYear ?? ""})` : `Select Date (${MONTHS[pickedMonth ?? 0]} ${pickedYear ?? ""})`}
+            </div>
+            <button type="button" onClick={() => setOpen(false)} className="text-gray-400 hover:text-gray-700 px-1" aria-label="Close">✕</button>
+          </div>
+
+          {view === "year" && (
+            <>
+              <div className="flex items-center justify-between mb-2">
+                <button type="button" className="px-2 py-1 text-sm border rounded hover:bg-gray-50" onClick={() => setYearWindowStart((y) => y - 12)}>‹</button>
+                <div className="text-xs text-gray-500">{yearWindowStart} - {yearWindowStart + 11}</div>
+                <button type="button" className="px-2 py-1 text-sm border rounded hover:bg-gray-50" onClick={() => setYearWindowStart((y) => y + 12)}>›</button>
+              </div>
+              <div className="grid grid-cols-4 gap-1.5">
+                {years.map((y) => (
+                  <button key={y} type="button" onClick={() => { setPickedYear(y); setView("month"); }}
+                    className={`px-2 py-2 text-sm rounded-lg border ${pickedYear === y ? "bg-emerald-600 text-white border-emerald-600" : "border-gray-200 hover:bg-emerald-50"}`}>
+                    {y}
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
+
+          {view === "month" && (
+            <>
+              <div className="flex items-center justify-between mb-2">
+                <button type="button" className="px-2 py-1 text-sm border rounded hover:bg-gray-50" onClick={() => setView("year")}>Back</button>
+                <div className="text-xs text-gray-500">{pickedYear}</div>
+                <div />
+              </div>
+              <div className="grid grid-cols-3 gap-1.5">
+                {MONTHS.map((m, i) => (
+                  <button key={m} type="button" onClick={() => { setPickedMonth(i); setView("day"); }}
+                    className={`px-2 py-2 text-sm rounded-lg border ${pickedMonth === i ? "bg-emerald-600 text-white border-emerald-600" : "border-gray-200 hover:bg-emerald-50"}`}>
+                    {m}
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
+
+          {view === "day" && pickedYear != null && pickedMonth != null && (
+            <>
+              <div className="flex items-center justify-between mb-2">
+                <button type="button" className="px-2 py-1 text-sm border rounded hover:bg-gray-50" onClick={() => setView("month")}>Back</button>
+                <div className="text-xs text-gray-500">{MONTHS[pickedMonth]} {pickedYear}</div>
+                <div />
+              </div>
+              <div className="grid grid-cols-7 gap-1 mb-1">
+                {WEEKDAYS.map((wd) => <div key={wd} className="text-[11px] text-center text-gray-400 py-1">{wd}</div>)}
+              </div>
+              <div className="grid grid-cols-7 gap-1">
+                {Array.from({ length: firstWeekday }).map((_, i) => <div key={`e-${i}`} />)}
+                {Array.from({ length: days }, (_, i) => i + 1).map((day) => {
+                  const isSel = selected?.getFullYear() === pickedYear && selected?.getMonth() === pickedMonth && selected?.getDate() === day;
+                  return (
+                    <button key={day} type="button" onClick={() => selectDay(day)}
+                      className={`py-1.5 text-sm rounded-md border ${isSel ? "bg-emerald-600 text-white border-emerald-600" : "border-transparent hover:bg-emerald-50"}`}>
+                      {day}
+                    </button>
+                  );
+                })}
+              </div>
+            </>
+          )}
+        </div>
+      )}
     </div>
   );
 }
