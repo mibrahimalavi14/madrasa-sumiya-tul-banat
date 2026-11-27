@@ -70,7 +70,7 @@ export default function SuggestionInput({
                 More ▾
               </button>
               {open && (
-                <div className="absolute z-20 mt-1 w-56 max-w-[calc(100vw-3rem)] max-h-52 overflow-auto bg-white border border-gray-200 rounded-lg shadow-lg p-1">
+                <div className="absolute left-1/2 -translate-x-1/2 z-20 mt-1 w-56 max-w-[calc(100vw-3rem)] max-h-52 overflow-auto bg-white border border-gray-200 rounded-lg shadow-lg p-1">
                   {more.map((s) => (
                     <button
                       key={s}
