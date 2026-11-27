@@ -9,6 +9,7 @@ import DateInputDMY from "@/components/DateInputDMY";
 import ScrollToTopOnError from "@/components/ScrollToTopOnError";
 import PhoneInput from "@/components/PhoneInput";
 import { logAudit } from "@/lib/audit";
+import DetailsCloseButton from "@/components/DetailsCloseButton";
 
 async function updateStudent(formData: FormData) {
   "use server";
@@ -211,7 +212,10 @@ export default async function EditStudent({ params, searchParams }: { params: Pr
             <span className="text-sm bg-emerald-50 text-emerald-800 border border-emerald-200 px-3 py-1 rounded-lg self-start shrink-0">+ Add Siblings</span>
           </summary>
           <div className="mt-4 border-t pt-4">
-            <label className="text-sm text-gray-700">Select from registered students (Admission No order)</label>
+            <div className="flex items-start justify-between gap-2">
+              <label className="text-sm text-gray-700">Select from registered students (Admission No order)</label>
+              <DetailsCloseButton className="shrink-0 text-gray-400 hover:text-gray-700 text-lg leading-none px-1" />
+            </div>
             <div className="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-64 overflow-auto pr-1">
               {all.map(s => (
                 <label key={s.id} className="flex items-center gap-2 border border-gray-200 rounded-lg px-3 py-2 hover:bg-emerald-50 cursor-pointer">

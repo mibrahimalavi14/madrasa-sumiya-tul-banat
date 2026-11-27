@@ -10,6 +10,8 @@ import ScrollToTopOnError from "@/components/ScrollToTopOnError";
 import PhoneInput from "@/components/PhoneInput";
 import SuggestionInput from "@/components/SuggestionInput";
 import { logAudit } from "@/lib/audit";
+import AdmissionNoAutoFields from "@/components/AdmissionNoAutoFields";
+import DetailsCloseButton from "@/components/DetailsCloseButton";
 import { cookies } from "next/headers";
 
 const DRAFT_COOKIE = "student_new_draft";
@@ -209,9 +211,11 @@ export default async function NewStudent({ searchParams }: { searchParams?: Prom
           </div>
           <div className="grid md:grid-cols-4 gap-4">
             <div><label className="text-sm text-gray-700">Session / تعلیمی سیشن</label><input value={session.name} disabled className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2.5 bg-gray-50"/></div>
-            <div><label className="text-sm text-gray-700">Roll No / رول نمبر</label><input name="rollNo" required defaultValue={draft?.rollNo || ""} className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-emerald-200" placeholder="e.g. 1"/></div>
-            <div><label className="text-sm text-gray-700">Application No / درخواست نمبر</label><input name="applicationNo" required defaultValue={draft?.applicationNo || ""} placeholder="e.g. MSB-01" className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-emerald-200"/></div>
-            <div><label className="text-sm text-gray-700">Admission No / داخلہ نمبر</label><input name="admissionNo" required defaultValue={draft?.admissionNo || ""} placeholder="e.g. MSB-01" className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-emerald-200"/></div>
+            <AdmissionNoAutoFields
+              defaultRollNo={draft?.rollNo || ""}
+              defaultApplicationNo={draft?.applicationNo || ""}
+              defaultAdmissionNo={draft?.admissionNo || ""}
+            />
             <div>
               <label className="text-sm text-gray-700">Status / حیثیت</label>
               <select name="status" defaultValue={draft?.status || "REGISTERED"} className="mt-1 block w-full h-[42px] border border-gray-200 rounded-lg px-3 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-200" style={{ paddingTop: 0, paddingBottom: 0, lineHeight: "40px" }}>
@@ -310,7 +314,10 @@ export default async function NewStudent({ searchParams }: { searchParams?: Prom
             <span className="text-sm bg-emerald-50 text-emerald-800 border border-emerald-200 px-3 py-1 rounded-lg self-start shrink-0">+ Add Siblings</span>
           </summary>
           <div className="mt-4 border-t pt-4">
-            <label className="text-sm text-gray-700">Select from registered students (Admission No order)</label>
+            <div className="flex items-start justify-between gap-2">
+              <label className="text-sm text-gray-700">Select from registered students (Admission No order)</label>
+              <DetailsCloseButton className="shrink-0 text-gray-400 hover:text-gray-700 text-lg leading-none px-1" />
+            </div>
             <div className="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-64 overflow-auto pr-1">
               {all.map(s => (
                 <label key={s.id} className="flex items-center gap-2 border border-gray-200 rounded-lg px-3 py-2 hover:bg-emerald-50 cursor-pointer">
