@@ -109,6 +109,12 @@ export default function DateInputDMY({
   const days = pickedYear != null && pickedMonth != null ? daysInMonth(pickedYear, pickedMonth) : 31;
   const firstWeekday = pickedYear != null && pickedMonth != null ? new Date(pickedYear, pickedMonth, 1).getDay() : 0;
   const selected = parseToDate(text);
+  const shiftMonth = (delta: number) => {
+    if (pickedYear == null || pickedMonth == null) return;
+    const d = new Date(pickedYear, pickedMonth + delta, 1);
+    setPickedYear(d.getFullYear());
+    setPickedMonth(d.getMonth());
+  };
 
   return (
     <div className={`relative ${className}`} ref={rootRef}>
@@ -199,9 +205,11 @@ export default function DateInputDMY({
           {view === "day" && pickedYear != null && pickedMonth != null && (
             <>
               <div className="flex items-center justify-between mb-3 bg-gray-50 rounded-xl px-2 py-1.5">
-                <button type="button" className="h-8 px-2 grid place-items-center rounded-lg hover:bg-white text-gray-600 text-sm" onClick={() => setView("month")}>← Month</button>
-                <div className="text-sm font-semibold text-gray-800">{MONTHS[pickedMonth]} {pickedYear}</div>
-                <div className="w-14" />
+                <button type="button" className="h-8 w-8 grid place-items-center rounded-lg hover:bg-white text-gray-600" onClick={() => shiftMonth(-1)} aria-label="Previous month">‹</button>
+                <button type="button" onClick={() => setView("month")} className="text-sm font-semibold text-gray-800 hover:text-emerald-700 px-2 py-1 rounded-md">
+                  {MONTHS[pickedMonth]} {pickedYear}
+                </button>
+                <button type="button" className="h-8 w-8 grid place-items-center rounded-lg hover:bg-white text-gray-600" onClick={() => shiftMonth(1)} aria-label="Next month">›</button>
               </div>
               <div className="grid grid-cols-7 gap-1 mb-1">
                 {WEEKDAYS.map((wd) => <div key={wd} className="text-[11px] text-center text-gray-400 py-1 font-medium">{wd}</div>)}
