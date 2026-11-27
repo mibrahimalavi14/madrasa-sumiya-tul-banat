@@ -153,7 +153,7 @@ export default async function NewStudent({ searchParams }: { searchParams?: Prom
   const draft = sp.error ? await readDraft() : null;
   if (!sp.error) await clearDraft();
   const [all, prev] = await Promise.all([
-    prisma.student.findMany({ select: { id: true, admissionNo: true, nameEn: true }, orderBy: { admissionNo: "asc" } }),
+    prisma.student.findMany({ select: { id: true, admissionNo: true, nameEn: true, fatherName: true }, orderBy: { admissionNo: "asc" } }),
     prisma.student.findMany({
       select: { age: true, admissionClass: true, previousSchool: true, fatherName: true, motherName: true, phone: true, address: true },
       orderBy: { createdAt: "desc" },
@@ -315,7 +315,7 @@ export default async function NewStudent({ searchParams }: { searchParams?: Prom
               {all.map(s => (
                 <label key={s.id} className="flex items-center gap-2 border border-gray-200 rounded-lg px-3 py-2 hover:bg-emerald-50 cursor-pointer">
                   <input type="checkbox" name="siblings" value={s.id} defaultChecked={Array.isArray(draft?.siblings) ? draft.siblings.includes(s.id) : draft?.siblings === s.id} className="h-4 w-4 shrink-0" />
-                  <span className="text-sm text-gray-800 break-words"><span className="font-medium text-emerald-800">{s.admissionNo}</span> - {s.nameEn}</span>
+                  <span className="text-sm text-gray-800 break-words"><span className="font-medium text-emerald-800">{s.admissionNo}</span> - {s.nameEn}{s.fatherName ? <span className="text-gray-500"> — {s.fatherName}</span> : null}</span>
                 </label>
               ))}
             </div>

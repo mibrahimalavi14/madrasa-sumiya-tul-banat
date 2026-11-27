@@ -112,7 +112,7 @@ export default async function EditStudent({ params, searchParams }: { params: Pr
   const student = await prisma.student.findUnique({ where: { id }, include: { siblingsA: true, siblingsB: true } });
   if (!student) notFound();
   const enrollment = session ? await prisma.studentEnrollment.findUnique({ where: { studentId_sessionId: { studentId: id, sessionId: session.id } } }) : null;
-  const all = await prisma.student.findMany({ where: { id: { not: id } }, select: { id: true, admissionNo: true, nameEn: true }, orderBy: { admissionNo: "asc" } });
+  const all = await prisma.student.findMany({ where: { id: { not: id } }, select: { id: true, admissionNo: true, nameEn: true, fatherName: true }, orderBy: { admissionNo: "asc" } });
   const currentSibs = new Set([...student.siblingsA.map(s=>s.studentBId), ...student.siblingsB.map(s=>s.studentAId)]);
   return (
     <div className="max-w-5xl space-y-4">
@@ -216,7 +216,7 @@ export default async function EditStudent({ params, searchParams }: { params: Pr
               {all.map(s => (
                 <label key={s.id} className="flex items-center gap-2 border border-gray-200 rounded-lg px-3 py-2 hover:bg-emerald-50 cursor-pointer">
                   <input type="checkbox" name="siblings" value={s.id} defaultChecked={currentSibs.has(s.id)} className="h-4 w-4 shrink-0" />
-                  <span className="text-sm text-gray-800 break-words"><span className="font-medium text-emerald-800">{s.admissionNo}</span> - {s.nameEn}</span>
+                  <span className="text-sm text-gray-800 break-words"><span className="font-medium text-emerald-800">{s.admissionNo}</span> - {s.nameEn}{s.fatherName ? <span className="text-gray-500"> — {s.fatherName}</span> : null}</span>
                 </label>
               ))}
             </div>
