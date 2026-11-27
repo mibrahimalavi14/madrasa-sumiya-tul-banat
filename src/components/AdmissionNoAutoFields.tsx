@@ -38,7 +38,7 @@ export default function AdmissionNoAutoFields({
           value={rollNo}
           readOnly
           tabIndex={-1}
-          className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2.5 bg-gray-50 text-gray-700 cursor-not-allowed focus:outline-none"
+          className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2.5 bg-gray-50 text-gray-700 cursor-default focus:outline-none pointer-events-none select-none caret-transparent"
           placeholder="Roll No"
         />
       </div>
@@ -50,7 +50,7 @@ export default function AdmissionNoAutoFields({
           value={applicationNo}
           readOnly
           tabIndex={-1}
-          className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2.5 bg-gray-50 text-gray-700 cursor-not-allowed focus:outline-none"
+          className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2.5 bg-gray-50 text-gray-700 cursor-default focus:outline-none pointer-events-none select-none caret-transparent"
           placeholder="Application No"
         />
       </div>
