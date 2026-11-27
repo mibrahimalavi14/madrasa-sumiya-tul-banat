@@ -91,20 +91,23 @@ export default async function StudentsPage({ searchParams }: { searchParams: Pro
   if (!session) return <div className="text-amber-800">{lang==="ur" ? "براہ کرم پہلے فعال سیشن بنائیں/منتخب کریں۔" : "Create/select an active session first."}</div>;
   const canEditStudents = user?.role === "ADMIN";
 
-  const where: any = { sessionId: session.id };
-  if (q) {
-    where.student = {
-      OR: [
-        { admissionNo: { contains: q, mode: "insensitive" } },
-        { applicationNo: { contains: q, mode: "insensitive" } },
-        { nameEn: { contains: q, mode: "insensitive" } },
-        { nameUr: { contains: q, mode: "insensitive" } },
-        { fatherName: { contains: q, mode: "insensitive" } },
-        { motherName: { contains: q, mode: "insensitive" } },
-        { admissionClass: { contains: q, mode: "insensitive" } },
-      ],
-    };
-  }
+  const where: any = {
+    sessionId: session.id,
+    student: {
+      status: "ACTIVE",
+      ...(q ? {
+        OR: [
+          { admissionNo: { contains: q, mode: "insensitive" } },
+          { applicationNo: { contains: q, mode: "insensitive" } },
+          { nameEn: { contains: q, mode: "insensitive" } },
+          { nameUr: { contains: q, mode: "insensitive" } },
+          { fatherName: { contains: q, mode: "insensitive" } },
+          { motherName: { contains: q, mode: "insensitive" } },
+          { admissionClass: { contains: q, mode: "insensitive" } },
+        ],
+      } : {}),
+    },
+  };
 
   const [total, allEnrollments, targetSessions] = await Promise.all([
     prisma.studentEnrollment.count({ where }),
@@ -213,9 +216,6 @@ export default async function StudentsPage({ searchParams }: { searchParams: Pro
 
       {[
         { key: "ACTIVE", title: lang === "ur" ? "فعال طلبہ" : "Active Students", list: activeEnrollments, badge: "bg-emerald-100 text-emerald-800" },
-        { key: "REGISTERED", title: lang === "ur" ? "رجسٹرڈ طلبہ" : "Registered Students", list: registeredEnrollments, badge: "bg-blue-100 text-blue-800" },
-        { key: "LEFT", title: lang === "ur" ? "چھوڑنے والے طلبہ" : "Left Students", list: leftEnrollments, badge: "bg-red-100 text-red-800" },
-        ...(otherEnrollments.length ? [{ key: "OTHER", title: lang === "ur" ? "دیگر" : "Other", list: otherEnrollments, badge: "bg-gray-100 text-gray-800" }] : []),
       ].map(section => (
         <div key={section.key} className="bg-white rounded-2xl shadow-sm border border-emerald-100 overflow-auto">
           <div className="px-4 py-3 border-b border-emerald-100 flex items-center justify-between gap-2">

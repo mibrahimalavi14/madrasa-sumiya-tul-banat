@@ -103,7 +103,7 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
     if (!yearOptions.includes(y)) y = yearOptions[0];
     monthOptions = Array.from({ length: 12 }, (_, i) => i + 1).filter(mm => inSessionPeriodCheck(y, mm));
     if (!monthOptions.includes(m)) m = monthOptions[0] ?? m;
-    const monthOptionsByYear = Object.fromEntries(yearOptions.map(yy => [String(yy), Array.from({ length: 12 }, (_, i) => i + 1).filter(mm => inSessionPeriodCheck(yy, mm))]));
+    monthOptionsByYear = Object.fromEntries(yearOptions.map(yy => [String(yy), Array.from({ length: 12 }, (_, i) => i + 1).filter(mm => inSessionPeriodCheck(yy, mm))]));
 
     const sid = session.id;
     const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
