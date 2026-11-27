@@ -195,6 +195,12 @@ export default function DateInputDMY({
             <button type="button" onClick={() => setOpen(false)} className="h-8 w-8 grid place-items-center rounded-full text-gray-400 hover:text-gray-700 hover:bg-gray-100" aria-label="Close">✕</button>
           </div>
 
+          <div className="flex items-center justify-between mb-2 bg-gray-50 rounded-xl px-2 py-1.5">
+            <button type="button" className="h-8 w-8 grid place-items-center rounded-lg hover:bg-white text-gray-600" onClick={() => { const d = new Date(year, month - 1, 1); applyDate(d.getFullYear(), d.getMonth(), day); }} aria-label="Previous month">‹</button>
+            <div className="text-sm font-semibold text-gray-800">{MONTHS[month]} {year}</div>
+            <button type="button" className="h-8 w-8 grid place-items-center rounded-lg hover:bg-white text-gray-600" onClick={() => { const d = new Date(year, month + 1, 1); applyDate(d.getFullYear(), d.getMonth(), day); }} aria-label="Next month">›</button>
+          </div>
+
           <div className="flex gap-2">
             <ScrollColumn label="Year" items={years} value={year} onChange={(y) => applyDate(y, month, day)} />
             <ScrollColumn label="Month" items={months} value={month} onChange={(m) => applyDate(year, m, day)} format={(m) => MONTHS[m].slice(0, 3)} />
